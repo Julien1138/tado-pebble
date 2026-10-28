@@ -28,8 +28,9 @@ void ui_draw_title(GContext *ctx, GRect b, const char *text, bool show_clock) {
   if (show_clock) {
     char clock[10];
     clock_copy_time_string(clock, sizeof(clock));
-    ui_draw_text(ctx, text, F_TITLE, GRect(4, 0, b.size.w - 46, b.size.h), GTextAlignmentLeft);
-    ui_draw_text(ctx, clock, F_TITLE, GRect(b.size.w - 46, 0, 42, b.size.h), GTextAlignmentRight);
+    // L'heure garde juste la place qu'il lui faut ; le reste est pour le titre (« Maison · Présent »).
+    ui_draw_text(ctx, text, F_TITLE, GRect(4, 0, b.size.w - 38, b.size.h), GTextAlignmentLeft);
+    ui_draw_text(ctx, clock, F_TITLE, GRect(b.size.w - 40, 0, 38, b.size.h), GTextAlignmentRight);
   } else {
     ui_draw_text(ctx, text, F_TITLE, GRect(4, 0, b.size.w - 8, b.size.h), GTextAlignmentLeft);
   }
