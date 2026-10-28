@@ -58,7 +58,14 @@
       "EndTime",
       "NextTime",
       "NextTemp",
-      "WindowMin"
+      "WindowMin",
+      "Result",
+      "Duration",
+      "CapMin",
+      "CapMax",
+      "CapStep",
+      "LastTemp",
+      "LastDur"
     ],
     "resources": {
       "media": []

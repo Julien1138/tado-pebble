@@ -22,6 +22,17 @@
   #define F_TITLE FONT_KEY_GOTHIC_14_BOLD
 #endif
 
+#include "store.h"
+
+// Mode en cours d'une pièce (TPB-DET-002) : « Programme · 22:00 », « Forcé · encore 40 min »...
+// with_setpoint : insère la température imposée (« Forcé 21° · encore 40 min », TPB-PIL-006).
+void ui_mode_line(const Room *room, uint8_t index, bool with_setpoint, char *out, size_t size);
+
+// Ouvrir une fenêtre de plus est-il possible ? Sur aplite, dont la mémoire de travail ne dépasse pas
+// quelques kilooctets, une fenêtre ouverte sans place ferait planter l'application : on vibre et
+// on reste sur l'écran courant. Toujours vrai sur les autres plateformes.
+bool ui_can_open_window(void);
+
 #ifdef PBL_COLOR
 GColor ui_band_color(uint8_t band);
 #endif

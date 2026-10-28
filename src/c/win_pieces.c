@@ -21,6 +21,10 @@ static TextLayer *s_empty;
 static AppTimer *s_timer;
 static bool s_link_dismissed;
 static char s_banner_text[32];
+static bool s_built;
+static uint16_t s_saved_row;
+static void build(Window *window);
+static void unbuild(void);
 
 
 // --- Couleurs (M-05) --------------------------------------------------------------------
@@ -232,6 +236,9 @@ static void banner_draw(Layer *layer, GContext *ctx) {
 
 // Place le bandeau, la liste et le message « Chargement » selon l'état.
 static void relayout(void) {
+  if (!s_built) {
+    return;
+  }
   GRect b = layer_get_bounds(window_get_root_layer(s_window));
   banner_text(s_banner_text, sizeof(s_banner_text));
   bool show_banner = BANNER_H > 0 && s_banner_text[0] != '\0';
@@ -284,6 +291,9 @@ static void touch_tap(int16_t x, int16_t y) {
 }
 
 static void window_appear(Window *window) {
+  if (!s_built) {
+    build(window);
+  }
   touch_start(&(TouchHandlers){
     .on_tap = touch_tap, .on_step = touch_step,
 #ifdef PBL_ROUND
@@ -297,12 +307,17 @@ static void window_appear(Window *window) {
 
 static void window_disappear(Window *window) {
   touch_stop();
+#ifdef PBL_PLATFORM_APLITE
+  unbuild();
+#endif
 }
 
-static void window_load(Window *window) {
+// Composants graphiques de la fenêtre. Sur aplite, dont la mémoire est la plus étroite, ils sont
+// libérés quand une autre fenêtre recouvre la liste et reconstruits à son retour : la fenêtre ne
+// garde que ce que le magasin sait redonner (conception, § Fenêtres et navigation).
+static void build(Window *window) {
   Layer *root = window_get_root_layer(window);
   GRect b = layer_get_bounds(root);
-  window_set_background_color(window, GColorBlack);
 
   s_title = layer_create(GRect(0, 0, b.size.w, TITLE_H));
   layer_set_update_proc(s_title, title_draw);
@@ -329,9 +344,30 @@ static void window_load(Window *window) {
   layer_add_child(root, s_banner);
   layer_add_child(root, s_title);
   layer_add_child(root, text_layer_get_layer(s_empty));
+  s_built = true;
+  if (g_view.count > 0 && s_saved_row < g_view.count) {
+    menu_layer_set_selected_index(s_menu, MenuIndex(0, s_saved_row), MenuRowAlignCenter, false);
+  }
+  relayout();
+}
+
+static void unbuild(void) {
+  if (!s_built) {
+    return;
+  }
+  s_saved_row = menu_layer_get_selected_index(s_menu).row;
+  text_layer_destroy(s_empty);
+  menu_layer_destroy(s_menu);
+  layer_destroy(s_banner);
+  layer_destroy(s_title);
+  s_built = false;
+}
+
+static void window_load(Window *window) {
+  window_set_background_color(window, GColorBlack);
+  build(window);
   tick_timer_service_subscribe(MINUTE_UNIT, on_minute);
   s_timer = app_timer_register(REFRESH_MS, on_refresh_timer, NULL);
-  relayout();
 }
 
 static void window_unload(Window *window) {
@@ -340,10 +376,7 @@ static void window_unload(Window *window) {
     app_timer_cancel(s_timer);
     s_timer = NULL;
   }
-  text_layer_destroy(s_empty);
-  menu_layer_destroy(s_menu);
-  layer_destroy(s_banner);
-  layer_destroy(s_title);
+  unbuild();
   window_destroy(s_window);
   s_window = NULL;
 }
@@ -356,7 +389,7 @@ void win_pieces_push(void) {
 }
 
 void win_pieces_reload(void) {
-  if (!s_window) {
+  if (!s_window || !s_built) {
     return;
   }
   menu_layer_reload_data(s_menu);
@@ -365,6 +398,9 @@ void win_pieces_reload(void) {
 
 void win_pieces_select(uint8_t row) {
   if (s_window && row < g_view.count) {
+    s_saved_row = row;
+  }
+  if (s_window && s_built && row < g_view.count) {
     menu_layer_set_selected_index(s_menu, MenuIndex(0, row), MenuRowAlignCenter, false);
   }
 }

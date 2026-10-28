@@ -83,6 +83,7 @@ function createHome(deps) {
           .filter(function(z) { return z.type === 'HEATING' && states[z.id]; })
           .map(function(z) { return { id: z.id, name: z.name, state: states[z.id] }; });
         cb(null, {
+          homeId: h.id,
           unit: h.unit,
           rooms: list,
           presence: { presence: r.state.data.presence, locked: !!r.state.data.presenceLocked },

@@ -8,6 +8,7 @@
 #include "touch.h"
 #include "ui.h"
 #include "win_pieces.h"
+#include "win_pilot.h"
 
 #ifdef PBL_ROUND
   #define BAR_W 0
@@ -22,40 +23,9 @@ static Layer *s_title;
 static Layer *s_content;
 static Layer *s_bar;
 static uint8_t s_index;
+static bool s_built;   // composants graphiques créés (libérés sur aplite quand la fenêtre est recouverte)
 
 // --- Contenu ------------------------------------------------------------------------------
-
-static void mode_line(const Room *room, char *out, size_t size) {
-  char when[16];
-  if (room->flags & FLAG_OFFLINE) {
-    snprintf(out, size, "%s", text_get(T_OFFLINE));
-    return;
-  }
-  if (!g_detail.valid || g_detail.index != s_index) {
-    out[0] = '\0';
-    return;
-  }
-  switch (g_detail.mode) {
-    case MODE_TIMER:
-      text_duration(when, sizeof(when), g_detail.remaining);
-      snprintf(out, size, "%s · %s %s", text_get(T_BOOST), text_get(T_LEFT), when);
-      break;
-    case MODE_NEXT_BLOCK:
-      text_time(when, sizeof(when), g_detail.end_time);
-      snprintf(out, size, "%s · %s %s", text_get(T_BOOST), text_get(T_UNTIL), when);
-      break;
-    case MODE_MANUAL:
-      snprintf(out, size, "%s", text_get(T_UNTIL_FURTHER));
-      break;
-    default:
-      if (g_detail.end_time >= 0) {
-        text_time(when, sizeof(when), g_detail.end_time);
-        snprintf(out, size, "%s · %s", text_get(T_SCHEDULE), when);
-      } else {
-        snprintf(out, size, "%s", text_get(T_SCHEDULE));
-      }
-  }
-}
 
 static void next_line(char *out, size_t size) {
   char when[16], temp[12];
@@ -129,7 +99,7 @@ static void content_draw(Layer *layer, GContext *ctx) {
   }
   ui_draw_text(ctx, line, F_NAME, GRect(x, SLOT(1), w, 26), align);
 
-  mode_line(room, line, sizeof(line));
+  ui_mode_line(room, s_index, false, line, sizeof(line));
   ui_draw_text(ctx, line, F_SUB, GRect(x, SLOT(2), w, 22), align);
 
   // Chauffe en cours : texte, pourcentage et barre.
@@ -207,8 +177,10 @@ static void bar_draw(Layer *layer, GContext *ctx) {
 static void show_room(uint8_t index) {
   s_index = index;
   comms_request_detail(s_index);
-  layer_mark_dirty(s_title);
-  layer_mark_dirty(s_content);
+  if (s_built) {
+    layer_mark_dirty(s_title);
+    layer_mark_dirty(s_content);
+  }
 }
 
 static void on_up(ClickRecognizerRef recognizer, void *context) {
@@ -235,26 +207,41 @@ static void touch_tap(int16_t x, int16_t y) {
     touch_step(-1);
   } else if (third == 2) {
     touch_step(1);
+  } else {
+    win_pilot_push(s_index);
   }
 }
 
+static void build(Window *window);
+static void unbuild(void);
+
 static void window_appear(Window *window) {
+  if (!s_built) {
+    build(window);
+  }
   touch_start(&(TouchHandlers){ .on_tap = touch_tap, .on_step = touch_step, .step_px = 40, .one_step = true });
 }
 
 static void window_disappear(Window *window) {
   touch_stop();
+#ifdef PBL_PLATFORM_APLITE
+  unbuild();
+#endif
+}
+
+static void on_select(ClickRecognizerRef recognizer, void *context) {
+  win_pilot_push(s_index);
 }
 
 static void click_config(void *context) {
   window_single_click_subscribe(BUTTON_ID_UP, on_up);
   window_single_click_subscribe(BUTTON_ID_DOWN, on_down);
+  window_single_click_subscribe(BUTTON_ID_SELECT, on_select);
 }
 
-static void window_load(Window *window) {
+static void build(Window *window) {
   Layer *root = window_get_root_layer(window);
   GRect b = layer_get_bounds(root);
-  window_set_background_color(window, GColorBlack);
   s_title = layer_create(GRect(0, 0, b.size.w, TITLE_H));
   layer_set_update_proc(s_title, title_draw);
   s_content = layer_create(GRect(0, TITLE_H, b.size.w - BAR_W, b.size.h - TITLE_H));
@@ -266,17 +253,31 @@ static void window_load(Window *window) {
     layer_set_update_proc(s_bar, bar_draw);
     layer_add_child(root, s_bar);
   }
-  window_set_click_config_provider(window, click_config);
-  comms_request_detail(s_index);
+  s_built = true;
 }
 
-static void window_unload(Window *window) {
+static void unbuild(void) {
+  if (!s_built) {
+    return;
+  }
   if (s_bar) {
     layer_destroy(s_bar);
     s_bar = NULL;
   }
   layer_destroy(s_content);
   layer_destroy(s_title);
+  s_built = false;
+}
+
+static void window_load(Window *window) {
+  window_set_background_color(window, GColorBlack);
+  build(window);
+  window_set_click_config_provider(window, click_config);
+  comms_request_detail(s_index);
+}
+
+static void window_unload(Window *window) {
+  unbuild();
   window_destroy(s_window);
   s_window = NULL;
   g_detail.valid = false;
@@ -284,7 +285,7 @@ static void window_unload(Window *window) {
 }
 
 void win_detail_push(uint8_t room_index) {
-  if (s_window || room_index >= g_view.count) {
+  if (s_window || room_index >= g_view.count || !ui_can_open_window()) {
     return;
   }
   s_index = room_index;
@@ -303,12 +304,14 @@ void win_detail_reload(void) {
     return;
   }
   comms_request_detail(s_index);
-  layer_mark_dirty(s_title);
-  layer_mark_dirty(s_content);
+  if (s_built) {
+    layer_mark_dirty(s_title);
+    layer_mark_dirty(s_content);
+  }
 }
 
 void win_detail_changed(void) {
-  if (s_window && g_detail.index == s_index) {
+  if (s_window && s_built && g_detail.index == s_index) {
     layer_mark_dirty(s_content);
   }
 }

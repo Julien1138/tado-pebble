@@ -7,7 +7,6 @@
 
 typedef struct {
   char name[21];
-  char abbrev[5];
   int16_t temp;
   int16_t setpoint;
   uint8_t power;
@@ -39,10 +38,22 @@ typedef struct {
   int16_t next_temp;       // dixièmes, DETAIL_NO_TEMP si éteint
   int16_t humidity;        // %, DETAIL_NONE si pas de capteur
   uint16_t window_minutes;
+  int16_t last_temp;       // dernier forçage de la pièce (dixièmes), 0 si aucun
+  uint8_t last_duration;   // code de durée (DUR_*), 0 si aucun
 } Detail;
+
+// Plage de consigne de la pièce (MSG-20), en dixièmes dans l'unité du compte.
+typedef struct {
+  bool valid;
+  uint8_t index;
+  int16_t min;
+  int16_t max;
+  int16_t step;
+} Caps;
 
 extern View g_view;
 extern Detail g_detail;
+extern Caps g_caps;
 
 void store_init(void);
 // Réception d'une liste : begin, puis chaque pièce ; commit quand toutes sont arrivées.

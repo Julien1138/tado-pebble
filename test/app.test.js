@@ -7,6 +7,7 @@ var createCache = require('../src/pkjs/cache');
 var createHome = require('../src/pkjs/home');
 var createLink = require('../src/pkjs/link');
 var createClient = require('../src/pkjs/tado');
+var createControl = require('../src/pkjs/control');
 var views = require('../src/pkjs/views');
 var f = require('./fakes');
 
@@ -43,7 +44,8 @@ function setup(steps, linked) {
   var opened = [];
   var messenger = createMessenger({ pebble: { sendAppMessage: function(m, ok) { sent.push(m); setImmediate(ok); } } });
   var app = createApp({ messenger: messenger, link: link, home: createHome({ client: client, cache: cache }),
-                        views: views, cache: cache, openUrl: function(u) { opened.push(u); } });
+                        views: views, cache: cache, openUrl: function(u) { opened.push(u); },
+                        control: createControl({ client: client, cache: cache, storage: store }) });
   return { app: app, sent: sent, opened: opened, http: http, clock: clock, store: store };
 }
 
@@ -220,4 +222,85 @@ test('détail : répond depuis les données déjà lues, sans nouvelle requête'
   assert.equal(t.sent[0].Index, 1);
   assert.equal(t.sent[0].Mode, P.MODE_SCHEDULE);
   assert.equal(t.sent[0].Humidity, P.NONE);
+});
+
+function command(extra) {
+  var m = { MsgType: P.MSG_DO, Seq: 9, Command: P.CMD_FORCE, Index: 1, Temp: 215, Duration: P.DUR_60 };
+  Object.keys(extra || {}).forEach(function(k) { m[k] = extra[k]; });
+  return m;
+}
+
+async function opened(extraSteps) {
+  var t = setup(OPEN.slice().concat(extraSteps));
+  t.app.onMessage(get(1));
+  await f.settle(); await f.settle();
+  t.sent.length = 0;
+  return t;
+}
+
+test('commande réussie : écriture, relecture sans cache, accusé puis vue relue', async function() {
+  var t = await opened([{ status: 200, body: {} }, { status: 200, body: ZONE_STATES },
+                        { status: 200, body: { presence: 'HOME', presenceLocked: false } }]);
+  var calls = t.http.calls.length;
+  t.app.onMessage(command());
+  await f.settle(); await f.settle(); await f.settle();
+  var tail = t.http.calls.slice(calls).map(function(c) { return c.method + ' ' + c.url.replace('https://my.tado.com/api/v2', ''); });
+  assert.deepEqual(tail, ['PUT /homes/7/zones/1/overlay', 'GET /homes/7/zoneStates', 'GET /homes/7/state']);
+  var kinds = t.sent.map(function(m) { return m.MsgType; });
+  assert.deepEqual(kinds, [P.MSG_ACK, P.MSG_STATUS, P.MSG_ROOMS_HEAD, P.MSG_ROOM, P.MSG_ROOM]);
+  assert.equal(t.sent[0].Result, P.RES_OK);
+  assert.equal(t.sent[0].Seq, 9);
+});
+
+test('commande refusée par Tado : accusé « refusé », rien d\'autre, aucune relecture', async function() {
+  var t = await opened([{ status: 422, body: { errors: [] } }]);
+  var calls = t.http.calls.length;
+  t.app.onMessage(command());
+  await f.settle(); await f.settle();
+  assert.equal(t.http.calls.length, calls + 1);
+  assert.deepEqual(t.sent.map(function(m) { return [m.MsgType, m.Result]; }), [[P.MSG_ACK, P.RES_REFUSED]]);
+});
+
+test('commande sans connexion : accusé « hors connexion », jamais retentée', async function() {
+  var t = await opened([{ error: { kind: 'network' } }]);
+  var calls = t.http.calls.length;
+  t.app.onMessage(command({ Command: P.CMD_SCHEDULE }));
+  await f.settle(); await f.settle();
+  assert.equal(t.http.calls.length, calls + 1);
+  assert.equal(t.sent[0].Result, P.RES_OFFLINE);
+});
+
+test('commande : liaison perdue, accusé en échec puis état de liaison', async function() {
+  var t = await opened([{ status: 401 }, { status: 400, body: { error: 'invalid_grant' } }]);
+  t.app.onMessage(command({ Command: P.CMD_OFF }));
+  await f.settle(); await f.settle(); await f.settle();
+  assert.deepEqual(t.sent.map(function(m) { return m.MsgType; }), [P.MSG_ACK, P.MSG_STATUS]);
+  assert.equal(t.sent[0].Result, P.RES_FAILED);
+  assert.equal(t.sent[1].Link, P.LINK_LOST);
+});
+
+test('commande sur une pièce inconnue : refusée sans requête d\'écriture', async function() {
+  var t = await opened([]);
+  var calls = t.http.calls.length;
+  t.app.onMessage(command({ Index: 7 }));
+  await f.settle(); await f.settle();
+  assert.equal(t.http.calls.length, calls);
+  assert.equal(t.sent[0].Result, P.RES_REFUSED);
+});
+
+test('plage de consigne : une requête, puis le détail annonce le dernier forçage', async function() {
+  var caps = { type: 'HEATING', temperatures: { celsius: { min: 5, max: 25, step: 0.1 }, fahrenheit: { min: 41, max: 77, step: 0.1 } } };
+  var t = await opened([{ status: 200, body: caps }, { status: 200, body: {} }, { status: 200, body: ZONE_STATES },
+                        { status: 200, body: { presence: 'HOME', presenceLocked: false } }]);
+  t.app.onMessage({ MsgType: P.MSG_GET, Seq: 3, Object: P.OBJ_CAPS, Index: 1 });
+  await f.settle(); await f.settle();
+  assert.deepEqual([t.sent[0].MsgType, t.sent[0].Index, t.sent[0].CapMin, t.sent[0].CapMax, t.sent[0].CapStep],
+                   [P.MSG_CAPS, 1, 50, 250, 5]);
+  t.app.onMessage(command());
+  await f.settle(); await f.settle(); await f.settle();
+  t.sent.length = 0;
+  t.app.onMessage({ MsgType: P.MSG_GET, Seq: 5, Object: P.OBJ_DETAIL, Index: 1 });
+  await f.settle(); await f.settle();
+  assert.equal(t.sent[0].LastTemp, 215);
+  assert.equal(t.sent[0].LastDur, P.DUR_60);
 });

@@ -8,14 +8,20 @@ static const char *const FR[T_COUNT] = {
   "Chargement…", "Aucune pièce", "Liaison Tado", "Sinon, ouvrir sur le\ntéléphone :\nlogin.tado.com\n/oauth2/device",
   "Attente", "Code expiré", "Liaison refusée", "Liaison perdue", "Hors connexion", "Il y a",
   "Consigne", "Programme", "Forcé", "encore", "jusqu'à", "Jusqu'à nouvel ordre", "Chauffe", "Ne chauffe pas",
-  "Humidité", "Fenêtre ouverte", "Ensuite", "à", "Éteint"
+  "Humidité", "Fenêtre ouverte", "Ensuite", "à", "Éteint",
+  "Pilotage", "Forcer temp.", "Retour programme", "Éteindre chauffage", "Actuelle", "pendant",
+  "30 min", "1 h", "2 h", "Prochain créneau", "Nouvel ordre",
+  "Forcer", "Envoi…", "Pris en compte", "Refusé", "Échec", "Pas de réponse"
 };
 static const char *const EN[T_COUNT] = {
   "House", "Present", "Away", "idle", "off", "offline", "boost", "unavailable",
   "Loading…", "No room", "Tado link", "Otherwise, open on\nyour phone:\nlogin.tado.com\n/oauth2/device",
   "Waiting", "Code expired", "Link refused", "Link lost", "Offline", "Ago",
   "Setpoint", "Schedule", "Boost", "left", "until", "Until further notice", "Heating", "Not heating",
-  "Humidity", "Window open", "Then", "at", "Off"
+  "Humidity", "Window open", "Then", "at", "Off",
+  "Control", "Set temp.", "Back to schedule", "Turn heating off", "Current", "for",
+  "30 min", "1 h", "2 h", "Next period", "Until changed",
+  "Boost", "Sending…", "Done", "Refused", "Failed", "No answer"
 };
 
 void text_init(void) {

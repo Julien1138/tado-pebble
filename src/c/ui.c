@@ -1,4 +1,6 @@
 #include "ui.h"
+#include "protocol.h"
+#include "text.h"
 
 #ifdef PBL_COLOR
 GColor ui_band_color(uint8_t band) {
@@ -32,4 +34,64 @@ void ui_draw_title(GContext *ctx, GRect b, const char *text, bool show_clock) {
     ui_draw_text(ctx, text, F_TITLE, GRect(4, 0, b.size.w - 8, b.size.h), GTextAlignmentLeft);
   }
 #endif
+}
+
+void ui_mode_line(const Room *room, uint8_t index, bool with_setpoint, char *out, size_t size) {
+  char when[16], sp[16], head[28];
+  if (room->flags & FLAG_OFFLINE) {
+    snprintf(out, size, "%s", text_get(T_OFFLINE));
+    return;
+  }
+  if (!g_detail.valid || g_detail.index != index) {
+    out[0] = '\0';
+    return;
+  }
+  sp[0] = '\0';
+  if (with_setpoint) {
+    if (room->flags & FLAG_OFF) {
+      snprintf(sp, sizeof(sp), "%s", text_get(T_OFF_CAP));
+    } else {
+      text_setpoint(sp, sizeof(sp), room->setpoint, g_view.unit);
+    }
+  }
+  switch (g_detail.mode) {
+    case MODE_TIMER:
+      text_duration(when, sizeof(when), g_detail.remaining);
+      snprintf(head, sizeof(head), "%s%s%s", text_get(T_BOOST), sp[0] ? " " : "", sp);
+      snprintf(out, size, "%s · %s %s", head, text_get(T_LEFT), when);
+      break;
+    case MODE_NEXT_BLOCK:
+      text_time(when, sizeof(when), g_detail.end_time);
+      snprintf(head, sizeof(head), "%s%s%s", text_get(T_BOOST), sp[0] ? " " : "", sp);
+      snprintf(out, size, "%s · %s %s", head, text_get(T_UNTIL), when);
+      break;
+    case MODE_MANUAL:
+      if (sp[0]) {
+        snprintf(out, size, "%s · %s", sp, text_get(T_UNTIL_FURTHER));
+      } else {
+        snprintf(out, size, "%s", text_get(T_UNTIL_FURTHER));
+      }
+      break;
+    default:
+      snprintf(head, sizeof(head), "%s%s%s", text_get(T_SCHEDULE), sp[0] ? " " : "", sp);
+      if (g_detail.end_time >= 0) {
+        text_time(when, sizeof(when), g_detail.end_time);
+        snprintf(out, size, "%s · %s", head, when);
+      } else {
+        snprintf(out, size, "%s", head);
+      }
+  }
+}
+
+// Place nécessaire à une fenêtre et à ses composants graphiques, mesurée sur l'émulateur d'aplite.
+#define WINDOW_HEAP_BYTES 900
+
+bool ui_can_open_window(void) {
+#ifdef PBL_PLATFORM_APLITE
+  if (heap_bytes_free() < WINDOW_HEAP_BYTES) {
+    vibes_short_pulse();
+    return false;
+  }
+#endif
+  return true;
 }

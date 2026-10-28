@@ -8,16 +8,35 @@ module.exports = {
   MSG_ROOMS_HEAD: 12,
   MSG_ROOM: 13,
   MSG_DETAIL: 14,
+  MSG_CAPS: 20,
+  MSG_ACK: 21,
   MSG_LINK_CODE: 22,
   MSG_READY: 30,
 
   // Objets demandables (clé Object)
   OBJ_ROOMS: 1,
   OBJ_DETAIL: 2,
+  OBJ_CAPS: 3,
 
   // Commandes (clé Command)
   CMD_LINK: 1,
   CMD_UNLINK: 2,
+  CMD_FORCE: 4,
+  CMD_SCHEDULE: 5,
+  CMD_OFF: 6,
+
+  // Durées d'un forçage (clé Duration)
+  DUR_30: 1,
+  DUR_60: 2,
+  DUR_120: 3,
+  DUR_NEXT: 4,
+  DUR_MANUAL: 5,
+
+  // Résultat d'une commande (MSG_ACK, clé Result)
+  RES_OK: 0,
+  RES_REFUSED: 1,
+  RES_FAILED: 2,
+  RES_OFFLINE: 3,
 
   // État de la liaison (STATUS, clé Link)
   LINK_NONE: 0,

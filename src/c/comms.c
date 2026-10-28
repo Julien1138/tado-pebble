@@ -3,8 +3,9 @@
 #include "store.h"
 #include "text.h"
 
-#define INBOX_SIZE 256
-#define OUTBOX_SIZE 64
+// Tailles réglées sur le plus gros message (une pièce, environ 135 octets) : la mémoire d'aplite est comptée.
+#define INBOX_SIZE 144
+#define OUTBOX_SIZE 72
 
 static CommsHandlers s_handlers;
 static uint32_t s_seq;
@@ -31,10 +32,14 @@ static void copy_string(char *out, size_t size, DictionaryIterator *iter, uint32
 
 // File d'envoi : AppMessage n'accepte qu'un message en vol, le suivant part à l'accusé.
 typedef struct {
-  int32_t type;
-  int32_t arg;
-  bool refresh;
+  uint8_t type;
+  uint32_t seq;
+  uint8_t object;     // MSG_GET : OBJ_*
+  uint8_t command;    // MSG_DO : CMD_*
   uint8_t index;
+  uint8_t duration;
+  int16_t temp;
+  bool refresh;
 } Request;
 
 #define QUEUE_SIZE 6
@@ -54,26 +59,33 @@ static void send_next(void) {
   }
   dict_write_int32(iter, MESSAGE_KEY_MsgType, req.type);
   if (req.type == MSG_HELLO) {
-    dict_write_int32(iter, MESSAGE_KEY_Lang, req.arg);
+    dict_write_int32(iter, MESSAGE_KEY_Lang, text_is_french() ? 1 : 0);
   } else {
-    dict_write_int32(iter, MESSAGE_KEY_Seq, req.arg);
+    dict_write_int32(iter, MESSAGE_KEY_Seq, req.seq);
     if (req.type == MSG_GET) {
-      dict_write_int32(iter, MESSAGE_KEY_Object, req.index == 0xFF ? OBJ_ROOMS : OBJ_DETAIL);
+      dict_write_int32(iter, MESSAGE_KEY_Object, req.object);
       dict_write_int32(iter, MESSAGE_KEY_Refresh, req.refresh ? 1 : 0);
-      if (req.index != 0xFF) {
+      if (req.object != OBJ_ROOMS) {
         dict_write_int32(iter, MESSAGE_KEY_Index, req.index);
       }
     } else {
-      dict_write_int32(iter, MESSAGE_KEY_Command, req.refresh ? CMD_UNLINK : CMD_LINK);
+      dict_write_int32(iter, MESSAGE_KEY_Command, req.command);
+      if (req.command == CMD_FORCE || req.command == CMD_SCHEDULE || req.command == CMD_OFF) {
+        dict_write_int32(iter, MESSAGE_KEY_Index, req.index);
+      }
+      if (req.command == CMD_FORCE) {
+        dict_write_int32(iter, MESSAGE_KEY_Temp, req.temp);
+        dict_write_int32(iter, MESSAGE_KEY_Duration, req.duration);
+      }
     }
   }
   s_in_flight = true;
   app_message_outbox_send();
 }
 
-static void enqueue(int32_t type, int32_t arg, bool flag, uint8_t index) {
+static void enqueue(const Request *req) {
   if (s_queue_len < QUEUE_SIZE) {
-    s_queue[s_queue_len++] = (Request){ .type = type, .arg = arg, .refresh = flag, .index = index };
+    s_queue[s_queue_len++] = *req;
   }
   send_next();
 }
@@ -92,7 +104,7 @@ static void on_inbox(DictionaryIterator *iter, void *context) {
   int32_t type = int_of(iter, MESSAGE_KEY_MsgType, 0);
   if (type == MSG_READY) {
     s_ready = true;
-    enqueue(MSG_HELLO, text_is_french() ? 1 : 0, false, 0xFF);
+    enqueue(&(Request){ .type = MSG_HELLO });
     comms_request_rooms(false);
     return;
   }
@@ -119,7 +131,6 @@ static void on_inbox(DictionaryIterator *iter, void *context) {
       Room room;
       memset(&room, 0, sizeof(room));
       copy_string(room.name, sizeof(room.name), iter, MESSAGE_KEY_Name);
-      copy_string(room.abbrev, sizeof(room.abbrev), iter, MESSAGE_KEY_Abbrev);
       room.temp = int_of(iter, MESSAGE_KEY_Temp, 0);
       room.setpoint = int_of(iter, MESSAGE_KEY_Setpoint, 0);
       room.power = int_of(iter, MESSAGE_KEY_Power, 0);
@@ -144,7 +155,20 @@ static void on_inbox(DictionaryIterator *iter, void *context) {
       g_detail.next_temp = int_of(iter, MESSAGE_KEY_NextTemp, DETAIL_NO_TEMP);
       g_detail.humidity = int_of(iter, MESSAGE_KEY_Humidity, DETAIL_NONE);
       g_detail.window_minutes = int_of(iter, MESSAGE_KEY_WindowMin, 0);
+      g_detail.last_temp = int_of(iter, MESSAGE_KEY_LastTemp, 0);
+      g_detail.last_duration = int_of(iter, MESSAGE_KEY_LastDur, 0);
       s_handlers.detail_changed();
+      break;
+    case MSG_CAPS:
+      g_caps.valid = true;
+      g_caps.index = int_of(iter, MESSAGE_KEY_Index, 0);
+      g_caps.min = int_of(iter, MESSAGE_KEY_CapMin, 0);
+      g_caps.max = int_of(iter, MESSAGE_KEY_CapMax, 0);
+      g_caps.step = int_of(iter, MESSAGE_KEY_CapStep, 5);
+      s_handlers.caps_changed();
+      break;
+    case MSG_ACK:
+      s_handlers.command_result(int_of(iter, MESSAGE_KEY_Result, RES_FAILED));
       break;
     case MSG_LINK_CODE: {
       char code[8];
@@ -174,25 +198,41 @@ bool comms_ready(void) {
 
 void comms_request_rooms(bool refresh) {
   if (s_ready) {
-    enqueue(MSG_GET, ++s_seq, refresh, 0xFF);
+    enqueue(&(Request){ .type = MSG_GET, .seq = ++s_seq, .object = OBJ_ROOMS, .refresh = refresh });
   }
 }
 
 void comms_request_detail(uint8_t index) {
   g_detail.valid = false;
   if (s_ready) {
-    enqueue(MSG_GET, ++s_seq, false, index);
+    enqueue(&(Request){ .type = MSG_GET, .seq = ++s_seq, .object = OBJ_DETAIL, .index = index });
   }
+}
+
+void comms_request_caps(uint8_t index) {
+  g_caps.valid = false;
+  if (s_ready) {
+    enqueue(&(Request){ .type = MSG_GET, .seq = ++s_seq, .object = OBJ_CAPS, .index = index });
+  }
+}
+
+bool comms_send_command(uint8_t command, uint8_t index, int16_t temp, uint8_t duration) {
+  if (!s_ready) {
+    return false;
+  }
+  enqueue(&(Request){ .type = MSG_DO, .seq = ++s_seq, .command = command, .index = index,
+                      .temp = temp, .duration = duration });
+  return true;
 }
 
 void comms_request_link(void) {
   if (s_ready) {
-    enqueue(MSG_DO, ++s_seq, false, 0xFF);
+    enqueue(&(Request){ .type = MSG_DO, .seq = ++s_seq, .command = CMD_LINK });
   }
 }
 
 void comms_request_unlink(void) {
   if (s_ready) {
-    enqueue(MSG_DO, ++s_seq, true, 0xFF);
+    enqueue(&(Request){ .type = MSG_DO, .seq = ++s_seq, .command = CMD_UNLINK });
   }
 }

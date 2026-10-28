@@ -1,7 +1,7 @@
 #include "store.h"
 #include "protocol.h"
 
-#define STORE_VERSION 1
+#define STORE_VERSION 2
 #define KEY_HEADER 1
 #define KEY_ROOM_BASE 100
 
@@ -16,7 +16,7 @@ typedef struct {
 
 View g_view;
 Detail g_detail;
-static Room s_staging[MAX_ROOMS];
+Caps g_caps;
 static uint8_t s_staging_count;
 static uint8_t s_staging_unit;
 static uint8_t s_staging_received;
@@ -53,7 +53,7 @@ void store_begin_rooms(uint8_t count, uint8_t unit) {
 
 void store_set_room(uint8_t index, const Room *room) {
   if (index < s_staging_count) {
-    s_staging[index] = *room;
+    g_view.rooms[index] = *room;
     s_staging_received++;
   }
 }
@@ -63,7 +63,6 @@ bool store_rooms_complete(void) {
 }
 
 void store_commit_rooms(void) {
-  memcpy(g_view.rooms, s_staging, sizeof(Room) * s_staging_count);
   g_view.count = s_staging_count;
   g_view.unit = s_staging_unit;
   g_view.obtained = time(NULL) - s_pending_age;

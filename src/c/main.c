@@ -5,16 +5,29 @@
 #include "win_detail.h"
 #include "win_link.h"
 #include "win_pieces.h"
+#include "win_pilot.h"
+#include "win_result.h"
+#include "win_setpoint.h"
 
 // M-01 Application : affiche tout de suite la dernière situation connue (TPB-ACT-001), puis la
 // remplace quand le téléphone répond.
 static void on_rooms(void) {
   win_pieces_reload();
   win_detail_reload();
+  win_pilot_refresh();
 }
 
 static void on_detail(void) {
   win_detail_changed();
+  win_pilot_refresh();
+}
+
+static void on_caps(void) {
+  win_setpoint_caps_changed();
+}
+
+static void on_command_result(uint8_t result) {
+  win_result_done(result);
 }
 
 static void on_status(void) {
@@ -31,7 +44,8 @@ static void on_link_code(const char *code, int seconds, uint8_t state) {
 int main(void) {
   text_init();
   store_init();
-  comms_init(&(CommsHandlers){ .rooms_changed = on_rooms, .detail_changed = on_detail, .status_changed = on_status,
+  comms_init(&(CommsHandlers){ .rooms_changed = on_rooms, .detail_changed = on_detail, .caps_changed = on_caps,
+                               .command_result = on_command_result, .status_changed = on_status,
                                .link_code = on_link_code });
   win_pieces_push();
   app_event_loop();

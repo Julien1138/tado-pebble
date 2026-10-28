@@ -116,7 +116,18 @@ Une fenêtre n'existe que pendant qu'elle est empilée~: elle est créée à l'o
 indispensable sur aplite, la plateforme dont la mémoire de travail est la plus étroite
 (point ouvert ci-dessous).
 
-\pointouvert{Quelle est la mémoire de travail disponible sur aplite pour la fenêtre la plus chargée (historique, six pièces)~? À mesurer sur l'émulateur avant de figer le moteur de liste.}
+\paragraph{Mémoire d'aplite (mesurée le 29 octobre 2026).} Sur aplite, le code de l'application est chargé en mémoire
+de travail~: 21~Ko des 24~Ko dès la compilation, soit environ 3~Ko de tas libre au lancement et
+quelques centaines d'octets une fois la liste des pièces affichée. Trois mesures y répondent~:
+une fenêtre recouverte libère ses composants graphiques et les reconstruit à son retour~; les tampons
+d'AppMessage sont réglés sur le plus gros message (144 et 72 octets)~; et l'application vérifie la place
+avant d'ouvrir une fenêtre, sans quoi elle vibre et reste sur l'écran courant plutôt que de planter.
+L'optimisation à l'édition de liens (\texttt{-flto}) rendrait 1,9~Ko mais empêche l'installation de l'application.
+
+\pointouvert{La chaîne la plus profonde (liste, détail, pilotage, consigne, durée, résultat) tient-elle sur une Pebble
+aplite réelle~? Sur l'émulateur, la durée et le résultat n'ont pu être mesurés qu'avec le code de démonstration, qui
+occupe 600~octets de plus que l'application. À vérifier sur une montre, sinon réduire le code ou fusionner la durée
+et la consigne dans une même fenêtre.}
 
 \subsection{Données conservées sur la montre}
 
