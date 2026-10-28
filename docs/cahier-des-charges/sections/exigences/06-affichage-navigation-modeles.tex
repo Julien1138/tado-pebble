@@ -77,7 +77,8 @@ sa température. Un utilisateur de Tado ne doit pas être dépaysé.
 \label{sec:navigation}
 
 Une montre Pebble se manipule avec quatre boutons~: \emph{Haut}, \emph{Sélection},
-\emph{Bas} et \emph{Retour}. Rien n'oblige à toucher l'écran, et il n'y a pas de clavier.
+\emph{Bas} et \emph{Retour}. Certaines montres ont aussi un écran tactile~: le toucher
+est un complément facultatif des boutons, jamais un passage obligé. Il n'y a pas de clavier.
 La figure~\ref{fig:navigation} montre l'enchaînement des écrans.
 
 \begin{exigence}{TPB-NAV-001}{Ouverture sur la liste des pièces}[
@@ -130,6 +131,43 @@ La figure~\ref{fig:navigation} montre l'enchaînement des écrans.
     phase         = {Navigation},
   ]
   Depuis la liste des pièces, le bouton \emph{Retour} doit quitter l'application.
+\end{exigence}
+
+\begin{exigence}{TPB-NAV-006}{Tout faisable aux boutons}[
+    justification = {Toutes les montres n'ont pas d'écran tactile, et le toucher n'est
+                     pas toujours praticable (gants, mains mouillées).},
+    priorite      = {Essentielle},
+    verification  = {D},
+    phase         = {Navigation},
+  ]
+  L'application doit permettre d'accomplir chacune de ses fonctions avec les seuls quatre
+  boutons, que la montre ait ou non un écran tactile.
+\end{exigence}
+
+\begin{exigence}{TPB-NAV-007}{Toucher en complément}[
+    justification = {Sur une montre tactile, toucher ce que l'on veut atteindre est plus
+                     direct que d'appuyer plusieurs fois sur un bouton.},
+    priorite      = {Souhaitable},
+    verification  = {D},
+    phase         = {Navigation},
+    note          = {Fonction facultative, mise en \oe uvre écran par écran. Elle s'ajoute aux
+                     boutons (\refexig{TPB-NAV-002}, \refexig{TPB-NAV-006}) et ne les remplace
+                     jamais.},
+  ]
+  Sur les montres à écran tactile, l'application devrait permettre de manipuler ses écrans
+  au toucher, en complément des boutons.
+\end{exigence}
+
+\begin{exigence}{TPB-NAV-008}{Liste des pièces au toucher}[
+    justification = {La liste des pièces est l'écran le plus consulté~; la parcourir et
+                     ouvrir une pièce d'un geste est le premier gain du toucher.},
+    priorite      = {Souhaitable},
+    verification  = {D},
+    phase         = {Navigation},
+  ]
+  Sur les montres à écran tactile, l'application devrait permettre, dans la liste des
+  pièces, de la faire défiler au toucher et d'ouvrir une pièce en la touchant, avec le même
+  résultat que le bouton \emph{Sélection} sur cette pièce.
 \end{exigence}
 
 \begin{figure}[H]
