@@ -37,7 +37,7 @@
     MSG-11 & STATUS & Séquence~; état de la liaison (non liée, perdue, active)~; âge de la donnée affichée (secondes)~; indicateurs~: hors connexion, attente~; mode et état de présence~; nombre d'alertes. \\
     MSG-12 & ROOMS\_HEAD & Séquence~; nombre de pièces~; unité (C ou F). \\
     MSG-13 & ROOM & Séquence~; indice~; nom (20 octets)~; abréviation (4)~; température mesurée~; consigne~; puissance (\%)~; tranche de couleur~; indicateurs (chauffe, forcée, éteinte, hors ligne, fenêtre ouverte)~; code de mode et durée restante. \\
-    MSG-14 & DETAIL & Séquence~; indice~; code de mode~; heure de fin~; heure et température du prochain changement~; humidité (\%)~; minutes de fenêtre ouverte. \\
+    MSG-14 & DETAIL & Séquence~; indice~; code de mode~; durée restante d'un forçage minuté~; heure de fin (absente pour \enquote{jusqu'à nouvel ordre})~; heure et température du prochain changement~; humidité (\%)~; minutes de fenêtre ouverte. \\
     MSG-15 & HISTORY\_ROW & Séquence~; indice~; niveaux des $n$ colonnes (2 bits chacune)~; masque des colonnes inconnues~; indice de la colonne en cours. \\
     MSG-16 & COMFORT & Séquence~; indice~; température et humidité en dixièmes~; code du verdict~; indicateur \enquote{humidité non mesurée}. \\
     MSG-17 & ALERT & Séquence~; indice~; indice de pièce~; nature~; détail (minutes ou code). \\

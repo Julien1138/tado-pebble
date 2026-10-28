@@ -4,29 +4,12 @@
 #include "protocol.h"
 #include "store.h"
 #include "text.h"
+#include "ui.h"
+#include "win_detail.h"
 #include "win_link.h"
 
 #define REFRESH_MS (5 * 60 * 1000)
 #define AGE_SHOWN_SECONDS 120
-
-// La flèche n'existe pas dans les polices des montres noir et blanc de première génération.
-#ifdef PBL_COLOR
-  #define ARROW "→ "
-#else
-  #define ARROW "> "
-#endif
-
-#if PBL_DISPLAY_WIDTH >= 200
-  #define F_NAME FONT_KEY_GOTHIC_24_BOLD
-  #define F_SUB FONT_KEY_GOTHIC_18
-  #define F_TEMP FONT_KEY_GOTHIC_28_BOLD
-  #define F_TITLE FONT_KEY_GOTHIC_18_BOLD
-#else
-  #define F_NAME FONT_KEY_GOTHIC_18_BOLD
-  #define F_SUB FONT_KEY_GOTHIC_14
-  #define F_TEMP FONT_KEY_GOTHIC_24_BOLD
-  #define F_TITLE FONT_KEY_GOTHIC_14_BOLD
-#endif
 
 static Window *s_window;
 static Layer *s_title;
@@ -45,16 +28,6 @@ static const GPathInfo FLAME_INFO = {
 #endif
 
 // --- Couleurs (M-05) --------------------------------------------------------------------
-
-#ifdef PBL_COLOR
-static GColor band_color(uint8_t band) {
-  static const GColor colors[4] = {
-    { .argb = GColorVividCeruleanARGB8 }, { .argb = GColorCelesteARGB8 },
-    { .argb = GColorChromeYellowARGB8 }, { .argb = GColorOrangeARGB8 }
-  };
-  return colors[band > 3 ? 3 : band];
-}
-#endif
 
 // --- Contenu de la ligne ------------------------------------------------------------------
 
@@ -79,12 +52,6 @@ static void temp_text(const Room *room, char *out, size_t size) {
   }
 }
 
-static void draw_text(GContext *ctx, const char *text, const char *font, GRect rect,
-                      GTextAlignment align) {
-  graphics_draw_text(ctx, text, fonts_get_system_font(font), rect, GTextOverflowModeTrailingEllipsis,
-                     align, NULL);
-}
-
 #ifndef PBL_ROUND
 static void draw_flame(GContext *ctx, GPoint at, GColor color) {
   graphics_context_set_fill_color(ctx, color);
@@ -102,19 +69,19 @@ static void draw_row_rect(GContext *ctx, GRect b, const Room *room, GColor fg) {
   sub_text(room, sub, sizeof(sub));
 
   graphics_context_set_text_color(ctx, fg);
-  draw_text(ctx, room->name, F_NAME, GRect(4, -3, b.size.w - temp_w - 4, name_h), GTextAlignmentLeft);
-  draw_text(ctx, sub, F_SUB, GRect(4, name_h - 4, b.size.w - temp_w - 4, name_h), GTextAlignmentLeft);
+  ui_draw_text(ctx, room->name, F_NAME, GRect(4, -3, b.size.w - temp_w - 4, name_h), GTextAlignmentLeft);
+  ui_draw_text(ctx, sub, F_SUB, GRect(4, name_h - 4, b.size.w - temp_w - 4, name_h), GTextAlignmentLeft);
   if (room->flags & FLAG_NO_MEASURE) {
-    draw_text(ctx, temp, F_SUB, GRect(b.size.w - temp_w - 2, 2, temp_w, name_h), GTextAlignmentRight);
+    ui_draw_text(ctx, temp, F_SUB, GRect(b.size.w - temp_w - 2, 2, temp_w, name_h), GTextAlignmentRight);
   } else {
-    draw_text(ctx, temp, F_TEMP, GRect(b.size.w - temp_w - 2, -5, temp_w, name_h + 8), GTextAlignmentRight);
+    ui_draw_text(ctx, temp, F_TEMP, GRect(b.size.w - temp_w - 2, -5, temp_w, name_h + 8), GTextAlignmentRight);
   }
   if (room->flags & FLAG_HEATING) {
     snprintf(power, sizeof(power), "%d %%", room->power);
-    draw_text(ctx, power, F_SUB, GRect(b.size.w - temp_w - 2, name_h - 4, temp_w, name_h), GTextAlignmentRight);
+    ui_draw_text(ctx, power, F_SUB, GRect(b.size.w - temp_w - 2, name_h - 4, temp_w, name_h), GTextAlignmentRight);
     draw_flame(ctx, GPoint(b.size.w - temp_w + 4, b.size.h - 13), fg);
   } else if (!(room->flags & (FLAG_OFF | FLAG_OFFLINE))) {
-    draw_text(ctx, text_get(T_IDLE), F_SUB, GRect(b.size.w - temp_w - 2, name_h - 4, temp_w, name_h), GTextAlignmentRight);
+    ui_draw_text(ctx, text_get(T_IDLE), F_SUB, GRect(b.size.w - temp_w - 2, name_h - 4, temp_w, name_h), GTextAlignmentRight);
   }
 }
 
@@ -126,7 +93,7 @@ static void draw_row_round(GContext *ctx, GRect b, const Room *room, GColor fg, 
   temp_text(room, temp, sizeof(temp));
   if (!selected) {
     snprintf(line, sizeof(line), "%s %s", room->name, temp);
-    draw_text(ctx, line, FONT_KEY_GOTHIC_18_BOLD, GRect(0, (b.size.h - 22) / 2 - 2, b.size.w, 24),
+    ui_draw_text(ctx, line, FONT_KEY_GOTHIC_18_BOLD, GRect(0, (b.size.h - 22) / 2 - 2, b.size.w, 24),
               GTextAlignmentCenter);
     return;
   }
@@ -136,14 +103,18 @@ static void draw_row_round(GContext *ctx, GRect b, const Room *room, GColor fg, 
     strncat(sub, power, sizeof(sub) - strlen(sub) - 1);
   }
   int unit = b.size.h / 4;
-  draw_text(ctx, room->name, FONT_KEY_GOTHIC_24_BOLD, GRect(10, 0, b.size.w - 20, unit + 6), GTextAlignmentCenter);
-  draw_text(ctx, temp, FONT_KEY_GOTHIC_28_BOLD, GRect(0, unit - 2, b.size.w, unit + 14), GTextAlignmentCenter);
-  draw_text(ctx, sub, FONT_KEY_GOTHIC_18, GRect(10, b.size.h - unit - 2, b.size.w - 20, unit), GTextAlignmentCenter);
+  ui_draw_text(ctx, room->name, FONT_KEY_GOTHIC_24_BOLD, GRect(10, 0, b.size.w - 20, unit + 6), GTextAlignmentCenter);
+  ui_draw_text(ctx, temp, FONT_KEY_GOTHIC_28_BOLD, GRect(0, unit - 2, b.size.w, unit + 14), GTextAlignmentCenter);
+  ui_draw_text(ctx, sub, FONT_KEY_GOTHIC_18, GRect(10, b.size.h - unit - 2, b.size.w - 20, unit), GTextAlignmentCenter);
 }
 
 #endif
 
 // --- Menu (M-06, via MenuLayer) -------------------------------------------------------------
+
+static void menu_select(MenuLayer *layer, MenuIndex *index, void *context) {
+  win_detail_push(index->row);
+}
 
 static uint16_t menu_rows(MenuLayer *layer, uint16_t section, void *context) {
   return g_view.count;
@@ -162,7 +133,7 @@ static void menu_draw(GContext *ctx, const Layer *cell, MenuIndex *index, void *
   GRect b = layer_get_bounds(cell);
   bool selected = menu_layer_is_index_selected(s_menu, index);
 #ifdef PBL_COLOR
-  GColor bg = band_color(room->band);
+  GColor bg = ui_band_color(room->band);
   GColor fg = GColorBlack;
 #else
   // Noir et blanc : une pièce qui chauffe est en vidéo inversée (TPB-PLT-003).
@@ -216,29 +187,17 @@ static void banner_text(char *out, size_t size) {
 }
 
 static void title_draw(Layer *layer, GContext *ctx) {
-  GRect b = layer_get_bounds(layer);
-  char left[40];
-  GColor bg = PBL_IF_COLOR_ELSE(GColorOrange, GColorBlack);
-  GColor fg = PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite);
-  graphics_context_set_fill_color(ctx, bg);
-  graphics_fill_rect(ctx, b, 0, GCornerNone);
-  graphics_context_set_text_color(ctx, fg);
-
+  char title[40];
 #ifdef PBL_ROUND
-  banner_text(left, sizeof(left));
-  if (left[0] == '\0') {
-    snprintf(left, sizeof(left), "%s", text_get(T_HOUSE));
+  banner_text(title, sizeof(title));
+  if (title[0] == '\0') {
+    snprintf(title, sizeof(title), "%s", text_get(T_HOUSE));
   }
-  draw_text(ctx, left, FONT_KEY_GOTHIC_18_BOLD, GRect(0, PBL_DISPLAY_WIDTH > 200 ? 6 : 2, b.size.w, 24),
-            GTextAlignmentCenter);
 #else
-  char clock[10];
-  clock_copy_time_string(clock, sizeof(clock));
-  snprintf(left, sizeof(left), "%s · %s", text_get(T_HOUSE),
+  snprintf(title, sizeof(title), "%s · %s", text_get(T_HOUSE),
            text_get(g_view.presence_state == PRESENCE_AWAY ? T_ABSENT : T_PRESENT));
-  draw_text(ctx, left, F_TITLE, GRect(4, 0, b.size.w - 46, b.size.h), GTextAlignmentLeft);
-  draw_text(ctx, clock, F_TITLE, GRect(b.size.w - 46, 0, 42, b.size.h), GTextAlignmentRight);
 #endif
+  ui_draw_title(ctx, layer_get_bounds(layer), title, true);
 }
 
 static void banner_draw(Layer *layer, GContext *ctx) {
@@ -246,7 +205,7 @@ static void banner_draw(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, PBL_IF_COLOR_ELSE(GColorDarkCandyAppleRed, GColorBlack));
   graphics_fill_rect(ctx, b, 0, GCornerNone);
   graphics_context_set_text_color(ctx, GColorWhite);
-  draw_text(ctx, s_banner_text, F_SUB, GRect(4, -2, b.size.w - 8, b.size.h + 2), GTextAlignmentLeft);
+  ui_draw_text(ctx, s_banner_text, F_SUB, GRect(4, -2, b.size.w - 8, b.size.h + 2), GTextAlignmentLeft);
 }
 
 // Place le bandeau, la liste et le message « Chargement » selon l'état.
@@ -288,7 +247,8 @@ static void window_load(Window *window) {
   layer_set_update_proc(s_banner, banner_draw);
   s_menu = menu_layer_create(GRect(0, TITLE_H, b.size.w, b.size.h - TITLE_H));
   menu_layer_set_callbacks(s_menu, NULL, (MenuLayerCallbacks){
-    .get_num_rows = menu_rows, .get_cell_height = menu_height, .draw_row = menu_draw
+    .get_num_rows = menu_rows, .get_cell_height = menu_height, .draw_row = menu_draw,
+    .select_click = menu_select
   });
   menu_layer_set_normal_colors(s_menu, GColorBlack, GColorWhite);
   menu_layer_set_highlight_colors(s_menu, GColorBlack, GColorWhite);
@@ -343,6 +303,12 @@ void win_pieces_reload(void) {
   }
   menu_layer_reload_data(s_menu);
   relayout();
+}
+
+void win_pieces_select(uint8_t row) {
+  if (s_window && row < g_view.count) {
+    menu_layer_set_selected_index(s_menu, MenuIndex(0, row), MenuRowAlignCenter, false);
+  }
 }
 
 void win_pieces_status_changed(void) {

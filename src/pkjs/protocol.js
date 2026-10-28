@@ -7,11 +7,13 @@ module.exports = {
   MSG_STATUS: 11,
   MSG_ROOMS_HEAD: 12,
   MSG_ROOM: 13,
+  MSG_DETAIL: 14,
   MSG_LINK_CODE: 22,
   MSG_READY: 30,
 
   // Objets demandables (clé Object)
   OBJ_ROOMS: 1,
+  OBJ_DETAIL: 2,
 
   // Commandes (clé Command)
   CMD_LINK: 1,
@@ -50,6 +52,10 @@ module.exports = {
   MODE_TIMER: 1,
   MODE_NEXT_BLOCK: 2,
   MODE_MANUAL: 3,
+
+  // Valeurs absentes dans MSG_DETAIL (EndTime, NextTime : minutes depuis minuit)
+  NONE: -1,
+  NO_TEMP: -999,
 
   // Unité (clé Unit)
   UNIT_C: 0,

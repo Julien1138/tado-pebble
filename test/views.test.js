@@ -103,3 +103,67 @@ test('statut : âge et hors connexion', function() {
   assert.equal(s.ageSeconds, 130);
   assert.equal(s.offline, true);
 });
+
+function at(hours, minutes) {
+  var d = new Date(2026, 9, 28, hours, minutes);
+  return d.toISOString();
+}
+function clock(hours, minutes) {
+  return hours * 60 + minutes;
+}
+
+test('détail : programme, fin au prochain changement, prochain changement, humidité', function() {
+  var state = zone({
+    nextScheduleChange: { start: at(22, 0), setting: { power: 'ON', temperature: { celsius: 16.5, fahrenheit: 61.7 } } },
+    sensorDataPoints: { insideTemperature: { celsius: 19.4 }, humidity: { percentage: 52.4 } }
+  });
+  var d = views.buildDetail({ id: 1, name: 'Salon', state: state }, 'CELSIUS', Date.now());
+  assert.equal(d.mode, P.MODE_SCHEDULE);
+  assert.equal(d.endTime, clock(22, 0));
+  assert.equal(d.nextTime, clock(22, 0));
+  assert.equal(d.nextTemp, 165);
+  assert.equal(d.humidity, 52);
+  assert.equal(d.windowMinutes, 0);
+});
+
+test('détail : forçage minuté, durée restante et heure de fin', function() {
+  var state = zone({
+    overlay: { termination: { type: 'TIMER', typeSkillBasedApp: 'TIMER', remainingTimeInSeconds: 2400, expiry: at(20, 40) } },
+    nextScheduleChange: { start: at(22, 0), setting: { power: 'OFF', temperature: null } }
+  });
+  var d = views.buildDetail({ id: 1, name: 'Salon', state: state }, 'CELSIUS', Date.now());
+  assert.equal(d.mode, P.MODE_TIMER);
+  assert.equal(d.remaining, 40);
+  assert.equal(d.endTime, clock(20, 40));
+  assert.equal(d.nextTemp, P.NO_TEMP);
+  assert.equal(d.humidity, P.NONE);
+});
+
+test('détail : jusqu\'au prochain créneau et jusqu\'à nouvel ordre', function() {
+  function detail(termination) {
+    return views.buildDetail({ id: 1, name: 'A', state: zone({ overlay: { termination: termination },
+      nextScheduleChange: { start: at(7, 30), setting: { power: 'ON', temperature: { celsius: 16 } } } }) }, 'CELSIUS', Date.now());
+  }
+  var next = detail({ type: 'TADO_MODE', typeSkillBasedApp: 'TADO_MODE', projectedExpiry: at(7, 30) });
+  assert.equal(next.mode, P.MODE_NEXT_BLOCK);
+  assert.equal(next.endTime, clock(7, 30));
+  var manual = detail({ type: 'MANUAL', typeSkillBasedApp: 'MANUAL', projectedExpiry: null });
+  assert.equal(manual.mode, P.MODE_MANUAL);
+  assert.equal(manual.endTime, P.NONE);
+});
+
+test('détail : fenêtre ouverte depuis quatre minutes ; sans prochain changement', function() {
+  var now = Date.parse('2026-10-28T20:00:00Z');
+  var d = views.buildDetail({ id: 1, name: 'A', state: zone({
+    openWindow: { detectedTime: '2026-10-28T19:56:00Z' }, nextScheduleChange: null }) }, 'CELSIUS', now);
+  assert.equal(d.windowMinutes, 4);
+  assert.equal(d.nextTime, P.NONE);
+  assert.equal(d.nextTemp, P.NO_TEMP);
+  assert.equal(d.endTime, P.NONE);
+});
+
+test('détail : Fahrenheit', function() {
+  var d = views.buildDetail({ id: 1, name: 'A', state: zone({
+    nextScheduleChange: { start: at(22, 0), setting: { power: 'ON', temperature: { celsius: 16.5, fahrenheit: 61.7 } } } }) }, 'FAHRENHEIT', Date.now());
+  assert.equal(d.nextTemp, 617);
+});

@@ -15,6 +15,7 @@ typedef struct {
 } Header;
 
 View g_view;
+Detail g_detail;
 static Room s_staging[MAX_ROOMS];
 static uint8_t s_staging_count;
 static uint8_t s_staging_unit;

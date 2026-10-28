@@ -204,3 +204,20 @@ test('liaison : l\'adresse de validation reste disponible tant que la liaison es
   await f.settle(); await f.settle();
   assert.equal(t.app.pendingLinkUrl(), null);
 });
+
+test('détail : répond depuis les données déjà lues, sans nouvelle requête', async function() {
+  var t = setup(OPEN.slice());
+  t.app.onMessage(get(1));
+  await f.settle(); await f.settle();
+  var calls = t.http.calls.length;
+  t.sent.length = 0;
+  t.app.onMessage({ MsgType: P.MSG_GET, Seq: 2, Object: P.OBJ_DETAIL, Index: 1 });
+  await f.settle(); await f.settle();
+  assert.equal(t.http.calls.length, calls);
+  assert.equal(t.sent.length, 1);
+  assert.equal(t.sent[0].MsgType, P.MSG_DETAIL);
+  assert.equal(t.sent[0].Seq, 2);
+  assert.equal(t.sent[0].Index, 1);
+  assert.equal(t.sent[0].Mode, P.MODE_SCHEDULE);
+  assert.equal(t.sent[0].Humidity, P.NONE);
+});

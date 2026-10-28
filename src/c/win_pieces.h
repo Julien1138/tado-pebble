@@ -5,3 +5,5 @@
 void win_pieces_push(void);
 void win_pieces_reload(void);
 void win_pieces_status_changed(void);
+// Sélectionne une pièce (retour du détail, TPB-PIE-011).
+void win_pieces_select(uint8_t row);

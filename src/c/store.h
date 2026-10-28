@@ -28,7 +28,21 @@ typedef struct {
   Room rooms[MAX_ROOMS];
 } View;
 
+// Détail de la pièce ouverte (MSG-14), valable tant que valid est vrai.
+typedef struct {
+  bool valid;
+  uint8_t index;
+  uint8_t mode;
+  uint16_t remaining;      // minutes de forçage restantes
+  int16_t end_time;        // minutes depuis minuit, DETAIL_NONE si indéfini
+  int16_t next_time;       // prochain changement de la programmation
+  int16_t next_temp;       // dixièmes, DETAIL_NO_TEMP si éteint
+  int16_t humidity;        // %, DETAIL_NONE si pas de capteur
+  uint16_t window_minutes;
+} Detail;
+
 extern View g_view;
+extern Detail g_detail;
 
 void store_init(void);
 // Réception d'une liste : begin, puis chaque pièce ; commit quand toutes sont arrivées.

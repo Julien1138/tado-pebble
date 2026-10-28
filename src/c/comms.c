@@ -34,6 +34,7 @@ typedef struct {
   int32_t type;
   int32_t arg;
   bool refresh;
+  uint8_t index;
 } Request;
 
 #define QUEUE_SIZE 6
@@ -57,8 +58,11 @@ static void send_next(void) {
   } else {
     dict_write_int32(iter, MESSAGE_KEY_Seq, req.arg);
     if (req.type == MSG_GET) {
-      dict_write_int32(iter, MESSAGE_KEY_Object, OBJ_ROOMS);
+      dict_write_int32(iter, MESSAGE_KEY_Object, req.index == 0xFF ? OBJ_ROOMS : OBJ_DETAIL);
       dict_write_int32(iter, MESSAGE_KEY_Refresh, req.refresh ? 1 : 0);
+      if (req.index != 0xFF) {
+        dict_write_int32(iter, MESSAGE_KEY_Index, req.index);
+      }
     } else {
       dict_write_int32(iter, MESSAGE_KEY_Command, req.refresh ? CMD_UNLINK : CMD_LINK);
     }
@@ -67,9 +71,9 @@ static void send_next(void) {
   app_message_outbox_send();
 }
 
-static void enqueue(int32_t type, int32_t arg, bool flag) {
+static void enqueue(int32_t type, int32_t arg, bool flag, uint8_t index) {
   if (s_queue_len < QUEUE_SIZE) {
-    s_queue[s_queue_len++] = (Request){ .type = type, .arg = arg, .refresh = flag };
+    s_queue[s_queue_len++] = (Request){ .type = type, .arg = arg, .refresh = flag, .index = index };
   }
   send_next();
 }
@@ -88,7 +92,7 @@ static void on_inbox(DictionaryIterator *iter, void *context) {
   int32_t type = int_of(iter, MESSAGE_KEY_MsgType, 0);
   if (type == MSG_READY) {
     s_ready = true;
-    enqueue(MSG_HELLO, text_is_french() ? 1 : 0, false);
+    enqueue(MSG_HELLO, text_is_french() ? 1 : 0, false, 0xFF);
     comms_request_rooms(false);
     return;
   }
@@ -130,6 +134,18 @@ static void on_inbox(DictionaryIterator *iter, void *context) {
       }
       break;
     }
+    case MSG_DETAIL:
+      g_detail.valid = true;
+      g_detail.index = int_of(iter, MESSAGE_KEY_Index, 0);
+      g_detail.mode = int_of(iter, MESSAGE_KEY_Mode, MODE_SCHEDULE);
+      g_detail.remaining = int_of(iter, MESSAGE_KEY_Remaining, 0);
+      g_detail.end_time = int_of(iter, MESSAGE_KEY_EndTime, DETAIL_NONE);
+      g_detail.next_time = int_of(iter, MESSAGE_KEY_NextTime, DETAIL_NONE);
+      g_detail.next_temp = int_of(iter, MESSAGE_KEY_NextTemp, DETAIL_NO_TEMP);
+      g_detail.humidity = int_of(iter, MESSAGE_KEY_Humidity, DETAIL_NONE);
+      g_detail.window_minutes = int_of(iter, MESSAGE_KEY_WindowMin, 0);
+      s_handlers.detail_changed();
+      break;
     case MSG_LINK_CODE: {
       char code[8];
       copy_string(code, sizeof(code), iter, MESSAGE_KEY_LinkCode);
@@ -158,18 +174,25 @@ bool comms_ready(void) {
 
 void comms_request_rooms(bool refresh) {
   if (s_ready) {
-    enqueue(MSG_GET, ++s_seq, refresh);
+    enqueue(MSG_GET, ++s_seq, refresh, 0xFF);
+  }
+}
+
+void comms_request_detail(uint8_t index) {
+  g_detail.valid = false;
+  if (s_ready) {
+    enqueue(MSG_GET, ++s_seq, false, index);
   }
 }
 
 void comms_request_link(void) {
   if (s_ready) {
-    enqueue(MSG_DO, ++s_seq, false);
+    enqueue(MSG_DO, ++s_seq, false, 0xFF);
   }
 }
 
 void comms_request_unlink(void) {
   if (s_ready) {
-    enqueue(MSG_DO, ++s_seq, true);
+    enqueue(MSG_DO, ++s_seq, true, 0xFF);
   }
 }

@@ -143,8 +143,48 @@ function buildRooms(data) {
   };
 }
 
+function minutesOfDay(iso) {
+  var d = new Date(iso);
+  return d.getHours() * 60 + d.getMinutes();
+}
+
+// Détail d'une pièce (MSG-14) : mode en cours et sa fin, prochain changement, humidité, fenêtre.
+// entry : une pièce de J-06 ; now : heure courante en millisecondes.
+function buildDetail(entry, unit, now) {
+  var s = entry.state;
+  var key = unit === 'FAHRENHEIT' ? 'fahrenheit' : 'celsius';
+  var m = mode(s.overlay);
+  var next = s.nextScheduleChange;
+  var nextTime = next && next.start ? minutesOfDay(next.start) : P.NONE;
+  var nextTemp = P.NO_TEMP;
+  if (next && next.setting && next.setting.power === 'ON' && next.setting.temperature) {
+    nextTemp = tenths(next.setting.temperature[key]);
+  }
+  var endTime = nextTime;
+  if (s.overlay) {
+    var term = s.overlay.termination || {};
+    var end = term.expiry || term.projectedExpiry;
+    endTime = m.mode !== P.MODE_MANUAL && end ? minutesOfDay(end) : P.NONE;
+  }
+  var humidity = s.sensorDataPoints && s.sensorDataPoints.humidity;
+  var windowMinutes = 0;
+  if (s.openWindow && s.openWindow.detectedTime) {
+    windowMinutes = Math.max(0, Math.floor((now - Date.parse(s.openWindow.detectedTime)) / 60000));
+  }
+  return {
+    mode: m.mode,
+    remaining: m.remaining,
+    endTime: endTime,
+    nextTime: nextTime,
+    nextTemp: nextTemp,
+    humidity: humidity && typeof humidity.percentage === 'number' ? Math.round(humidity.percentage) : P.NONE,
+    windowMinutes: windowMinutes
+  };
+}
+
 module.exports = {
   buildRooms: buildRooms,
+  buildDetail: buildDetail,
   abbreviations: abbreviations,
   truncateBytes: truncateBytes,
   band: band

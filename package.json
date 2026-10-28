@@ -53,7 +53,12 @@
       "Remaining",
       "LinkCode",
       "LinkSeconds",
-      "LinkState"
+      "LinkState",
+      "Humidity",
+      "EndTime",
+      "NextTime",
+      "NextTemp",
+      "WindowMin"
     ],
     "resources": {
       "media": []

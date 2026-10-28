@@ -3,6 +3,7 @@
 // home (J-06), views (J-11), cache (J-04), openUrl(url).
 var P = require('./protocol');
 
+
 var CACHE_KEYS = ['home', 'zones', 'zoneStates', 'state'];
 
 function createApp(deps) {
@@ -12,6 +13,7 @@ function createApp(deps) {
   var views = deps.views;
   var cache = deps.cache;
   var openUrl = deps.openUrl;
+  var now = deps.now || function() { return Date.now(); };
   var linkLost = false;
   var cancelLink = null;
   var pendingUrl = null;
@@ -59,6 +61,21 @@ function createApp(deps) {
     });
   }
 
+  // Détail d'une pièce, d'après les données déjà lues (aucune requête si elles sont fraîches).
+  function sendDetail(seq, index) {
+    home.rooms({ force: false }, function(err, data) {
+      if (err || !data.rooms[index]) {
+        return;
+      }
+      var d = views.buildDetail(data.rooms[index], data.unit, now());
+      messenger.replace([{
+        MsgType: P.MSG_DETAIL, Seq: seq, Index: index, Mode: d.mode, Remaining: d.remaining,
+        EndTime: d.endTime, NextTime: d.nextTime, NextTemp: d.nextTemp,
+        Humidity: d.humidity, WindowMin: d.windowMinutes
+      }]);
+    });
+  }
+
   function onGet(payload) {
     var seq = payload.Seq;
     if (!link.isLinked()) {
@@ -66,6 +83,8 @@ function createApp(deps) {
     }
     if (payload.Object === P.OBJ_ROOMS) {
       sendRooms(seq, !!payload.Refresh);
+    } else if (payload.Object === P.OBJ_DETAIL) {
+      sendDetail(seq, payload.Index);
     }
   }
 
