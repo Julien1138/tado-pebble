@@ -7,21 +7,18 @@
   \item[Tado reste l'unique source.] L'application ne mesure ni ne commande rien par
     elle-même~: elle montre ce que Tado lui dit et lui transmet les ordres de l'utilisateur.
     Ce que Tado ne met pas à la disposition des applications tierces est abandonné.
-  \item[Volume de requêtes.] Un compte standard n'autorise que 100 requêtes par jour [N2]. Les
-    exigences d'actualisation (§\ref{sec:actualisation}) en tirent les conséquences~; elles
-    deviennent moins contraintes pour un compte Auto-Assist.
   \item[Eau chaude et climatisation exclues.] La maison n'en a pas~; l'application ne les
     montre pas.
   \item[Présence par géolocalisation.] Le mode \emph{Auto} de Tado se fonde sur la position
     des appareils mobiles suivis, pas sur leur connexion au wifi~; ce choix est retenu. L'utilisateur n'a pas l'abonnement
-    Auto-Assist, mais la géolocalisation fonctionne dans son application Android~; que l'API
-    donne accès à ce mode sans l'abonnement reste à vérifier.
+    Auto-Assist, mais la géolocalisation fonctionne dans son application Android~; l'API
+    accepte de rendre la présence à ce mode sans l'abonnement (vérifié le 28 octobre 2026).
   \item[Fonctions conditionnées à l'API Tado.] Le bien-être ambiant et les alertes
     reprennent ce que montre l'application Android Tado. Toute information que l'API de
     Tado ne fournit pas est abandonnée, avec la fonction qui en dépend.
   \item[Montre associée à un téléphone.] Une montre Pebble n'atteint le réseau que par le
     téléphone auquel elle est associée~; lorsqu'elle s'en éloigne, elle ne reçoit plus rien
-    de Tado (\refexig{TPB-ACT-009}).
+    de Tado (\refexig{TPB-ACT-006}).
   \item[Programmation faite ailleurs.] Les plages horaires se règlent dans l'application
     mobile Tado~; l'application les lit, ne les écrit pas.
 \end{description}

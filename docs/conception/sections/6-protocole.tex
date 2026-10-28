@@ -34,7 +34,7 @@
     MSG-03 & DO & Séquence~; commande (forcer, programmation, éteindre, présence, raccourci, lier, délier)~; indice de pièce~; température en dixièmes~; durée (code)~; numéro de raccourci. \\
     \midrule
     \multicolumn{3}{@{}l}{\textit{Du téléphone vers la montre}} \\
-    MSG-11 & STATUS & Séquence~; état de la liaison (non liée, perdue, active)~; âge de la donnée affichée (secondes)~; indicateurs~: hors connexion, quota épuisé, attente~; mode et état de présence~; nombre d'alertes. \\
+    MSG-11 & STATUS & Séquence~; état de la liaison (non liée, perdue, active)~; âge de la donnée affichée (secondes)~; indicateurs~: hors connexion, attente~; mode et état de présence~; nombre d'alertes. \\
     MSG-12 & ROOMS\_HEAD & Séquence~; nombre de pièces~; unité (C ou F). \\
     MSG-13 & ROOM & Séquence~; indice~; nom (20 octets)~; abréviation (4)~; température mesurée~; consigne~; puissance (\%)~; tranche de couleur~; indicateurs (chauffe, forcée, éteinte, hors ligne, fenêtre ouverte)~; code de mode et durée restante. \\
     MSG-14 & DETAIL & Séquence~; indice~; code de mode~; heure de fin~; heure et température du prochain changement~; humidité (\%)~; minutes de fenêtre ouverte. \\
@@ -44,7 +44,7 @@
     MSG-18 & PRESENCE & Séquence~; mode (Présent, Absent, Auto)~; état~; nombre d'appareils présents~; indicateur \enquote{Auto indisponible}. \\
     MSG-19 & SHORTCUTS & Séquence~; masque des raccourcis offerts. \\
     MSG-20 & CAPS & Séquence~; indice de pièce~; minimum, maximum et pas de consigne, en dixièmes. \\
-    MSG-21 & ACK & Séquence~; résultat (pris en compte, refusé, échec, indisponible, quota, hors connexion, Auto indisponible). Suivi de la vue relue. \\
+    MSG-21 & ACK & Séquence~; résultat (pris en compte, refusé, échec, indisponible, hors connexion, Auto indisponible). Suivi de la vue relue. \\
     MSG-22 & LINK\_CODE & Code à saisir (6 caractères)~; secondes restantes~; état (en attente, validé, expiré, refusé). \\
     \bottomrule
   \end{tabularx}

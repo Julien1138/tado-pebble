@@ -11,10 +11,10 @@ Ces contraintes ne se négocient pas~: la conception s'y plie.
     \textbf{Réf.} & \textbf{Contrainte} & \textbf{Conséquence pour la conception} \\
     \midrule\endhead
     \bottomrule\endfoot
-    C1 & Quota de 100 requêtes par jour pour un compte standard [E2]. Chaque réponse porte un en-tête \texttt{RateLimit} (restant, secondes avant renouvellement) et \texttt{RateLimit-Policy} (quota). Les écritures comptent [E4]. & Un composant unique compte, cache et limite toutes les requêtes (§\ref{sec:quota}). Le quota réel est lu dans l'en-tête, non supposé. \\
+    C1 & Tado compte les requêtes par jour [E2]~: 100 pour un compte standard, 20\,000 observés sur le compte de l'utilisateur (§\ref{sec:observations}). Ce volume n'est pas une contrainte de conception. & Aucun composant ne compte ni ne limite les requêtes~; un refus \texttt{429} est traité comme une erreur de Tado ordinaire (§\ref{sec:erreurs}). \\
     C2 & L'API de Tado est non officielle pour les tiers~; la spécification communautaire [E3] signale que les chemins de zone ne valent que pour les installations \emph{classiques}, pas pour Tado~X. & Toute dépendance à un chemin est isolée dans un seul composant (\texttt{J-03}). Hypothèse H1. \\
     C3 & Authentification par code d'appareil [E1, N3]~: jeton d'accès de courte vie, jeton de rafraîchissement \emph{à rotation} (chaque usage invalide le précédent), valable 30 jours au plus. & Le jeton le plus récent est toujours écrit avant d'être utilisé~; une montre inutilisée plus de 30 jours impose une nouvelle liaison (\texttt{TPB-CPT-005}). \\
-    C4 & La géolocalisation de Tado et la restitution du mode \emph{Auto} (\texttt{DELETE presenceLock}) exigent un abonnement Auto-Assist~[E3]. & Le mode \emph{Auto} n'est offert que s'il est disponible (H2). \\
+    C4 & La géolocalisation de Tado et la restitution du mode \emph{Auto} (\texttt{DELETE presenceLock}) exigent un abonnement Auto-Assist~[E3]~; \emph{observé}~: le retour à \emph{Auto} est accepté sur le compte de l'utilisateur, qui n'a pas l'abonnement. & Le mode \emph{Auto} n'est offert que s'il est disponible~; un refus \texttt{403} reste géré pour un autre compte (H2). \\
     C5 & Le pkjs ne s'exécute que pendant que la watchapp est ouverte, ou qu'une page de configuration l'est. Il n'existe pas de tâche de fond. & Pas d'alerte poussée sans ouvrir l'application (DEC-08). \\
     C6 & Les tampons AppMessage sont de taille fixe~; un message plus gros que le tampon est perdu. & Messages petits, paginés (§\ref{sec:protocole}). \\
     C7 & Stockage de la watchapp~: 4~Ko sur aplite, basalt, chalk et diorite~; 1~Mo sur emery, gabbro et flint [E5]. Mémoire de travail réduite sur aplite. & La watchapp ne conserve que la dernière situation (quelques centaines d'octets) (\texttt{TPB-INF-001}). \\
@@ -29,12 +29,12 @@ Ces contraintes ne se négocient pas~: la conception s'y plie.
     système Tado classique, non de Tado~X. Si cela changeait, les chemins de zone changeraient
     d'hôte et de forme~: seul \texttt{J-03} serait à réécrire.
   \item[H2. Pas d'Auto-Assist.] L'utilisateur n'a pas l'abonnement Auto-Assist, mais la
-  géolocalisation fonctionne dans son application Android Tado. Le quota est donc celui d'un compte
-  standard (100 requêtes par jour, à confirmer par l'en-tête). Que l'API accepte de rendre la
-  présence à la géolocalisation (\texttt{DELETE presenceLock}) sans l'abonnement n'est pas établi~:
-  l'application ne le suppose pas, elle découvre le refus de Tado (§\ref{sec:presence}).
+  géolocalisation fonctionne dans son application Android Tado. \emph{Observé le 28 octobre 2026~:}
+  l'API annonce pourtant 20\,000 requêtes par jour (\texttt{RateLimit-Policy}) et accepte
+  \texttt{DELETE presenceLock} (204). Un éventuel refus \texttt{403} reste géré
+  pour un autre compte (§\ref{sec:presence}).
   \item[H3. Téléphone à portée.] La montre n'atteint Tado que par le téléphone associé
-    (cahier des charges, \texttt{TPB-ACT-009}).
+    (cahier des charges, \texttt{TPB-ACT-006}).
   \item[H4. Stockage local du pkjs.] Le \texttt{localStorage} du pkjs survit entre deux
     ouvertures de la watchapp. Il peut être vidé par l'utilisateur (désinstallation, nettoyage)~:
     l'application doit alors redemander la liaison.
@@ -57,7 +57,7 @@ Ces contraintes ne se négocient pas~: la conception s'y plie.
       lbl/.style={font=\sffamily\scriptsize, text=exigBleu!80!black, align=center},
     ]
     \node[bloc] (mon) at (0, 0)    {\textbf{Watchapp}\\langage C\\écrans, boutons,\\dernière situation};
-    \node[bloc] (tel) at (6.4, 0)  {\textbf{pkjs}\\JavaScript, téléphone\\logique Tado, cache,\\quota, vues};
+    \node[bloc] (tel) at (6.4, 0)  {\textbf{pkjs}\\JavaScript, téléphone\\logique Tado, cache,\\vues};
     \node[ext]  (log) at (12.2, 1.2)  {login.tado.com\\\textit{autorisation}};
     \node[ext]  (api) at (12.2, -1.2) {my.tado.com\\\textit{API v2}};
     \draw[fleche] (mon) -- node[lbl, above=1pt]{AppMessage} node[lbl, below=1pt]{Bluetooth} (tel);
@@ -69,7 +69,7 @@ Ces contraintes ne se négocient pas~: la conception s'y plie.
 \end{figure}
 
 La watchapp ne parle jamais à Tado. Elle envoie des \emph{demandes} au pkjs et reçoit des
-\emph{vues}~; le pkjs porte toute la connaissance de Tado, du quota et des jetons. Aucun
+\emph{vues}~; le pkjs porte toute la connaissance de Tado, et des jetons. Aucun
 serveur n'est ajouté entre le téléphone et Tado.
 
 \subsection{Décisions d'architecture}
@@ -115,12 +115,12 @@ serveur n'est ajouté entre le téléphone et Tado.
 \end{decision}
 
 \begin{decision}{DEC-04}{Requêtes groupées}
-  \attr{Contexte} Chaque requête coûte du quota (C1).
+  \attr{Contexte} Chaque requête coûte une attente réseau, d'autant plus longue que le téléphone passe par Bluetooth.
   \attr{Décision} L'état de toutes les pièces vient d'une seule requête (\texttt{zoneStates}), la
   présence d'une seule (\texttt{state}). Les raccourcis utilisent les routes groupées
   \texttt{POST /overlay} et \texttt{DELETE /overlay?rooms=}. Aucune requête par pièce n'est faite pour la liste.
   \attr{Conséquences} Le coût d'ouverture est de deux requêtes, quel que soit le nombre de pièces.
-  \attr{Exigences} \refexig{TPB-ACT-005}, \refexig{TPB-RAC-002}, \refexig{TPB-RAC-003}.
+  \attr{Exigences} \refexig{TPB-RAC-002}, \refexig{TPB-RAC-003}.
 \end{decision}
 
 \begin{decision}{DEC-05}{Historique par rapport du jour, avec cache}
@@ -128,23 +128,22 @@ serveur n'est ajouté entre le téléphone et Tado.
   \attr{Décision} Le pkjs demande le rapport du jour de chaque pièce (\texttt{dayReport}), qui
   contient les périodes d'appel de chaleur, et en tire douze colonnes. Un rapport de jour échu
   est conservé définitivement~; celui du jour courant se renouvelle au plus toutes les 30 minutes.
-  \attr{Alternatives écartées} Échantillonner la puissance à intervalles réguliers~: consomme du
-  quota à chaque ouverture, laisse des trous lorsque l'application est fermée.
+  \attr{Alternatives écartées} Échantillonner la puissance à intervalles réguliers~: multiplie les requêtes à chaque ouverture, laisse des trous lorsque l'application est fermée.
   \attr{Conséquences} Un historique complet coûte une requête par pièce, deux par pièce avant
   midi (la fenêtre de douze heures chevauche minuit). Les niveaux de chauffe du rapport sont au
   nombre de quatre, non des pourcentages~: voir DEC-11 et le retour R3 (§\ref{sec:retours}).
   \attr{Exigences} \refexig{TPB-HIS-001}, \refexig{TPB-HIS-002}, \refexig{TPB-HIS-007}, \refexig{TPB-HIS-008}.
 \end{decision}
 
-\begin{decision}{DEC-06}{Un seul gardien du quota}
-  \attr{Contexte} Les consultations ne doivent pas empêcher une commande (\refexig{TPB-ACT-006}).
-  \attr{Décision} Toutes les requêtes passent par le composant \texttt{J-05}. Il lit les en-têtes
-  \texttt{RateLimit}, refuse toute \emph{lecture} lorsqu'il reste dix requêtes ou moins, et
-  n'accepte plus que les commandes. Il sert les données du cache lorsqu'il refuse.
-  \attr{Conséquences} Lorsque le quota est épuisé, l'application l'annonce
-  (\refexig{TPB-ACT-007}) et affiche le cache avec son âge. Le nombre de requêtes restantes n'est
-  jamais montré (\refexig{TPB-ACT-010}).
-  \attr{Exigences} \refexig{TPB-ACT-005} à \refexig{TPB-ACT-007}, \refexig{TPB-ACT-010}.
+\begin{decision}{DEC-06}{Un seul gardien du quota (remplacée)}
+  \attr{Contexte} La décision supposait 100 requêtes par jour et une réserve de dix pour les commandes.
+  \attr{Décision} Remplacée le 28 octobre 2026~: le compte de l'utilisateur annonce 20\,000 requêtes
+  par jour (§\ref{sec:observations}) et le volume cesse d'être une contrainte. Le composant \texttt{J-05}, la
+  réserve et les exigences correspondantes sont abandonnés.
+  \attr{Conséquences} Les lectures ne sont plus refusées par prudence~; le cache ne sert plus qu'aux
+  âges et à l'ouverture immédiate. Si l'API devait un jour refuser (\texttt{429}), l'application traite le
+  refus comme tout autre échec de Tado.
+  \attr{Exigences} \refexig{TPB-ACT-007}.
 \end{decision}
 
 \begin{decision}{DEC-07}{Dernière situation à deux endroits}
@@ -153,7 +152,7 @@ serveur n'est ajouté entre le téléphone et Tado.
   l'heure de son obtention~; le pkjs conserve dans son cache toutes les données de Tado
   avec leur âge. À l'ouverture, la watchapp affiche sa copie, puis la remplace.
   \attr{Conséquences} Quelques centaines d'octets sur la montre, compatibles avec 4~Ko.
-  \attr{Exigences} \refexig{TPB-ACT-001}, \refexig{TPB-ACT-002}, \refexig{TPB-ACT-009},
+  \attr{Exigences} \refexig{TPB-ACT-001}, \refexig{TPB-ACT-002}, \refexig{TPB-ACT-006},
   \refexig{TPB-INF-001}, \refexig{TPB-INF-002}.
 \end{decision}
 
@@ -184,7 +183,7 @@ serveur n'est ajouté entre le téléphone et Tado.
   ne renvoie à la montre que cet état. Une commande refusée est annoncée comme telle, sans
   réessai automatique, et sans file d'attente (\refexig{TPB-PIL-011}).
   \attr{Conséquences} Une commande coûte deux requêtes (l'écriture et la relecture).
-  \attr{Exigences} \refexig{TPB-PIL-008} à \refexig{TPB-PIL-011}, \refexig{TPB-ACT-008}.
+  \attr{Exigences} \refexig{TPB-PIL-008} à \refexig{TPB-PIL-011}, \refexig{TPB-ACT-005}.
 \end{decision}
 
 \begin{decision}{DEC-11}{Intensité de chauffe pondérée}

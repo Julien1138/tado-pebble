@@ -58,10 +58,7 @@ son compte, une fois, avec son accord.
 \subsubsection{Actualisation des données (F10)}
 \label{sec:actualisation}
 
-Tado limite le nombre de requêtes qu'une application peut lui faire par jour (100 pour un
-compte standard, davantage avec l'abonnement Auto-Assist). L'application doit donc rester
-utile en consommant ce volume avec soin, et ne jamais cacher à l'utilisateur l'âge de ce
-qu'elle lui montre.
+L'application ne doit jamais cacher à l'utilisateur l'âge de ce qu'elle lui montre.
 
 \begin{exigence}{TPB-ACT-001}{Ouverture immédiate}[
     justification = {On regarde la montre quelques secondes~; elle ne peut pas rester vide
@@ -101,51 +98,13 @@ qu'elle lui montre.
     priorite      = {Souhaitable},
     verification  = {D},
     phase         = {Actualisation},
-    note          = {Fréquence à fixer pour que la journée tienne dans le volume autorisé
-                     (\refexig{TPB-ACT-005}, \refexig{TPB-ACT-006}).},
+    note          = {Fréquence à fixer.},
   ]
   Tant que l'utilisateur consulte l'application, celle-ci devrait actualiser la situation
   de la maison à intervalles réguliers.
 \end{exigence}
 
-\begin{exigence}{TPB-ACT-005}{Volume de requêtes tenu}[
-    justification = {Au-delà du volume autorisé, Tado refuse tout, commandes comprises.},
-    priorite      = {Essentielle},
-    verification  = {A},
-    phase         = {Actualisation},
-    note          = {Volume autorisé~: 100 requêtes par jour pour un compte standard,
-                     20\,000 avec Auto-Assist (Tado, janvier 2026). L'historique
-                     (\refexig{TPB-HIS-007}) et les alertes (\refexig{TPB-ALE-006})
-                     consomment aussi ce volume.},
-  ]
-  L'application doit remplir toutes ses fonctions en restant, pour un usage normal d'une
-  journée, sous le volume de requêtes que Tado autorise à un compte standard.
-\end{exigence}
-
-\begin{exigence}{TPB-ACT-006}{Commandes toujours possibles}[
-    justification = {Une consultation automatique ne doit pas empêcher de couper le
-                     chauffage.},
-    priorite      = {Essentielle},
-    verification  = {A},
-    phase         = {Actualisation},
-    note          = {Part réservée~: dix requêtes par jour.},
-  ]
-  L'application doit réserver dix requêtes par jour aux commandes de l'utilisateur, que ses
-  consultations automatiques ne peuvent pas entamer.
-\end{exigence}
-
-\begin{exigence}{TPB-ACT-007}{Volume épuisé}[
-    justification = {Comprendre pourquoi les valeurs ne bougent plus.},
-    priorite      = {Importante},
-    verification  = {T},
-    phase         = {Actualisation},
-  ]
-  Lorsque Tado refuse des requêtes parce que le volume autorisé est atteint, l'application
-  doit le dire à l'utilisateur et continuer à afficher la dernière situation connue avec
-  son âge.
-\end{exigence}
-
-\begin{exigence}{TPB-ACT-008}{Situation relue après une commande}[
+\begin{exigence}{TPB-ACT-005}{Situation relue après une commande}[
     justification = {Voir l'effet réel d'une commande, pas celui que l'on espère.},
     priorite      = {Importante},
     verification  = {T},
@@ -155,7 +114,7 @@ qu'elle lui montre.
   (ou de la maison, pour un raccourci) avant de l'afficher.
 \end{exigence}
 
-\begin{exigence}{TPB-ACT-009}{Montre sans connexion}[
+\begin{exigence}{TPB-ACT-006}{Montre sans connexion}[
     justification = {La montre quitte souvent la portée du téléphone.},
     priorite      = {Importante},
     verification  = {T},
@@ -165,7 +124,7 @@ qu'elle lui montre.
   connue avec son âge et indiquer que la connexion manque.
 \end{exigence}
 
-\begin{exigence}{TPB-ACT-010}{Requêtes restantes non affichées}[
+\begin{exigence}{TPB-ACT-007}{Requêtes restantes non affichées}[
     justification = {Un compteur de requêtes est une préoccupation technique que
                      l'utilisateur n'a pas à porter.},
     priorite      = {Importante},
