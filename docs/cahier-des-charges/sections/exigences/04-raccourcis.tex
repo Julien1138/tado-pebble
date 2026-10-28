@@ -1,5 +1,5 @@
 % -----------------------------------------------------------------------------
-\subsubsection{Raccourcis (F7)}
+\subsubsection{Raccourcis (F6)}
 \label{sec:raccourcis}
 
 Un raccourci agit sur toute la maison en une seule action~: partir, se coucher, rentrer.
@@ -85,75 +85,3 @@ Un raccourci agit sur toute la maison en une seule action~: partir, se coucher, 
   Lorsqu'un raccourci n'a pas pu être appliqué à toutes les pièces, l'application doit
   indiquer à l'utilisateur lesquelles n'ont pas été modifiées.
 \end{exigence}
-
-% -----------------------------------------------------------------------------
-\subsubsection{Alertes (F8)}
-\label{sec:alertes}
-
-Les alertes rassemblent ce qui, dans la maison, demande l'attention de l'utilisateur sans
-qu'il l'ait cherché.
-
-\begin{exigence}{TPB-ALE-001}{Liste des alertes}[
-    justification = {Savoir ce qui ne va pas sans parcourir chaque pièce.},
-    priorite      = {Importante},
-    verification  = {D},
-    phase         = {Alertes},
-  ]
-  L'application doit présenter la liste des alertes en cours, chacune avec la pièce
-  concernée, sa nature et un détail.
-\end{exigence}
-
-\begin{exigence}{TPB-ALE-002}{Natures d'alerte}[
-    justification = {Les trois situations qui font perdre du confort ou de l'énergie sans
-                     que rien ne le signale.},
-    priorite      = {Importante},
-    verification  = {T},
-    phase         = {Alertes},
-    note          = {Détail~: pour une fenêtre ouverte, depuis combien de temps le
-                     chauffage est coupé~; pour une pile faible, l'appareil concerné. Les
-                     alertes sont celles de l'application Android Tado~; une nature d'alerte
-                     que l'API de Tado ne fournit pas est abandonnée.},
-  ]
-  L'application doit signaler les alertes de trois natures~: fenêtre ouverte détectée,
-  pile faible d'un appareil, appareil injoignable.
-\end{exigence}
-
-\begin{exigence}{TPB-ALE-003}{Nombre d'alertes dans le menu}[
-    justification = {Savoir qu'il y a quelque chose à voir avant d'ouvrir l'écran.},
-    priorite      = {Importante},
-    verification  = {D},
-    phase         = {Alertes},
-  ]
-  L'application doit afficher, dans le menu, le nombre d'alertes en cours.
-\end{exigence}
-
-\begin{exigence}{TPB-ALE-004}{Aucune alerte}[
-    justification = {Un écran vide laisse croire à une panne de l'application.},
-    priorite      = {Importante},
-    verification  = {D},
-    phase         = {Alertes},
-  ]
-  Lorsqu'il n'y a aucune alerte, l'application doit le dire.
-\end{exigence}
-
-\begin{exigence}{TPB-ALE-005}{Alerte résolue}[
-    justification = {Une alerte qui reste après sa cause fait perdre confiance dans les
-                     autres.},
-    priorite      = {Importante},
-    verification  = {T},
-    phase         = {Alertes},
-  ]
-  L'application ne doit plus présenter une alerte dès que sa cause a disparu.
-\end{exigence}
-
-\begin{exigence}{TPB-ALE-006}{Alerte signalée à la montre}[
-    justification = {Une pile qui s'épuise ne se découvre pas en ouvrant l'application par
-                     hasard.},
-    priorite      = {Souhaitable},
-    verification  = {D},
-    phase         = {Alertes},
-  ]
-  Lorsqu'une nouvelle alerte apparaît, l'application devrait la signaler à l'utilisateur
-  sur sa montre, sans qu'il ait ouvert l'application.
-\end{exigence}
-

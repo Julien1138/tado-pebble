@@ -15,7 +15,7 @@ Ces contraintes ne se négocient pas~: la conception s'y plie.
     C2 & L'API de Tado est non officielle pour les tiers~; la spécification communautaire [E3] signale que les chemins de zone ne valent que pour les installations \emph{classiques}, pas pour Tado~X. & Toute dépendance à un chemin est isolée dans un seul composant (\texttt{J-03}). Hypothèse H1. \\
     C3 & Authentification par code d'appareil [E1, N3]~: jeton d'accès de courte vie, jeton de rafraîchissement \emph{à rotation} (chaque usage invalide le précédent), valable 30 jours au plus. & Le jeton le plus récent est toujours écrit avant d'être utilisé~; une montre inutilisée plus de 30 jours impose une nouvelle liaison (\texttt{TPB-CPT-005}). \\
     C4 & La géolocalisation de Tado et la restitution du mode \emph{Auto} (\texttt{DELETE presenceLock}) exigent un abonnement Auto-Assist~[E3]~; \emph{observé}~: le retour à \emph{Auto} est accepté sur le compte de l'utilisateur, qui n'a pas l'abonnement. & Le mode \emph{Auto} n'est offert que s'il est disponible~; un refus \texttt{403} reste géré pour un autre compte (H2). \\
-    C5 & Le pkjs ne s'exécute que pendant que la watchapp est ouverte, ou qu'une page de configuration l'est. Il n'existe pas de tâche de fond. & Pas d'alerte poussée sans ouvrir l'application (DEC-08). \\
+    C5 & Le pkjs ne s'exécute que pendant que la watchapp est ouverte, ou qu'une page de configuration l'est. Il n'existe pas de tâche de fond. & Rien ne se rafraîchit application fermée (DEC-08). \\
     C6 & Les tampons AppMessage sont de taille fixe~; un message plus gros que le tampon est perdu. & Messages petits, paginés (§\ref{sec:protocole}). \\
     C7 & Stockage de la watchapp~: 4~Ko sur basalt, chalk et diorite~; 1~Mo sur emery, gabbro et flint [E5]. & La watchapp ne conserve que la dernière situation (quelques centaines d'octets) (\texttt{TPB-INF-001}). \\
     C8 & Pas de clavier, quatre boutons, écrans de 144\,×\,168 à 260\,×\,260. & Pas de saisie de texte (\texttt{TPB-UTI-003})~; un moteur de listes unique pour toutes les formes d'écran. \\
@@ -131,7 +131,7 @@ serveur n'est ajouté entre le téléphone et Tado.
   \attr{Alternatives écartées} Échantillonner la puissance à intervalles réguliers~: multiplie les requêtes à chaque ouverture, laisse des trous lorsque l'application est fermée.
   \attr{Conséquences} Un historique complet coûte une requête par pièce, deux par pièce avant
   midi (la fenêtre de douze heures chevauche minuit). Les niveaux de chauffe du rapport sont au
-  nombre de quatre, non des pourcentages~: voir DEC-11 et le retour R3 (§\ref{sec:retours}).
+  nombre de quatre, non des pourcentages~: voir DEC-11 et le retour R1 (§\ref{sec:retours}).
   \attr{Exigences} \refexig{TPB-HIS-001}, \refexig{TPB-HIS-002}, \refexig{TPB-HIS-006}, \refexig{TPB-HIS-007}.
 \end{decision}
 
@@ -158,13 +158,12 @@ serveur n'est ajouté entre le téléphone et Tado.
 
 \begin{decision}{DEC-08}{Pas de serveur, pas de tâche de fond}
   \attr{Contexte} Le pkjs ne tourne pas lorsque la watchapp est fermée (C5).
-  \attr{Décision} L'application n'a ni serveur propre ni exécution en arrière-plan. Elle ne peut donc
-  pas prévenir l'utilisateur d'une alerte qu'il n'a pas cherchée.
-  \attr{Alternatives écartées} Un serveur qui interroge Tado et pousse des notifications~:
-  hébergement, jetons hors du téléphone, et quota consommé en continu.
-  \attr{Conséquences} \refexig{TPB-ALE-006} (Souhaitable) n'est pas satisfaite dans la première
-  version~; voir le retour R4.
-  \attr{Exigences} \refexig{TPB-ALE-006}, \refexig{TPB-INF-003}.
+  \attr{Décision} L'application n'a ni serveur propre ni exécution en arrière-plan~: les données ne sont lues
+  que pendant que la watchapp est ouverte.
+  \attr{Alternatives écartées} Un serveur qui interroge Tado en continu~: hébergement, jetons hors du téléphone.
+  \attr{Conséquences} Rien ne se rafraîchit application fermée~; l'ouverture montre la dernière situation connue
+  (DEC-07), puis la remplace.
+  \attr{Exigences} \refexig{TPB-INF-003}.
 \end{decision}
 
 \begin{decision}{DEC-09}{Un seul code C pour six plateformes}
@@ -216,7 +215,7 @@ serveur n'est ajouté entre le téléphone et Tado.
 \begin{decision}{DEC-13}{Tactile en complément des boutons, par le service tactile du SDK}
   \attr{Contexte} Certaines montres ont un écran tactile (emery, gabbro~; flint expose le service
   sans écran). Le toucher doit compléter les boutons sans jamais les remplacer
-  (\refexig{TPB-NAV-006}, \refexig{TPB-NAV-007}).
+  (\refexig{TPB-NAV-005}, \refexig{TPB-NAV-006}).
   \attr{Décision} Chaque fenêtre qui prend en charge le toucher s'abonne au service tactile quand
   elle apparaît et s'en désabonne quand elle disparaît, seulement si le service est actif. La
   reconnaissance des gestes (toucher, glissement par pas) est isolée dans un module sans dépendance au SDK,
@@ -228,7 +227,7 @@ serveur n'est ajouté entre le téléphone et Tado.
   Liste des pièces~: glisser fait défiler d'une ligne par hauteur de ligne, toucher une pièce l'ouvre
   comme \emph{Sélection}. Détail~: glisser change de pièce, toucher une flèche de la barre d'actions
   aussi. Les écrans suivants s'y ajoutent un à un.
-  \attr{Exigences} \refexig{TPB-NAV-006} à \refexig{TPB-NAV-008}.
+  \attr{Exigences} \refexig{TPB-NAV-005} à \refexig{TPB-NAV-007}.
 \end{decision}
 
 \begin{decision}{DEC-14}{Abandon de la plateforme aplite}

@@ -6,7 +6,7 @@
 \begin{itemize}
   \item La montre \emph{demande}, le téléphone \emph{répond}~; hors liaison et état d'attente, le
         téléphone n'envoie rien de lui-même.
-  \item Un message ne contient qu'un élément (une pièce, une rangée d'historique, une alerte), jamais
+  \item Un message ne contient qu'un élément (une pièce, une rangée d'historique), jamais
         une liste. Une liste est une tête suivie de ses éléments (C6).
   \item Toute demande porte un numéro de séquence que la réponse reprend. La montre ignore les
         réponses d'une séquence qui n'est plus la sienne (l'utilisateur a changé d'écran).
@@ -30,17 +30,15 @@
     \midrule
     \multicolumn{3}{@{}l}{\textit{De la montre vers le téléphone}} \\
     MSG-01 & HELLO & Langue de la montre, forme de l'écran, nombre de colonnes d'historique souhaité. Envoyé à l'ouverture, après \texttt{ready}. \\
-    MSG-02 & GET & Séquence~; objet demandé (pièces, détail, historique, confort, alertes, présence, raccourcis, plage de consigne)~; indice de pièce~; indicateur \enquote{actualiser}. \\
+    MSG-02 & GET & Séquence~; objet demandé (pièces, détail, historique, présence, raccourcis, plage de consigne)~; indice de pièce~; indicateur \enquote{actualiser}. \\
     MSG-03 & DO & Séquence~; commande (forcer, programmation, éteindre, présence, raccourci, lier, délier)~; indice de pièce~; température en dixièmes~; durée (code)~; numéro de raccourci. \\
     \midrule
     \multicolumn{3}{@{}l}{\textit{Du téléphone vers la montre}} \\
-    MSG-11 & STATUS & Séquence~; état de la liaison (non liée, perdue, active)~; âge de la donnée affichée (secondes)~; indicateurs~: hors connexion, attente~; mode et état de présence~; nombre d'alertes. \\
+    MSG-11 & STATUS & Séquence~; état de la liaison (non liée, perdue, active)~; âge de la donnée affichée (secondes)~; indicateurs~: hors connexion, attente~; mode et état de présence~\\
     MSG-12 & ROOMS\_HEAD & Séquence~; nombre de pièces~; unité (C ou F). \\
     MSG-13 & ROOM & Séquence~; indice~; nom (20 octets)~; abréviation (4)~; température mesurée~; consigne~; puissance (\%)~; tranche de couleur~; indicateurs (chauffe, forcée, éteinte, hors ligne, fenêtre ouverte)~; code de mode et durée restante. \\
     MSG-14 & DETAIL & Séquence~; indice~; code de mode~; durée restante d'un forçage minuté~; heure de fin (absente pour \enquote{jusqu'à nouvel ordre})~; heure et température du prochain changement~; humidité (\%)~; minutes de fenêtre ouverte. \\
     MSG-15 & HISTORY\_ROW & Séquence~; indice de la pièce~; nom abrégé (4 caractères, distinct d'une pièce à l'autre)~; nombre de colonnes $n$ (12, ou 8 sur Time Round)~; niveaux des $n$ colonnes (2 bits chacune, colonne 0 la plus ancienne)~; masque des colonnes inconnues. La dernière colonne est toujours l'heure en cours. Une rangée par pièce, envoyée dès que son rapport est lu. \\
-    MSG-16 & COMFORT & Séquence~; indice~; température et humidité en dixièmes~; code du verdict~; indicateur \enquote{humidité non mesurée}. \\
-    MSG-17 & ALERT & Séquence~; indice~; indice de pièce~; nature~; détail (minutes ou code). \\
     MSG-18 & PRESENCE & Séquence~; mode (Présent, Absent, Auto)~; état~; nombre d'appareils suivis par la géolocalisation et nombre de ceux qui sont à la maison~; indicateur \enquote{Auto indisponible} (mémorisé par le téléphone après un refus). \\
     MSG-19 & SHORTCUTS & Séquence~; masque des raccourcis offerts (bit $n-1$ pour le raccourci $n$)~; nombre de pièces forcées. \\
     MSG-20 & CAPS & Séquence~; indice de pièce~; minimum, maximum et pas de consigne, en dixièmes. \\
@@ -80,13 +78,11 @@ le pkjs construit (J-11).
     3 Pilotage & MSG-14 & Mode et consigne en cours~; dernier forçage mémorisé par le pkjs. \\
     4 Consigne & MSG-20 & \texttt{capabilities}. \\
     5 Durée & aucun & Constantes de la montre. \\
-    6 Menu & MSG-11 & Nombre d'alertes, présence. \\
+    6 Menu & MSG-11 & Présence. \\
     7 Historique & MSG-15 & \texttt{dayReport} par pièce. \\
     8 Présence & MSG-18 & \texttt{state}, \texttt{mobileDevices}. \\
     9 Raccourcis & MSG-19 & \texttt{zoneStates}, \texttt{state}. \\
-    10 Bien-être & MSG-16 & \texttt{airComfort}, \texttt{zoneStates}. \\
-    11 Alertes & MSG-17 & \texttt{zones}, \texttt{zoneStates}. \\
-    12 Liaison & MSG-22 & \texttt{login.tado.com}. \\
+    10 Liaison & MSG-22 & \texttt{login.tado.com}. \\
     \bottomrule
   \end{tabularx}
   \caption{Vues et données d'origine}

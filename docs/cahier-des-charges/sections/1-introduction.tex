@@ -26,8 +26,7 @@ celui-ci.
         main à la programmation, éteindre le chauffage d'une pièce~;
   \item la \textbf{présence}~: imposer \emph{Présent} ou \emph{Absent}, ou laisser Tado
         décider~;
-  \item les \textbf{compléments}~: raccourcis qui agissent sur toute la maison, alertes,
-        bien-être ambiant de chaque pièce~;
+  \item les \textbf{raccourcis}~: actions qui agissent sur toute la maison à la fois~;
   \item la \textbf{liaison au compte Tado} et l'\textbf{actualisation des données} dans le
         volume de requêtes que Tado autorise~;
   \item l'\textbf{adaptation aux modèles de montre} Pebble (six plateformes d'affichage,
@@ -71,15 +70,13 @@ tableau~\ref{tab:ecrans} rattache chaque écran aux fonctions.
     3  & Pilotage                & Forcer, rejouer, rendre à la programmation, éteindre (F3). \\
     4  & Forcer une température  & Choix de la température au demi-degré (F3). \\
     5  & Durée                   & Choix de la durée du forçage (F3). \\
-    6  & Menu                    & Accès à l'historique, la présence, les raccourcis, les alertes (F12). \\
+    6  & Menu                    & Accès à l'historique, la présence et les raccourcis (F10). \\
     7  & Historique              & Grille pièces\,×\,heures sur douze heures (F4). \\
     8  & Présence                & Présent, Absent, Auto (F5). \\
-    9  & Raccourcis              & Actions sur toute la maison (F7). \\
-    10 & Bien-être ambiant       & Confort d'une pièce~: température, humidité, moisissure (F6). \\
-    11 & Alertes                 & Fenêtre ouverte, pile faible, appareil injoignable (F8). \\
+    9  & Raccourcis              & Actions sur toute la maison (F6). \\
     \bottomrule
   \end{tabularx}
-  \caption{Les onze écrans de l'application}
+  \caption{Les neuf écrans de l'application}
   \label{tab:ecrans}
 \end{table}
 
@@ -99,14 +96,12 @@ exigences fonctionnelles du §\ref{sec:fonctionnelles}.
     F3  & Piloter une pièce        & Imposer une température pour une durée, revenir à la programmation, éteindre. \\
     F4  & Se souvenir de la chauffe & Montrer où l'on a chauffé pendant les douze dernières heures. \\
     F5  & Gérer la présence        & Imposer \emph{Présent} ou \emph{Absent}, ou laisser Tado décider. \\
-    F6  & Juger le confort         & Dire si l'on est bien dans une pièce~: température, humidité, moisissure. \\
-    F7  & Agir sur toute la maison & Les quatre raccourcis de l'application Android~: tout off, programmation partout, mode Absent, mode Géolocalisation. \\
-    F8  & Alerter                  & Signaler fenêtre ouverte, pile faible, appareil injoignable. \\
-    F9  & Relier le compte Tado    & Autoriser une fois l'accès à la maison, le retirer. \\
-    F10 & Actualiser               & Garder les données à jour dans le volume de requêtes autorisé, en dire l'âge. \\
-    F11 & Colorer et rendre lisible & Couleur selon la température, repères sans couleur, unités. \\
-    F12 & Naviguer                 & Se déplacer entre les écrans avec les quatre boutons. \\
-    F13 & S'adapter à la montre    & Même application sur les six plateformes Pebble prises en charge. \\
+    F6  & Agir sur toute la maison & Les quatre raccourcis de l'application Android~: tout off, programmation partout, mode Absent, mode Géolocalisation. \\
+    F7  & Relier le compte Tado    & Autoriser une fois l'accès à la maison, le retirer. \\
+    F8  & Actualiser               & Garder les données à jour dans le volume de requêtes autorisé, en dire l'âge. \\
+    F9  & Colorer et rendre lisible & Couleur selon la température, repères sans couleur, unités. \\
+    F10 & Naviguer                 & Se déplacer entre les écrans avec les quatre boutons. \\
+    F11 & S'adapter à la montre    & Même application sur les six plateformes Pebble prises en charge. \\
     \bottomrule
   \end{tabularx}
   \caption{Fonctions du système}
@@ -140,8 +135,6 @@ celui de l'utilisateur, fait décider Tado de la présence.
   Présence & État de la maison pour le chauffage~: \emph{Présent} (habitée) ou \emph{Absent}. \\
   Mode de présence & Façon de déterminer la présence~: \emph{Présent} et \emph{Absent} (imposés par l'utilisateur) ou \emph{Auto} (décidé par Tado d'après la position des appareils mobiles qu'il suit). \\
   Raccourci & Action unique qui modifie toute la maison à la fois, reprise de l'application Android Tado. \\
-  Alerte & Situation qui demande l'attention de l'utilisateur~: fenêtre ouverte, pile faible, appareil injoignable. \\
-  Bien-être ambiant & Jugement sur le confort d'une pièce d'après sa température, son humidité et le risque de moisissure. \\
   Âge des données & Temps écoulé depuis que les données affichées ont été obtenues de Tado. \\
   Plateforme & Famille de montres Pebble de même écran~: emery, basalt, chalk, gabbro, diorite, flint. \\
 \end{longtable}
@@ -181,11 +174,10 @@ identifiant n'est jamais réattribué, même après retrait de l'exigence.
     \midrule
     PIE & Liste des pièces (F1)        & DET & Détail d'une pièce (F2) \\
     PIL & Pilotage (F3)                & HIS & Historique de chauffe (F4) \\
-    PRE & Présence (F5)                & AMB & Bien-être ambiant (F6) \\
-    RAC & Raccourcis (F7)              & ALE & Alertes (F8) \\
-    CPT & Compte Tado (F9)             & ACT & Actualisation (F10) \\
-    AFF & Couleurs et lisibilité (F11) & NAV & Navigation (F12) \\
-    PLT & Modèles de montre (F13)      & UTI & Utilisabilité \\
+    PRE & Présence (F5)                & RAC & Raccourcis (F6) \\
+    CPT & Compte Tado (F7)             & ACT & Actualisation (F8) \\
+    AFF & Couleurs et lisibilité (F9) & NAV & Navigation (F10) \\
+    PLT & Modèles de montre (F11)      & UTI & Utilisabilité \\
     SEC & Droits d'accès               & INF & Gestion de l'information \\
     \bottomrule
   \end{tabular}
@@ -199,8 +191,8 @@ identifiant n'est jamais réattribué, même après retrait de l'exigence.
   \item[Vérification] méthode prévue~: \textbf{I}nspection, \textbf{A}nalyse,
     \textbf{D}émonstration, \textbf{T}est (§\ref{sec:verification})~;
   \item[Phase] la partie de l'application concernée~: \textit{Pièces}, \textit{Pilotage},
-    \textit{Historique}, \textit{Présence}, \textit{Ambiance}, \textit{Raccourcis},
-    \textit{Alertes}, \textit{Compte}, \textit{Actualisation}, \textit{Affichage},
+    \textit{Historique}, \textit{Présence}, \textit{Raccourcis},
+    \textit{Compte}, \textit{Actualisation}, \textit{Affichage},
     \textit{Navigation}, \textit{Modèles} ou \textit{Transverse}~;
   \item[État] \textit{Proposée}, \textit{Approuvée}, \textit{Retirée}~;
   \item[Note] facultative~: précision de lecture, exemple~;

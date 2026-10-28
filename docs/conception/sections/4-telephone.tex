@@ -17,8 +17,6 @@
     \node[c] (vue) at (0, -1.6)  {J-11 Vues};
     \node[c] (hom) at (3.5, 1.2) {J-06 Maison};
     \node[c] (his) at (3.5, 0)   {J-07 Historique};
-    \node[c] (con) at (3.5, -1.2) {J-08 Confort};
-    \node[c] (ale) at (3.5, -2.4) {J-09 Alertes};
     \node[c] (ctl) at (3.5, -3.6) {J-10 Commandes};
     \node[c] (cac) at (7.2, 0.6) {J-04 Cache};
     \node[c] (cli) at (7.2, -2.6) {J-03 Client Tado};
@@ -27,8 +25,6 @@
     \draw[fleche] (msg) -- (vue);
     \draw[fleche] (vue.east) -- ++(0.4,0) |- (hom.west);
     \draw[fleche] (vue.east) -- ++(0.4,0) |- (his.west);
-    \draw[fleche] (vue.east) -- ++(0.4,0) |- (con.west);
-    \draw[fleche] (vue.east) -- ++(0.4,0) |- (ale.west);
     \draw[fleche] (vue.east) -- ++(0.4,0) |- (ctl.west);
     \draw[fleche] (hom.east) -- ++(0.5,0) |- (cac.west);
     \draw[fleche] (cac) -- (cli);
@@ -36,7 +32,7 @@
     \draw[fleche] (cli.east) -- ++(0.35,0) |- (ext.west);
   \end{tikzpicture}
   \caption{Composants du pkjs~; une flèche va d'un composant à celui dont il se sert (les services
-    J-06 à J-10 passent tous par le cache et le client)}
+    J-06, J-07 et J-10 passent tous par le cache et le client)}
   \label{fig:composants-js}
 \end{figure}
 
@@ -50,10 +46,8 @@
     J-02 & Liaison & Conduit le flux de code d'appareil (RFC~8628), conserve les jetons, les rafraîchit, sait les révoquer. Seul composant à connaître les jetons. & \refexig{TPB-CPT-001} à \refexig{TPB-CPT-005}, \refexig{TPB-SEC-001}, \refexig{TPB-SEC-002} \\
     J-03 & Client Tado & Seul composant à connaître les adresses, les formes des requêtes et des réponses. Ajoute le jeton, relit les en-têtes, normalise les erreurs (\S\ref{sec:erreurs}). & \refexig{TPB-ACT-005} \\
     J-04 & Cache & Conserve chaque réponse avec l'heure de son obtention et son TTL, dans le \texttt{localStorage}. Sert les âges. & \refexig{TPB-ACT-002}, \refexig{TPB-INF-001} \\
-    J-06 & Maison & Liste des pièces, détail d'une pièce, présence de la maison. & \refexig{TPB-PIE-001} à \refexig{TPB-PIE-010}, \refexig{TPB-DET-001} à \refexig{TPB-DET-008}, \refexig{TPB-PRE-001} à \refexig{TPB-PRE-005} \\
+    J-06 & Maison & Liste des pièces, détail d'une pièce, présence de la maison. & \refexig{TPB-PIE-001} à \refexig{TPB-PIE-010}, \refexig{TPB-DET-001} à \refexig{TPB-DET-007}, \refexig{TPB-PRE-001} à \refexig{TPB-PRE-005} \\
     J-07 & Historique & Rapports du jour, calcul des douze colonnes. & \refexig{TPB-HIS-001} à \refexig{TPB-HIS-007} \\
-    J-08 & Confort & Niveaux de confort d'une pièce. & \refexig{TPB-AMB-001} à \refexig{TPB-AMB-006} \\
-    J-09 & Alertes & Alertes de fenêtre ouverte, de pile, de connexion. & \refexig{TPB-ALE-001} à \refexig{TPB-ALE-005} \\
     J-10 & Commandes & Forçages, retour à la programmation, extinction, présence, raccourcis~; relecture après chaque commande. & \refexig{TPB-PIL-001} à \refexig{TPB-PIL-011}, \refexig{TPB-RAC-001} à \refexig{TPB-RAC-007} \\
     J-11 & Vues & Construit les vues envoyées à la montre~: noms abrégés et distincts, températures en dixièmes dans l'unité du compte, niveaux, indicateurs d'âge, liste des raccourcis offerts. & \refexig{TPB-PLT-006}, \refexig{TPB-AFF-001}, \refexig{TPB-AFF-005} \\
     \bottomrule
@@ -80,8 +74,6 @@ chemins viennent de [E3] (base \texttt{https://my.tado.com/api/v2}, \texttt{\{h\
     Présence (F5) & \texttt{GET /homes/\{h\}/state} & 5 min & 1. \texttt{presence} et \texttt{presenceLocked}. \\
     Appareils présents & \texttt{GET /homes/\{h\}/mobileDevices} & 10 min & 1, à l'ouverture de l'écran Présence seulement. Appareils où \texttt{geoTrackingEnabled} et \texttt{atHome}. \\
     Historique (F4) & \texttt{GET /homes/\{h\}/zones/\{z\}/dayReport?date=} & 30 min (jour courant), illimité (jour échu) & 1 par pièce~; 2 par pièce avant midi. \\
-    Confort (F6) & \texttt{GET /homes/\{h\}/airComfort} & 10 min & 1 pour toutes les pièces. \\
-    Alertes (F8) & \texttt{GET /homes/\{h\}/zones} (appareils de chaque pièce, pile, connexion), jointe à \texttt{zoneStates} (fenêtre, liaison) & 15 min & 1 en plus de \texttt{zoneStates}. \\
     Réglages de la maison & \texttt{GET /homes/\{h\}} & illimité & 1, à la liaison. Unité de température, fuseau (H5). \\
     Plage de consigne & \texttt{GET /homes/\{h\}/zones/\{z\}/capabilities} & illimité & 1 par pièce, à la première ouverture de l'écran de consigne. Observé~: 5 à 25~°C (41 à 77~°F), pas annoncé de 0,1. \\
     Forcer, éteindre (F3) & \texttt{PUT /homes/\{h\}/zones/\{z\}/overlay} & --- & 1, puis relecture \texttt{GET .../zones/\{z\}/state} (1). Total 2. \\
@@ -113,7 +105,7 @@ contiennent des données personnelles)~; ne figurent ici que les constats qui ch
   \item[Identifiant de maison.] Il vient de \texttt{GET /me} (une requête de plus que le
     tableau~\ref{tab:requetes}, à faire une fois à la liaison).
   \item[Lectures.] \texttt{zoneStates}, \texttt{state}, \texttt{mobileDevices}, \texttt{zones},
-    \texttt{airComfort} (\texttt{freshness}, \texttt{comfort}), \texttt{capabilities} et
+    \texttt{capabilities} et
     \texttt{dayReport} (\texttt{callForHeat.dataIntervals} avec \texttt{NONE}/\texttt{HIGH}…)
     répondent \texttt{200} aux formes décrites.
   \item[Plage de consigne.] \texttt{capabilities} annonce \texttt{celsius} 5 à 25 par pas de 0,1 et
@@ -173,52 +165,6 @@ pleines (douze, huit sur Time Round), la dernière étant l'heure en cours.
         colonne, la colonne est \emph{inconnue}, non nulle (\refexig{TPB-HIS-007}).
   \item La colonne de l'heure en cours est marquée (\refexig{TPB-HIS-003}).
 \end{enumerate}
-
-\subsubsection{Bien-être ambiant}
-
-\texttt{airComfort} donne, par pièce, un niveau de température (\texttt{COLD}, \texttt{COMFY}, \texttt{WARM}, \texttt{HOT})
-et un niveau d'humidité (\texttt{HUMID}, \texttt{COMFY}, \texttt{DRY}). Il ne donne \emph{pas} de risque de moisissure~; cette
-fonction est abandonnée (\refexig{TPB-AMB-006}, retour R1).
-
-\begin{table}[H]
-  \centering\small
-  \begin{tabular}{@{}ll@{}}
-    \toprule
-    \textbf{Niveaux reçus} & \textbf{Verdict affiché} \\
-    \midrule
-    température \texttt{COMFY} et humidité \texttt{COMFY} & Confortable \\
-    température \texttt{COLD} / \texttt{WARM} / \texttt{HOT} & Froid / Un peu chaud / Trop chaud \\
-    humidité \texttt{DRY} / \texttt{HUMID} & Air trop sec / Air trop humide \\
-    deux écarts à la fois & celui de la température, puis celui de l'humidité \\
-    niveaux absents (appareil injoignable) & Mesure indisponible \\
-    humidité absente seule (pas de capteur) & température seule, \enquote{humidité non mesurée} \\
-    \bottomrule
-  \end{tabular}
-  \caption{Verdict de bien-être ambiant}
-\end{table}
-
-Les jauges reprennent la température et l'humidité de \texttt{zoneStates}, placées par rapport aux
-zones fixes du cahier des charges (19 à 21~°C, 40 à 60~\%).
-
-\subsubsection{Alertes}
-
-\begin{table}[H]
-  \centering\small
-  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{34mm}>{\raggedright\arraybackslash}p{58mm}X@{}}
-    \toprule
-    \textbf{Alerte} & \textbf{Condition} & \textbf{Détail} \\
-    \midrule
-    Fenêtre ouverte & \texttt{zoneStates[z].openWindow} non nul & Depuis \texttt{detectedTime}, en minutes. \\
-    Pile faible & Un appareil de la pièce avec \texttt{batteryState = LOW} & Type d'appareil (tête thermostatique, thermostat). \\
-    Appareil injoignable & \texttt{link.state = OFFLINE}, ou \texttt{connectionState.value = false} & Motif de \texttt{link.reason.title}, s'il existe. \\
-    \bottomrule
-  \end{tabularx}
-  \caption{Règles d'alerte}
-\end{table}
-
-Une alerte n'est présentée que tant que sa condition est vraie dans la dernière donnée
-obtenue (\refexig{TPB-ALE-005}). Le nombre d'alertes du menu (\refexig{TPB-ALE-003}) vient de la
-dernière donnée en cache~; il n'ouvre aucune requête à lui seul.
 
 \subsection{Commandes}
 

@@ -15,7 +15,7 @@
     M-04 & Plateforme & Table de constantes par plateforme (§\ref{sec:plateformes}). Seul endroit où l'on teste la plateforme. & \refexig{TPB-PLT-001} à \refexig{TPB-PLT-007} \\
     M-05 & Thème & Couleurs, motifs noir et blanc, tranches de température (§\ref{sec:theme}). & \refexig{TPB-AFF-001} à \refexig{TPB-AFF-004} \\
     M-06 & Moteur de liste & Une seule liste pour tous les écrans de liste~: rectangulaire, ou ronde sur trois lignes avec la sélection au centre. Défilement, sélection, sous-titres, pastilles. & \refexig{TPB-NAV-002}, \refexig{TPB-PLT-004} \\
-    M-07 & Fenêtres & Une fenêtre par écran (§\ref{sec:fenetres}). Elles ne connaissent ni Tado ni le protocole~: elles lisent la vue du magasin et émettent des demandes. & \refexig{TPB-PIE-001} à \refexig{TPB-ALE-005} \\
+    M-07 & Fenêtres & Une fenêtre par écran (§\ref{sec:fenetres}). Elles ne connaissent ni Tado ni le protocole~: elles lisent la vue du magasin et émettent des demandes. & \refexig{TPB-PIE-001} à \refexig{TPB-RAC-007} \\
     M-08 & Textes & Ressources en français et en anglais, mise en forme des températures et des heures. & \refexig{TPB-AFF-005}, \refexig{TPB-AFF-006} \\
     M-09 & Barre d'actions & Barre latérale des écrans rectangulaires (30~px sur Time~2, 24~px ailleurs). Absente des écrans ronds. & \refexig{TPB-PLT-005} \\
     M-10 & Bandeau d'état & Âge des données, absence de connexion, attente de réponse. & \refexig{TPB-ACT-002}, \refexig{TPB-UTI-005} \\
@@ -93,7 +93,7 @@ température. La watchapp ne compare donc jamais de seuils (DEC-02).
     \textbf{Fenêtre} & \textbf{Parent} & \textbf{Boutons} \\
     \midrule
     1 Pièces & aucun & Haut/Bas~: sélection. Sélection~: détail. Sélection long~: menu. Retour~: quitter. \\
-    2 Détail & Pièces & Haut/Bas (barre d'actions)~: pièce précédente/suivante. Sélection~: pilotage. Sélection long~: bien-être. Retour~: pièces. \\
+    2 Détail & Pièces & Haut/Bas (barre d'actions)~: pièce précédente/suivante. Sélection~: pilotage. Retour~: pièces. \\
     3 Pilotage & Détail & Haut/Bas~: sélection. Sélection~: action (forcer, rejouer, programmation, éteindre). Retour~: détail. \\
     4 Consigne & Pilotage & Haut/Bas~: $\pm 0{,}5$~° ($\pm 1$~°F). Sélection~: valider, ouvre la durée. Retour~: abandonner sans effet. \\
     5 Durée & Consigne & Haut/Bas~: sélection. Sélection~: envoyer la commande. Retour~: consigne. \\
@@ -101,12 +101,10 @@ température. La watchapp ne compare donc jamais de seuils (DEC-02).
     7 Historique & Menu & Retour seulement. Haut/Bas~: défilement s'il y a plus de pièces que de lignes. \\
     8 Présence & Menu & Haut/Bas~: sélection. Sélection~: imposer le mode. Retour~: menu. \\
     9 Raccourcis & Menu & Haut/Bas~: sélection. Sélection~: confirmation, puis commande. Retour~: menu. \\
-    10 Bien-être & Détail & Haut/Bas~: pièce précédente/suivante. Retour~: détail. \\
-    11 Alertes & Menu & Haut/Bas~: sélection. Retour~: menu. \\
-    12 Liaison & Pièces & Retour~: annuler la liaison. \\
+    10 Liaison & Pièces & Retour~: annuler la liaison. \\
     \bottomrule
   \end{tabularx}
-  \caption{Fenêtres et fonction des boutons (\refexig{TPB-NAV-002} à \refexig{TPB-NAV-005})}
+  \caption{Fenêtres et fonction des boutons (\refexig{TPB-NAV-002} à \refexig{TPB-NAV-004})}
   \label{tab:fenetres}
 \end{table}
 

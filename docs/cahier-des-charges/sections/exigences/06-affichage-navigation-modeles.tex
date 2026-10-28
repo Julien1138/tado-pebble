@@ -1,5 +1,5 @@
 % -----------------------------------------------------------------------------
-\subsubsection{Couleurs et lisibilité (F11)}
+\subsubsection{Couleurs et lisibilité (F9)}
 \label{sec:affichage}
 
 L'application emprunte à l'application mobile Tado son principe~: la couleur d'une pièce dit
@@ -73,7 +73,7 @@ sa température. Un utilisateur de Tado ne doit pas être dépaysé.
 \end{exigence}
 
 % -----------------------------------------------------------------------------
-\subsubsection{Navigation (F12)}
+\subsubsection{Navigation (F10)}
 \label{sec:navigation}
 
 Une montre Pebble se manipule avec quatre boutons~: \emph{Haut}, \emph{Sélection},
@@ -109,22 +109,10 @@ La figure~\ref{fig:navigation} montre l'enchaînement des écrans.
     phase         = {Navigation},
   ]
   L'application doit ouvrir, par un appui long sur \emph{Sélection} depuis la liste des
-  pièces, un menu qui donne accès à l'historique, à la présence, aux raccourcis et aux
-  alertes.
+  pièces, un menu qui donne accès à l'historique, à la présence et aux raccourcis.
 \end{exigence}
 
-\begin{exigence}{TPB-NAV-004}{Bien-être depuis le détail}[
-    justification = {Même geste pour la même idée~: l'appui long mène à ce qui complète
-                     l'écran.},
-    priorite      = {Importante},
-    verification  = {D},
-    phase         = {Navigation},
-  ]
-  L'application doit ouvrir le bien-être ambiant de la pièce par un appui long sur
-  \emph{Sélection} depuis le détail d'une pièce.
-\end{exigence}
-
-\begin{exigence}{TPB-NAV-005}{Quitter}[
+\begin{exigence}{TPB-NAV-004}{Quitter}[
     justification = {Les montres Pebble se quittent par \emph{Retour}.},
     priorite      = {Essentielle},
     verification  = {D},
@@ -133,7 +121,7 @@ La figure~\ref{fig:navigation} montre l'enchaînement des écrans.
   Depuis la liste des pièces, le bouton \emph{Retour} doit quitter l'application.
 \end{exigence}
 
-\begin{exigence}{TPB-NAV-006}{Tout faisable aux boutons}[
+\begin{exigence}{TPB-NAV-005}{Tout faisable aux boutons}[
     justification = {Toutes les montres n'ont pas d'écran tactile, et le toucher n'est
                      pas toujours praticable (gants, mains mouillées).},
     priorite      = {Essentielle},
@@ -144,21 +132,21 @@ La figure~\ref{fig:navigation} montre l'enchaînement des écrans.
   boutons, que la montre ait ou non un écran tactile.
 \end{exigence}
 
-\begin{exigence}{TPB-NAV-007}{Toucher en complément}[
+\begin{exigence}{TPB-NAV-006}{Toucher en complément}[
     justification = {Sur une montre tactile, toucher ce que l'on veut atteindre est plus
                      direct que d'appuyer plusieurs fois sur un bouton.},
     priorite      = {Souhaitable},
     verification  = {D},
     phase         = {Navigation},
     note          = {Fonction facultative, mise en \oe uvre écran par écran. Elle s'ajoute aux
-                     boutons (\refexig{TPB-NAV-002}, \refexig{TPB-NAV-006}) et ne les remplace
+                     boutons (\refexig{TPB-NAV-002}, \refexig{TPB-NAV-005}) et ne les remplace
                      jamais.},
   ]
   Sur les montres à écran tactile, l'application devrait permettre de manipuler ses écrans
   au toucher, en complément des boutons.
 \end{exigence}
 
-\begin{exigence}{TPB-NAV-008}{Liste des pièces au toucher}[
+\begin{exigence}{TPB-NAV-007}{Liste des pièces au toucher}[
     justification = {La liste des pièces est l'écran le plus consulté~; la parcourir et
                      ouvrir une pièce d'un geste est le premier gain du toucher.},
     priorite      = {Souhaitable},
@@ -186,22 +174,18 @@ La figure~\ref{fig:navigation} montre l'enchaînement des écrans.
     \node[ecr] (pil) at (6.8, 0)  {\textbf{Pilotage}};
     \node[ecr] (con) at (10.2, 0) {\textbf{Forcer}\\température};
     \node[ecr] (dur) at (13.6, 0) {\textbf{Durée}};
-    \node[ecr] (amb) at (3.4, -1.8) {\textbf{Bien-être}\\ambiant};
     \node[men] (men) at (0, -3.6)   {\textbf{Menu}};
     \node[ecr] (his) at (3.4, -3.6) {\textbf{Historique}};
     \node[ecr] (pre) at (6.8, -3.6) {\textbf{Présence}};
     \node[ecr] (rac) at (10.2, -3.6) {\textbf{Raccourcis}};
-    \node[ecr] (ale) at (13.6, -3.6) {\textbf{Alertes}};
     \draw[fleche] (pie) -- node[lbl, above=1pt]{Sél.} (det);
     \draw[fleche] (det) -- node[lbl, above=1pt]{Sél.} (pil);
     \draw[fleche] (pil) -- node[lbl, above=1pt]{Sél.} (con);
     \draw[fleche] (con) -- node[lbl, above=1pt]{valider} (dur);
-    \draw[fleche] (det) -- node[lbl, right=1pt]{Sél. long} (amb);
     \draw[fleche] (pie) -- node[lbl, left=1pt]{Sél. long} (men);
     \draw[fleche] (men) -- (his);
     \draw[fleche] (men.south) -- ++(0,-0.7) -| (pre.south);
     \draw[fleche] (men.south) -- ++(0,-0.7) -| (rac.south);
-    \draw[fleche] (men.south) -- ++(0,-0.7) -| (ale.south);
   \end{tikzpicture}
   \caption{Enchaînement des écrans~; \emph{Retour} revient à l'écran précédent depuis chacun
     d'eux}
@@ -209,7 +193,7 @@ La figure~\ref{fig:navigation} montre l'enchaînement des écrans.
 \end{figure}
 
 % -----------------------------------------------------------------------------
-\subsubsection{Modèles de montre (F13)}
+\subsubsection{Modèles de montre (F11)}
 \label{sec:modeles}
 
 L'application est conçue pour la Pebble Time~2, et doit rester utilisable sur les autres

@@ -132,7 +132,7 @@ moment, et avec quelle force. Chaque pièce occupe une ligne.
 
 Le détail d'une pièce rassemble ce que la liste ne peut pas montrer faute de place~: le
 programme en cours, l'humidité, ce qui se passera ensuite. C'est aussi la porte d'entrée
-vers le pilotage et vers le bien-être ambiant de la pièce.
+vers le pilotage de la pièce.
 
 \begin{exigence}{TPB-DET-001}{Détail d'une pièce}[
     justification = {Comprendre pourquoi une pièce chauffe, ou ne chauffe pas.},
@@ -169,8 +169,8 @@ vers le pilotage et vers le bien-être ambiant de la pièce.
 \end{exigence}
 
 \begin{exigence}{TPB-DET-004}{Humidité}[
-    justification = {L'humidité relative accompagne la température dans toute lecture du
-                     confort.},
+    justification = {L'humidité relative accompagne la température dans la lecture d'une
+                     pièce.},
     priorite      = {Importante},
     verification  = {T},
     phase         = {Pièces},
@@ -198,17 +198,7 @@ vers le pilotage et vers le bien-être ambiant de la pièce.
   L'application doit permettre d'ouvrir le pilotage d'une pièce depuis son détail.
 \end{exigence}
 
-\begin{exigence}{TPB-DET-007}{Accès au bien-être ambiant}[
-    justification = {Le bien-être ambiant se lit pièce par pièce.},
-    priorite      = {Importante},
-    verification  = {D},
-    phase         = {Pièces},
-  ]
-  L'application doit permettre d'ouvrir le bien-être ambiant d'une pièce depuis son détail
-  (§\ref{sec:ambiance}).
-\end{exigence}
-
-\begin{exigence}{TPB-DET-008}{Fenêtre ouverte dans le détail}[
+\begin{exigence}{TPB-DET-007}{Fenêtre ouverte dans le détail}[
     justification = {Expliquer un chauffage coupé alors que la programmation en demande.},
     priorite      = {Importante},
     verification  = {T},
