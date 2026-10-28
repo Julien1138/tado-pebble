@@ -74,6 +74,7 @@ compilateur C de la machine et est ignoré s'il n'y en a pas.
 | `test/` | tests Node ; `test/c/` pour la reconnaissance de gestes |
 | `docs/` | cahier des charges et document de conception (LaTeX) |
 | `resources/` | icône du menu ; `logo/` : sources et exports du logo |
+| `store/` | textes du catalogue : description et mini-manuel, en français (`manuel-fr.md`) et en anglais (`manual-en.md`) |
 
 Le téléphone porte toute la connaissance de Tado et ne transmet à la montre que des vues prêtes à
 afficher. Le protocole entre les deux est décrit dans le document de conception (section Protocole) ;
