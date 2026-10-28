@@ -25,3 +25,10 @@ var app = require('./app')({
 Pebble.addEventListener('appmessage', function(e) {
   app.onMessage(e.payload);
 });
+
+// Prévient la montre que le pkjs peut recevoir ses demandes.
+Pebble.addEventListener('ready', function() {
+  Pebble.sendAppMessage({ MsgType: require('./protocol').MSG_READY },
+    function() {},
+    function(e) { console.log('prêt refusé ' + JSON.stringify(e)); });
+});

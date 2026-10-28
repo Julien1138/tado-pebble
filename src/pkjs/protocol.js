@@ -8,6 +8,7 @@ module.exports = {
   MSG_ROOMS_HEAD: 12,
   MSG_ROOM: 13,
   MSG_LINK_CODE: 22,
+  MSG_READY: 30,
 
   // Objets demandables (clé Object)
   OBJ_ROOMS: 1,
