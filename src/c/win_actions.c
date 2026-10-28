@@ -24,11 +24,12 @@ struct ActionList {
   char header[48];
   ActionItem items[ACTION_MAX];
   uint8_t count;
+  bool radio;
   bool built;          // composants graphiques créés
   uint16_t saved_row;
 };
 
-#define POOL_SIZE 2
+#define POOL_SIZE 4
 static ActionList s_pool[POOL_SIZE];
 static uint8_t s_pool_used;
 
@@ -66,9 +67,23 @@ static void menu_draw(GContext *ctx, const Layer *cell, MenuIndex *index, void *
   graphics_fill_rect(ctx, b, 0, GCornerNone);
   graphics_context_set_text_color(ctx, fg);
   int text_h = PBL_DISPLAY_WIDTH >= 200 ? 30 : 24;
+  int left = PBL_IF_ROUND_ELSE(10, 6);
+  if (list->radio) {
+    // Puce : cercle vide, plein pour l'élément en vigueur (TPB-PRE-004, lisible aussi sans couleur).
+    int r = PBL_DISPLAY_WIDTH >= 200 ? 8 : 7;
+    GPoint c = GPoint(PBL_IF_ROUND_ELSE(22, 6 + r + 2), b.size.h / 2);
+    graphics_context_set_stroke_color(ctx, fg);
+    graphics_context_set_stroke_width(ctx, 2);
+    graphics_draw_circle(ctx, c, r);
+    if (list->items[index->row].marked) {
+      graphics_context_set_fill_color(ctx, fg);
+      graphics_fill_circle(ctx, c, r - 4);
+    }
+    left = c.x + r + 8;
+  }
   ui_draw_text(ctx, list->items[index->row].label, F_NAME,
-               GRect(PBL_IF_ROUND_ELSE(10, 6), (b.size.h - text_h) / 2 - 3, b.size.w - PBL_IF_ROUND_ELSE(20, 12), text_h),
-               PBL_IF_ROUND_ELSE(GTextAlignmentCenter, GTextAlignmentLeft));
+               GRect(left, (b.size.h - text_h) / 2 - 3, b.size.w - left - PBL_IF_ROUND_ELSE(10, 6), text_h),
+               PBL_IF_ROUND_ELSE(list->radio ? GTextAlignmentLeft : GTextAlignmentCenter, GTextAlignmentLeft));
 }
 
 static void menu_select(MenuLayer *layer, MenuIndex *index, void *context) {
@@ -213,6 +228,10 @@ void actions_set_header(ActionList *list, const char *header) {
   if (list->built) {
     relayout(list);
   }
+}
+
+void actions_set_radio(ActionList *list, bool radio) {
+  list->radio = radio;
 }
 
 void actions_set_items(ActionList *list, const ActionItem *items, uint8_t count) {

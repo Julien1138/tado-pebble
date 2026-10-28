@@ -64,7 +64,10 @@
       "CapMax",
       "CapStep",
       "LastTemp",
-      "LastDur"
+      "LastDur",
+      "DevicesHome",
+      "DevicesTracked",
+      "AutoUnavailable"
     ],
     "resources": {
       "media": []

@@ -8,6 +8,7 @@ module.exports = {
   MSG_ROOMS_HEAD: 12,
   MSG_ROOM: 13,
   MSG_DETAIL: 14,
+  MSG_PRESENCE: 18,
   MSG_CAPS: 20,
   MSG_ACK: 21,
   MSG_LINK_CODE: 22,
@@ -17,6 +18,7 @@ module.exports = {
   OBJ_ROOMS: 1,
   OBJ_DETAIL: 2,
   OBJ_CAPS: 3,
+  OBJ_PRESENCE: 4,
 
   // Commandes (clé Command)
   CMD_LINK: 1,
@@ -24,6 +26,7 @@ module.exports = {
   CMD_FORCE: 4,
   CMD_SCHEDULE: 5,
   CMD_OFF: 6,
+  CMD_PRESENCE: 7,
 
   // Durées d'un forçage (clé Duration)
   DUR_30: 1,
@@ -37,6 +40,7 @@ module.exports = {
   RES_REFUSED: 1,
   RES_FAILED: 2,
   RES_OFFLINE: 3,
+  RES_AUTO_UNAVAILABLE: 4,
 
   // État de la liaison (STATUS, clé Link)
   LINK_NONE: 0,

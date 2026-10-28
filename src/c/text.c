@@ -11,6 +11,7 @@ static const char *const FR[T_COUNT] = {
   "Humidité", "Fenêtre ouverte", "Ensuite", "à", "Éteint",
   "Pilotage", "Forcer temp.", "Retour programme", "Éteindre chauffage", "Actuelle", "pendant",
   "30 min", "1 h", "2 h", "Prochain créneau", "Nouvel ordre",
+  "Menu", "Présence", "Présent", "Absent", "Auto", "Actuel", "imposé", "Auto indisponible",
   "Forcer", "Envoi…", "Pris en compte", "Refusé", "Échec", "Pas de réponse"
 };
 static const char *const EN[T_COUNT] = {
@@ -21,6 +22,7 @@ static const char *const EN[T_COUNT] = {
   "Humidity", "Window open", "Then", "at", "Off",
   "Control", "Set temp.", "Back to schedule", "Turn heating off", "Current", "for",
   "30 min", "1 h", "2 h", "Next period", "Until changed",
+  "Menu", "Presence", "Home", "Away", "Auto", "Now", "set", "Auto unavailable",
   "Boost", "Sending…", "Done", "Refused", "Failed", "No answer"
 };
 

@@ -118,6 +118,53 @@ function createApp(deps) {
     });
   }
 
+  function presenceMessage(seq, data) {
+    var v = views.buildPresence(data, control.autoUnavailable());
+    return { MsgType: P.MSG_PRESENCE, Seq: seq, PresenceMode: v.mode, PresenceState: v.state,
+             DevicesHome: v.devicesHome, DevicesTracked: v.devicesTracked, AutoUnavailable: v.autoUnavailable };
+  }
+
+  // Présence (MSG-18) : mode, état et appareils présents.
+  function sendPresence(seq, refresh) {
+    home.presence({ force: refresh }, function(err, data) {
+      if (err) {
+        return refresh ? messenger.replace(failureMessages(seq, err)) : undefined;
+      }
+      messenger.replace([presenceMessage(seq, data)]);
+    });
+  }
+
+  // Changement de mode de présence : écriture, puis relecture sans cache (TPB-PRE-005). Jamais retentée.
+  function runPresence(payload) {
+    var seq = payload.Seq;
+    home.presence({ force: false }, function(err, current) {
+      if (err) {
+        return messenger.replace([{ MsgType: P.MSG_ACK, Seq: seq, Result: control.resultFor(err) }]);
+      }
+      control.setPresence({ homeId: current.homeId }, payload.PresenceMode, function(err) {
+        if (err) {
+          var autoRefused = payload.PresenceMode === P.PRESENCE_AUTO && err.kind === 'forbidden';
+          var ack = { MsgType: P.MSG_ACK, Seq: seq, Result: autoRefused ? P.RES_AUTO_UNAVAILABLE : control.resultFor(err) };
+          if (err.kind === 'lost' || err.kind === 'unlinked') {
+            linkLost = err.kind === 'lost';
+            return messenger.replace([ack, linkStatus(seq)]);
+          }
+          return messenger.replace(autoRefused ? [ack, presenceMessage(seq, current)] : [ack]);
+        }
+        var ok = { MsgType: P.MSG_ACK, Seq: seq, Result: P.RES_OK };
+        home.rooms({ force: true }, function(err, data) {
+          if (err) {
+            return messenger.replace(failureMessages(seq, err, [ok]));
+          }
+          home.presence({ force: false }, function(err, fresh) {
+            var prefix = err ? [ok] : [ok, presenceMessage(seq, fresh)];
+            messenger.replace(roomsMessages(seq, data, prefix));
+          });
+        });
+      });
+    });
+  }
+
   // Commande sur une pièce : écriture, puis relecture sans cache (DEC-10). Jamais retentée.
   function runCommand(payload) {
     var seq = payload.Seq;
@@ -151,6 +198,8 @@ function createApp(deps) {
       sendRooms(seq, !!payload.Refresh);
     } else if (payload.Object === P.OBJ_DETAIL) {
       sendDetail(seq, payload.Index, !!payload.Refresh);
+    } else if (payload.Object === P.OBJ_PRESENCE) {
+      sendPresence(seq, !!payload.Refresh);
     } else if (payload.Object === P.OBJ_CAPS) {
       sendCaps(seq, payload.Index, !!payload.Refresh);
     }
@@ -190,6 +239,11 @@ function createApp(deps) {
         return messenger.replace([linkStatus(payload.Seq)]);
       }
       runCommand(payload);
+    } else if (payload.Command === P.CMD_PRESENCE) {
+      if (!link.isLinked()) {
+        return messenger.replace([linkStatus(payload.Seq)]);
+      }
+      runPresence(payload);
     } else if (payload.Command === P.CMD_UNLINK) {
       if (cancelLink) {
         cancelLink();

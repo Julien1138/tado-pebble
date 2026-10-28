@@ -336,3 +336,84 @@ test('détail avec rechargement, Tado injoignable : copie conservée, indicateur
   assert.equal(t.sent[0].Indicators, P.IND_OFFLINE);
   assert.equal(t.sent[t.sent.length - 1].MsgType, P.MSG_DETAIL, 'le détail vient du cache périmé');
 });
+
+var DEVICES = [
+  { id: 1, name: 'A', settings: { geoTrackingEnabled: true }, location: null },
+  { id: 2, name: 'B', settings: { geoTrackingEnabled: true }, location: { atHome: false } },
+  { id: 3, name: 'C', settings: { geoTrackingEnabled: true }, location: { atHome: true } },
+  { id: 4, name: 'D', settings: { geoTrackingEnabled: false }, location: { atHome: true } }
+];
+
+function presenceCommand(mode) {
+  return { MsgType: P.MSG_DO, Seq: 11, Command: P.CMD_PRESENCE, PresenceMode: mode };
+}
+
+test('présence : mode Auto, état Présent, un appareil suivi sur deux est à la maison', async function() {
+  var t = await opened([{ status: 200, body: DEVICES }]);
+  var calls = t.http.calls.length;
+  t.app.onMessage({ MsgType: P.MSG_GET, Seq: 10, Object: P.OBJ_PRESENCE });
+  await f.settle(); await f.settle();
+  assert.equal(t.http.calls.length, calls + 1, 'seuls les appareils sont lus : l\'état est en cache');
+  var m = t.sent[0];
+  assert.deepEqual([m.MsgType, m.PresenceMode, m.PresenceState, m.DevicesHome, m.DevicesTracked, m.AutoUnavailable],
+                   [P.MSG_PRESENCE, P.PRESENCE_AUTO, P.PRESENCE_HOME, 1, 2, 0]);
+});
+
+test('présence imposée Absent : écriture, relecture, accusé puis mode et état résultants', async function() {
+  var t = await opened([{ status: 200, body: DEVICES }, { status: 204 }, { status: 200, body: ZONE_STATES },
+                        { status: 200, body: { presence: 'AWAY', presenceLocked: true } }]);
+  var calls = t.http.calls.length;
+  t.app.onMessage(presenceCommand(P.PRESENCE_AWAY));
+  await f.settle(); await f.settle(); await f.settle();
+  var tail = t.http.calls.slice(calls).map(function(c) { return c.method + ' ' + c.url.replace('https://my.tado.com/api/v2', ''); });
+  assert.deepEqual(tail, ['GET /homes/7/mobileDevices', 'PUT /homes/7/presenceLock', 'GET /homes/7/zoneStates', 'GET /homes/7/state']);
+  assert.deepEqual(JSON.parse(t.http.calls[calls + 1].body), { homePresence: 'AWAY' });
+  assert.deepEqual(t.sent.map(function(m) { return m.MsgType; }),
+                   [P.MSG_ACK, P.MSG_PRESENCE, P.MSG_STATUS, P.MSG_ROOMS_HEAD, P.MSG_ROOM, P.MSG_ROOM]);
+  assert.equal(t.sent[0].Result, P.RES_OK);
+  assert.equal(t.sent[1].PresenceMode, P.PRESENCE_AWAY);
+  assert.equal(t.sent[1].PresenceState, P.PRESENCE_AWAY);
+  assert.equal(t.sent[2].PresenceState, P.PRESENCE_AWAY, 'le titre de la liste suit');
+});
+
+test('retour à Auto : DELETE de la présence imposée', async function() {
+  var t = await opened([{ status: 200, body: DEVICES }, { status: 204 }, { status: 200, body: ZONE_STATES },
+                        { status: 200, body: { presence: 'HOME', presenceLocked: false } }]);
+  var calls = t.http.calls.length;
+  t.app.onMessage(presenceCommand(P.PRESENCE_AUTO));
+  await f.settle(); await f.settle(); await f.settle();
+  assert.equal(t.http.calls[calls + 1].method, 'DELETE');
+  assert.equal(t.sent[1].PresenceMode, P.PRESENCE_AUTO);
+});
+
+test('Auto refusé (403) : accusé « Auto indisponible », mémorisé, Auto n\'est plus offert', async function() {
+  var t = await opened([{ status: 200, body: DEVICES }, { status: 403, body: {} }]);
+  t.app.onMessage(presenceCommand(P.PRESENCE_AUTO));
+  await f.settle(); await f.settle();
+  assert.equal(t.sent[0].Result, P.RES_AUTO_UNAVAILABLE);
+  assert.equal(t.sent[1].AutoUnavailable, 1);
+  assert.equal(t.store.data['tado.autoUnavailable'], '1');
+  t.sent.length = 0;
+  t.app.onMessage({ MsgType: P.MSG_GET, Seq: 12, Object: P.OBJ_PRESENCE });
+  await f.settle(); await f.settle();
+  assert.equal(t.sent[0].AutoUnavailable, 1);
+});
+
+test('présence sans connexion : refusée, jamais retentée', async function() {
+  var t = await opened([{ status: 200, body: DEVICES }, { error: { kind: 'network' } }]);
+  var calls = t.http.calls.length;
+  t.app.onMessage(presenceCommand(P.PRESENCE_HOME));
+  await f.settle(); await f.settle();
+  assert.equal(t.http.calls.length, calls + 2);
+  assert.equal(t.sent[0].Result, P.RES_OFFLINE);
+  assert.equal(t.sent.length, 1);
+});
+
+test('présence : mode inconnu refusé sans requête d\'écriture', async function() {
+  var t = await opened([{ status: 200, body: DEVICES }]);
+  var calls = t.http.calls.length;
+  t.app.onMessage(presenceCommand(9));
+  await f.settle(); await f.settle();
+  assert.equal(t.http.calls.length, calls + 1, 'seulement la lecture des appareils');
+  assert.equal(t.sent[0].Result, P.RES_REFUSED);
+});

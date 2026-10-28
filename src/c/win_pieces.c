@@ -9,6 +9,7 @@
 #include "ui.h"
 #include "win_detail.h"
 #include "win_link.h"
+#include "win_menu.h"
 
 #define REFRESH_MS (5 * 60 * 1000)
 #define AGE_SHOWN_SECONDS 120
@@ -140,6 +141,10 @@ static void draw_row_round(GContext *ctx, GRect b, const Room *room, GColor fg, 
 
 static void menu_select(MenuLayer *layer, MenuIndex *index, void *context) {
   win_detail_push(index->row);
+}
+
+static void menu_long_select(MenuLayer *layer, MenuIndex *index, void *context) {
+  win_menu_push();
 }
 
 static uint16_t menu_rows(MenuLayer *layer, uint16_t section, void *context) {
@@ -323,7 +328,7 @@ static void build(Window *window) {
   s_menu = menu_layer_create(GRect(0, TITLE_H, b.size.w, b.size.h - TITLE_H));
   menu_layer_set_callbacks(s_menu, NULL, (MenuLayerCallbacks){
     .get_num_rows = menu_rows, .get_cell_height = menu_height, .draw_row = menu_draw,
-    .select_click = menu_select
+    .select_click = menu_select, .select_long_click = menu_long_select
   });
   menu_layer_set_normal_colors(s_menu, GColorBlack, GColorWhite);
   menu_layer_set_highlight_colors(s_menu, GColorBlack, GColorWhite);

@@ -182,8 +182,21 @@ function buildDetail(entry, unit, now) {
   };
 }
 
+// Présence (MSG-18) : mode en vigueur (Auto, ou imposé Présent/Absent), état, appareils.
+function buildPresence(data, autoUnavailable) {
+  var p = data.presence;
+  return {
+    mode: p.locked ? (p.presence === 'HOME' ? P.PRESENCE_HOME : P.PRESENCE_AWAY) : P.PRESENCE_AUTO,
+    state: p.presence === 'HOME' ? P.PRESENCE_HOME : P.PRESENCE_AWAY,
+    devicesHome: data.devices.home,
+    devicesTracked: data.devices.tracked,
+    autoUnavailable: autoUnavailable ? 1 : 0
+  };
+}
+
 module.exports = {
   buildRooms: buildRooms,
+  buildPresence: buildPresence,
   buildDetail: buildDetail,
   abbreviations: abbreviations,
   truncateBytes: truncateBytes,

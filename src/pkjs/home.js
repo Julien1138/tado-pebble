@@ -4,6 +4,7 @@ var MIN = 60 * 1000;
 var TTL_HOME = Infinity;
 var TTL_ZONES = 60 * MIN;
 var TTL_STATES = 5 * MIN;
+var TTL_DEVICES = 10 * MIN;
 
 function parallel(tasks, cb) {
   var results = {};
@@ -94,7 +95,50 @@ function createHome(deps) {
     });
   }
 
-  return { rooms: rooms, home: home };
+  // Appareils mobiles suivis par la géolocalisation et ceux qui sont à la maison (TPB-PRE-003). Un
+  // appareil sans position (location nulle) n'est pas suivi.
+  function countDevices(list) {
+    var tracked = 0;
+    var atHome = 0;
+    list.forEach(function(d) {
+      if (d.settings && d.settings.geoTrackingEnabled && d.location) {
+        tracked += 1;
+        if (d.location.atHome) {
+          atHome += 1;
+        }
+      }
+    });
+    return { home: atHome, tracked: tracked };
+  }
+
+  // cb(err, {homeId, presence: {presence, locked}, devices: {home, tracked}}).
+  function presence(opts, cb) {
+    var force = !!opts.force;
+    home(function(err, h) {
+      if (err) {
+        return cb(err);
+      }
+      parallel({
+        state: function(done) {
+          cache.fetch('state', TTL_STATES, force, function(d) { client.getState(h.id, d); }, done);
+        },
+        devices: function(done) {
+          cache.fetch('mobileDevices', TTL_DEVICES, force, function(d) { client.getMobileDevices(h.id, d); }, done);
+        }
+      }, function(err, r) {
+        if (err) {
+          return cb(err);
+        }
+        cb(null, {
+          homeId: h.id,
+          presence: { presence: r.state.data.presence, locked: !!r.state.data.presenceLocked },
+          devices: countDevices(r.devices.data)
+        });
+      });
+    });
+  }
+
+  return { rooms: rooms, home: home, presence: presence };
 }
 
 module.exports = createHome;

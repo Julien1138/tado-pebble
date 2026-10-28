@@ -17,6 +17,7 @@ typedef struct {
 View g_view;
 Detail g_detail;
 Caps g_caps;
+Presence g_presence;
 static uint8_t s_staging_count;
 static uint8_t s_staging_unit;
 static uint8_t s_staging_received;

@@ -6,6 +6,7 @@
 typedef struct {
   void (*rooms_changed)(void);          // une nouvelle liste est en place
   void (*detail_changed)(void);         // le détail de la pièce demandée est arrivé
+  void (*presence_changed)(void);       // la présence demandée est arrivée
   void (*caps_changed)(void);           // la plage de consigne de la pièce demandée est arrivée
   void (*status_changed)(void);         // liaison, présence ou indicateurs ont changé
   void (*command_result)(uint8_t result);  // accusé de la dernière commande (RES_*)
@@ -19,7 +20,9 @@ void comms_request_rooms(bool refresh);
 // (rechargement à l'affichage d'un écran) ; sinon il répond depuis ses données.
 void comms_request_detail(uint8_t index, bool refresh);
 void comms_request_caps(uint8_t index, bool refresh);
-// Commande sur une pièce : CMD_FORCE (température en dixièmes, durée DUR_*), CMD_SCHEDULE, CMD_OFF.
+void comms_request_presence(bool refresh);
+// Commande : sur une pièce, CMD_FORCE (température en dixièmes, durée DUR_*), CMD_SCHEDULE, CMD_OFF ;
+// CMD_PRESENCE (le mode PRESENCE_* est passé dans duration).
 // Renvoie faux si le téléphone n'est pas prêt : rien n'est mis en attente (TPB-PIL-011).
 bool comms_send_command(uint8_t command, uint8_t index, int16_t temp, uint8_t duration);
 void comms_request_link(void);

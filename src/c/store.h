@@ -51,9 +51,20 @@ typedef struct {
   int16_t step;
 } Caps;
 
+// Présence de la maison (MSG-18) : mode en vigueur, état et appareils mobiles suivis.
+typedef struct {
+  bool valid;
+  uint8_t mode;               // PRESENCE_AUTO, PRESENCE_HOME ou PRESENCE_AWAY (imposé)
+  uint8_t state;              // PRESENCE_HOME ou PRESENCE_AWAY
+  uint8_t devices_home;
+  uint8_t devices_tracked;
+  bool auto_unavailable;      // Tado a refusé le retour à Auto : il n'est plus offert
+} Presence;
+
 extern View g_view;
 extern Detail g_detail;
 extern Caps g_caps;
+extern Presence g_presence;
 
 void store_init(void);
 // Réception d'une liste : begin, puis chaque pièce ; commit quand toutes sont arrivées.

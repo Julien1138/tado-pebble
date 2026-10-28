@@ -4,6 +4,7 @@
 var P = require('./protocol');
 
 var LAST_PREFIX = 'tado.last.';
+var AUTO_KEY = 'tado.autoUnavailable';
 var DURATIONS = {};
 DURATIONS[P.DUR_30] = { typeSkillBasedApp: 'TIMER', durationInSeconds: 1800 };
 DURATIONS[P.DUR_60] = { typeSkillBasedApp: 'TIMER', durationInSeconds: 3600 };
@@ -92,7 +93,30 @@ function createControl(deps) {
     });
   }
 
-  return { execute: execute, last: last, range: range, resultFor: resultFor };
+  // Mode de présence : Présent et Absent sont imposés (PUT), Auto rend la main à la géolocalisation
+  // (DELETE). Un refus 403 d'Auto signale l'absence d'abonnement Auto-Assist : il est mémorisé et
+  // Auto n'est plus offert (hypothèse H2). cb(err).
+  function setPresence(target, mode, cb) {
+    if (mode === P.PRESENCE_AUTO) {
+      return client.deletePresenceLock(target.homeId, function(err) {
+        if (err && err.kind === 'forbidden') {
+          storage.set(AUTO_KEY, '1');
+        }
+        cb(err);
+      });
+    }
+    if (mode !== P.PRESENCE_HOME && mode !== P.PRESENCE_AWAY) {
+      return cb({ kind: 'refused' });
+    }
+    client.putPresenceLock(target.homeId, mode === P.PRESENCE_HOME ? 'HOME' : 'AWAY', function(err) { cb(err); });
+  }
+
+  function autoUnavailable() {
+    return storage.get(AUTO_KEY) === '1';
+  }
+
+  return { execute: execute, last: last, range: range, resultFor: resultFor,
+           setPresence: setPresence, autoUnavailable: autoUnavailable };
 }
 
 createControl.resultFor = resultFor;

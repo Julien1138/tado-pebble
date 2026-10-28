@@ -65,7 +65,7 @@ static void send_next(void) {
     if (req.type == MSG_GET) {
       dict_write_int32(iter, MESSAGE_KEY_Object, req.object);
       dict_write_int32(iter, MESSAGE_KEY_Refresh, req.refresh ? 1 : 0);
-      if (req.object != OBJ_ROOMS) {
+      if (req.object == OBJ_DETAIL || req.object == OBJ_CAPS) {
         dict_write_int32(iter, MESSAGE_KEY_Index, req.index);
       }
     } else {
@@ -76,6 +76,9 @@ static void send_next(void) {
       if (req.command == CMD_FORCE) {
         dict_write_int32(iter, MESSAGE_KEY_Temp, req.temp);
         dict_write_int32(iter, MESSAGE_KEY_Duration, req.duration);
+      }
+      if (req.command == CMD_PRESENCE) {
+        dict_write_int32(iter, MESSAGE_KEY_PresenceMode, req.duration);
       }
     }
   }
@@ -167,6 +170,15 @@ static void on_inbox(DictionaryIterator *iter, void *context) {
       g_caps.step = int_of(iter, MESSAGE_KEY_CapStep, 5);
       s_handlers.caps_changed();
       break;
+    case MSG_PRESENCE:
+      g_presence.valid = true;
+      g_presence.mode = int_of(iter, MESSAGE_KEY_PresenceMode, PRESENCE_AUTO);
+      g_presence.state = int_of(iter, MESSAGE_KEY_PresenceState, PRESENCE_HOME);
+      g_presence.devices_home = int_of(iter, MESSAGE_KEY_DevicesHome, 0);
+      g_presence.devices_tracked = int_of(iter, MESSAGE_KEY_DevicesTracked, 0);
+      g_presence.auto_unavailable = int_of(iter, MESSAGE_KEY_AutoUnavailable, 0) != 0;
+      s_handlers.presence_changed();
+      break;
     case MSG_ACK:
       s_handlers.command_result(int_of(iter, MESSAGE_KEY_Result, RES_FAILED));
       break;
@@ -220,6 +232,16 @@ void comms_request_caps(uint8_t index, bool refresh) {
   if (s_ready) {
     enqueue(&(Request){ .type = MSG_GET, .seq = ++s_seq, .object = OBJ_CAPS, .index = index,
                         .refresh = refresh });
+  }
+}
+
+void comms_request_presence(bool refresh) {
+  // Un rechargement garde l'ancienne présence à l'écran jusqu'à la réponse.
+  if (!refresh) {
+    g_presence.valid = false;
+  }
+  if (s_ready) {
+    enqueue(&(Request){ .type = MSG_GET, .seq = ++s_seq, .object = OBJ_PRESENCE, .refresh = refresh });
   }
 }
 

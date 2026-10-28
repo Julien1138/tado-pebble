@@ -4,6 +4,7 @@
 #include "store.h"
 #include "text.h"
 #include "ui.h"
+#include "win_menu.h"
 #include "win_pilot.h"
 
 #define ANSWER_TIMEOUT_MS 12000
@@ -102,10 +103,12 @@ void win_result_done(uint8_t result) {
     case RES_OK: show(text_get(T_RES_OK), false); break;
     case RES_REFUSED: show(text_get(T_RES_REFUSED), false); break;
     case RES_OFFLINE: show(text_get(T_DISCONNECTED), false); break;
+    case RES_AUTO_UNAVAILABLE: show(text_get(T_AUTO_UNAVAILABLE), false); break;
     default: show(text_get(T_RES_FAILED), false); break;
   }
   if (s_success) {
     win_pilot_close_all();
+    win_menu_close_all();
   }
   arm(SHOW_MS);
 }
