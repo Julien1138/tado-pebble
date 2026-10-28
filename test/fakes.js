@@ -66,9 +66,11 @@ function tokenStore(clock, overrides) {
   return memoryStorage({ 'tado.tokens': JSON.stringify(tokens) });
 }
 
-// Laisse les callbacks setImmediate de scriptedHttp se dérouler.
-function settle() {
-  return new Promise(function(resolve) { setTimeout(resolve, 5); });
+// Laisse les callbacks setImmediate de scriptedHttp se dérouler, sans dépendre de l'horloge.
+async function settle() {
+  for (var i = 0; i < 20; i++) {
+    await new Promise(function(resolve) { setImmediate(resolve); });
+  }
 }
 
 module.exports = {
