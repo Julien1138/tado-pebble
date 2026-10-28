@@ -1,0 +1,219 @@
+% -----------------------------------------------------------------------------
+\subsubsection{Liste des pièces (F1)}
+
+La liste des pièces est l'écran d'accueil de l'application. Elle répond d'un coup d'œil à
+trois questions~: quelle température fait-il dans chaque pièce, où chauffe-t-on en ce
+moment, et avec quelle force. Chaque pièce occupe une ligne.
+
+\begin{exigence}{TPB-PIE-001}{Une ligne par pièce}[
+    justification = {Connaître la température de chaque pièce sans rien ouvrir.},
+    priorite      = {Essentielle},
+    verification  = {D},
+    phase         = {Pièces},
+  ]
+  L'application doit présenter, pour chaque pièce chauffée de la maison Tado de
+  l'utilisateur, une ligne portant le nom de la pièce et sa température mesurée.
+\end{exigence}
+
+\begin{exigence}{TPB-PIE-002}{Chauffe en cours}[
+    justification = {Savoir où le chauffage tourne réellement, et pas seulement où il est
+                     demandé.},
+    priorite      = {Essentielle},
+    verification  = {T},
+    phase         = {Pièces},
+    note          = {Une pièce chauffe lorsque sa puissance de chauffe est supérieure à
+                     zéro.},
+  ]
+  L'application doit indiquer, sur la ligne de chaque pièce, si elle est en train de
+  chauffer.
+\end{exigence}
+
+\begin{exigence}{TPB-PIE-003}{Puissance de chauffe}[
+    justification = {Une pièce qui chauffe à 15~\% et une autre à 100~\% ne se trouvent
+                     pas dans la même situation.},
+    priorite      = {Essentielle},
+    verification  = {T},
+    phase         = {Pièces},
+  ]
+  Lorsqu'une pièce chauffe, l'application doit afficher sur sa ligne la puissance de
+  chauffe, en pourcentage de la puissance maximale.
+\end{exigence}
+
+\begin{exigence}{TPB-PIE-004}{Température demandée}[
+    justification = {Comparer ce qu'il fait à ce que l'on veut obtenir.},
+    priorite      = {Importante},
+    verification  = {D},
+    phase         = {Pièces},
+  ]
+  L'application doit afficher sur la ligne de chaque pièce la température que le
+  chauffage cherche à atteindre.
+\end{exigence}
+
+\begin{exigence}{TPB-PIE-005}{Pièce forcée signalée}[
+    justification = {Un forçage oublié coûte de l'énergie~; il doit se voir sans ouvrir la
+                     pièce.},
+    priorite      = {Importante},
+    verification  = {D},
+    phase         = {Pièces},
+  ]
+  Lorsque la température d'une pièce a été imposée en dehors de la programmation,
+  l'application doit le signaler sur sa ligne.
+\end{exigence}
+
+\begin{exigence}{TPB-PIE-006}{Pièce sans chauffage actif}[
+    justification = {Une pièce dont le chauffage est éteint n'est pas une pièce qui se
+                     refroidit par erreur.},
+    priorite      = {Importante},
+    verification  = {D},
+    phase         = {Pièces},
+  ]
+  Lorsque le chauffage d'une pièce est éteint, l'application doit l'indiquer sur sa
+  ligne, à la place de la température demandée.
+\end{exigence}
+
+\begin{exigence}{TPB-PIE-007}{Mesure indisponible}[
+    justification = {Une température inventée ou périmée est pire qu'une absence de
+                     température.},
+    priorite      = {Essentielle},
+    verification  = {T},
+    phase         = {Pièces},
+  ]
+  Lorsque la température d'une pièce n'est pas connue, l'application doit l'indiquer sur
+  sa ligne, sans afficher de valeur.
+\end{exigence}
+
+\begin{exigence}{TPB-PIE-008}{Ordre des pièces}[
+    justification = {Retrouver chaque pièce à la même place d'une consultation à l'autre.},
+    priorite      = {Importante},
+    verification  = {D},
+    phase         = {Pièces},
+    note          = {L'ordre retenu est celui de l'application mobile Tado.},
+  ]
+  L'application doit présenter les pièces dans un ordre qui ne change pas d'une
+  consultation à l'autre.
+\end{exigence}
+
+\begin{exigence}{TPB-PIE-009}{Beaucoup de pièces}[
+    justification = {Une maison compte plus de pièces qu'un écran de montre n'en montre.},
+    priorite      = {Essentielle},
+    verification  = {T},
+    phase         = {Pièces},
+    note          = {Maison d'essai~: six pièces (annexe, §\ref{sec:maison-essai}). Le
+                     nombre minimal de pièces à gérer reste à fixer.},
+  ]
+  L'application doit permettre d'atteindre toutes les pièces de la maison, même lorsqu'elles
+  ne tiennent pas toutes à l'écran.
+\end{exigence}
+
+\begin{exigence}{TPB-PIE-010}{Présence dans le titre}[
+    justification = {Savoir en permanence si le chauffage se croit à la maison ou
+                     absent.},
+    priorite      = {Importante},
+    verification  = {D},
+    phase         = {Pièces},
+  ]
+  L'application doit afficher, avec la liste des pièces, l'état de présence de la maison
+  (\emph{Présent} ou \emph{Absent}).
+\end{exigence}
+
+\begin{exigence}{TPB-PIE-011}{Retour à la pièce choisie}[
+    justification = {Après avoir forcé le salon, on veut retrouver le salon, pas le haut de
+                     la liste.},
+    priorite      = {Souhaitable},
+    verification  = {D},
+    phase         = {Pièces},
+  ]
+  Lorsque l'utilisateur revient à la liste des pièces depuis l'une d'elles, l'application
+  doit sélectionner cette pièce.
+\end{exigence}
+
+% -----------------------------------------------------------------------------
+\subsubsection{Détail d'une pièce (F2)}
+
+Le détail d'une pièce rassemble ce que la liste ne peut pas montrer faute de place~: le
+programme en cours, l'humidité, ce qui se passera ensuite. C'est aussi la porte d'entrée
+vers le pilotage et vers le bien-être ambiant de la pièce.
+
+\begin{exigence}{TPB-DET-001}{Détail d'une pièce}[
+    justification = {Comprendre pourquoi une pièce chauffe, ou ne chauffe pas.},
+    priorite      = {Essentielle},
+    verification  = {D},
+    phase         = {Pièces},
+  ]
+  L'application doit permettre d'ouvrir le détail d'une pièce depuis la liste, et y
+  afficher sa température mesurée, la température demandée, l'état et la puissance de
+  chauffe.
+\end{exigence}
+
+\begin{exigence}{TPB-DET-002}{Mode en cours}[
+    justification = {Distinguer le programme d'un forçage, et savoir jusqu'à quand il
+                     dure.},
+    priorite      = {Essentielle},
+    verification  = {T},
+    phase         = {Pièces},
+    note          = {Exemples~: \enquote{Programme, jusqu'à 22:00}~; \enquote{Forcé, encore
+                     40 min}~; \enquote{Jusqu'à nouvel ordre}.},
+  ]
+  L'application doit afficher, dans le détail d'une pièce, si la température demandée vient
+  de la programmation ou d'un forçage, et jusqu'à quel moment elle reste en vigueur.
+\end{exigence}
+
+\begin{exigence}{TPB-DET-003}{Prochain changement}[
+    justification = {Savoir ce que le chauffage fera ensuite, avant d'y toucher.},
+    priorite      = {Importante},
+    verification  = {T},
+    phase         = {Pièces},
+  ]
+  Lorsque la programmation prévoit un changement, l'application doit afficher dans le
+  détail d'une pièce l'heure de ce changement et la température qui suivra.
+\end{exigence}
+
+\begin{exigence}{TPB-DET-004}{Humidité}[
+    justification = {L'humidité relative accompagne la température dans toute lecture du
+                     confort.},
+    priorite      = {Importante},
+    verification  = {T},
+    phase         = {Pièces},
+  ]
+  Lorsque la pièce est équipée d'un capteur d'humidité, l'application doit afficher
+  l'humidité relative dans le détail de la pièce.
+\end{exigence}
+
+\begin{exigence}{TPB-DET-005}{Passer d'une pièce à l'autre}[
+    justification = {Faire le tour de la maison sans repasser par la liste.},
+    priorite      = {Importante},
+    verification  = {D},
+    phase         = {Pièces},
+  ]
+  L'application doit permettre de passer, depuis le détail d'une pièce, au détail de la
+  pièce précédente ou suivante de la liste.
+\end{exigence}
+
+\begin{exigence}{TPB-DET-006}{Accès au pilotage}[
+    justification = {On consulte une pièce pour la régler.},
+    priorite      = {Essentielle},
+    verification  = {D},
+    phase         = {Pièces},
+  ]
+  L'application doit permettre d'ouvrir le pilotage d'une pièce depuis son détail.
+\end{exigence}
+
+\begin{exigence}{TPB-DET-007}{Accès au bien-être ambiant}[
+    justification = {Le bien-être ambiant se lit pièce par pièce.},
+    priorite      = {Importante},
+    verification  = {D},
+    phase         = {Pièces},
+  ]
+  L'application doit permettre d'ouvrir le bien-être ambiant d'une pièce depuis son détail
+  (§\ref{sec:ambiance}).
+\end{exigence}
+
+\begin{exigence}{TPB-DET-008}{Fenêtre ouverte dans le détail}[
+    justification = {Expliquer un chauffage coupé alors que la programmation en demande.},
+    priorite      = {Importante},
+    verification  = {T},
+    phase         = {Pièces},
+  ]
+  Lorsqu'une fenêtre ouverte est détectée dans une pièce, l'application doit l'indiquer
+  dans le détail de la pièce, avec depuis combien de temps le chauffage est coupé.
+\end{exigence}

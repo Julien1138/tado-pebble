@@ -1,0 +1,176 @@
+% -----------------------------------------------------------------------------
+\subsubsection{Compte Tado (F9)}
+
+L'application agit au nom de l'utilisateur sur sa maison Tado. Elle doit donc être reliée à
+son compte, une fois, avec son accord.
+
+\begin{exigence}{TPB-CPT-001}{Relier le compte Tado}[
+    justification = {Sans compte relié, l'application ne montre ni ne commande rien.},
+    priorite      = {Essentielle},
+    verification  = {T},
+    phase         = {Compte},
+  ]
+  L'application doit permettre à l'utilisateur de la relier à son compte Tado, en lui
+  faisant autoriser cet accès auprès de Tado.
+\end{exigence}
+
+\begin{exigence}{TPB-CPT-002}{Maison choisie}[
+    justification = {Un compte Tado peut compter plusieurs maisons.},
+    priorite      = {Importante},
+    verification  = {T},
+    phase         = {Compte},
+  ]
+  Lorsque le compte Tado compte plusieurs maisons, l'application doit permettre à
+  l'utilisateur de choisir celle qu'elle pilote, et ne doit en piloter qu'une.
+\end{exigence}
+
+\begin{exigence}{TPB-CPT-003}{Liaison durable}[
+    justification = {Personne ne ressaisit un mot de passe sur une montre à chaque usage.},
+    priorite      = {Essentielle},
+    verification  = {D},
+    phase         = {Compte},
+  ]
+  Une fois reliée, l'application doit rester utilisable sans nouvelle autorisation de
+  l'utilisateur, tant que celui-ci ne la délie pas.
+\end{exigence}
+
+\begin{exigence}{TPB-CPT-004}{Délier le compte}[
+    justification = {Changer de compte, revendre la montre.},
+    priorite      = {Importante},
+    verification  = {T},
+    phase         = {Compte},
+  ]
+  L'application doit permettre à l'utilisateur de la délier de son compte Tado, après
+  quoi elle ne doit plus afficher ni commander la maison.
+\end{exigence}
+
+\begin{exigence}{TPB-CPT-005}{Liaison perdue}[
+    justification = {Une autorisation peut expirer ou être retirée chez Tado.},
+    priorite      = {Essentielle},
+    verification  = {T},
+    phase         = {Compte},
+  ]
+  Lorsque Tado refuse l'accès à l'application, celle-ci doit dire à l'utilisateur que la
+  liaison est perdue et lui permettre de la rétablir.
+\end{exigence}
+
+% -----------------------------------------------------------------------------
+\subsubsection{Actualisation des données (F10)}
+\label{sec:actualisation}
+
+Tado limite le nombre de requêtes qu'une application peut lui faire par jour (100 pour un
+compte standard, davantage avec l'abonnement Auto-Assist). L'application doit donc rester
+utile en consommant ce volume avec soin, et ne jamais cacher à l'utilisateur l'âge de ce
+qu'elle lui montre.
+
+\begin{exigence}{TPB-ACT-001}{Ouverture immédiate}[
+    justification = {On regarde la montre quelques secondes~; elle ne peut pas rester vide
+                     pendant que le réseau répond.},
+    priorite      = {Essentielle},
+    verification  = {D},
+    phase         = {Actualisation},
+  ]
+  À l'ouverture, l'application doit afficher sans délai la dernière situation connue de la
+  maison, puis la remplacer par la situation actuelle dès qu'elle l'a obtenue.
+\end{exigence}
+
+\begin{exigence}{TPB-ACT-002}{Âge des données}[
+    justification = {Une température vieille de deux heures n'est pas une température.},
+    priorite      = {Essentielle},
+    verification  = {T},
+    phase         = {Actualisation},
+    note          = {Seuil d'affichage à fixer.},
+  ]
+  Lorsque les données affichées ont plus d'un certain âge, l'application doit indiquer cet
+  âge.
+\end{exigence}
+
+\begin{exigence}{TPB-ACT-003}{Actualisation à la demande}[
+    justification = {L'utilisateur qui vient de forcer une pièce veut voir le résultat.},
+    priorite      = {Importante},
+    verification  = {D},
+    phase         = {Actualisation},
+  ]
+  L'application doit permettre à l'utilisateur de demander l'actualisation de la situation
+  de la maison.
+\end{exigence}
+
+\begin{exigence}{TPB-ACT-004}{Actualisation pendant la consultation}[
+    justification = {Une montre posée sur la table pendant une minute ne doit pas montrer
+                     une valeur périmée.},
+    priorite      = {Souhaitable},
+    verification  = {D},
+    phase         = {Actualisation},
+    note          = {Fréquence à fixer pour que la journée tienne dans le volume autorisé
+                     (\refexig{TPB-ACT-005}, \refexig{TPB-ACT-006}).},
+  ]
+  Tant que l'utilisateur consulte l'application, celle-ci devrait actualiser la situation
+  de la maison à intervalles réguliers.
+\end{exigence}
+
+\begin{exigence}{TPB-ACT-005}{Volume de requêtes tenu}[
+    justification = {Au-delà du volume autorisé, Tado refuse tout, commandes comprises.},
+    priorite      = {Essentielle},
+    verification  = {A},
+    phase         = {Actualisation},
+    note          = {Volume autorisé~: 100 requêtes par jour pour un compte standard,
+                     20\,000 avec Auto-Assist (Tado, janvier 2026). L'historique
+                     (\refexig{TPB-HIS-007}) et les alertes (\refexig{TPB-ALE-006})
+                     consomment aussi ce volume.},
+  ]
+  L'application doit remplir toutes ses fonctions en restant, pour un usage normal d'une
+  journée, sous le volume de requêtes que Tado autorise à un compte standard.
+\end{exigence}
+
+\begin{exigence}{TPB-ACT-006}{Commandes toujours possibles}[
+    justification = {Une consultation automatique ne doit pas empêcher de couper le
+                     chauffage.},
+    priorite      = {Essentielle},
+    verification  = {A},
+    phase         = {Actualisation},
+    note          = {Part réservée~: dix requêtes par jour.},
+  ]
+  L'application doit réserver dix requêtes par jour aux commandes de l'utilisateur, que ses
+  consultations automatiques ne peuvent pas entamer.
+\end{exigence}
+
+\begin{exigence}{TPB-ACT-007}{Volume épuisé}[
+    justification = {Comprendre pourquoi les valeurs ne bougent plus.},
+    priorite      = {Importante},
+    verification  = {T},
+    phase         = {Actualisation},
+  ]
+  Lorsque Tado refuse des requêtes parce que le volume autorisé est atteint, l'application
+  doit le dire à l'utilisateur et continuer à afficher la dernière situation connue avec
+  son âge.
+\end{exigence}
+
+\begin{exigence}{TPB-ACT-008}{Situation relue après une commande}[
+    justification = {Voir l'effet réel d'une commande, pas celui que l'on espère.},
+    priorite      = {Importante},
+    verification  = {T},
+    phase         = {Actualisation},
+  ]
+  Après une commande, l'application doit relire la situation de la pièce concernée
+  (ou de la maison, pour un raccourci) avant de l'afficher.
+\end{exigence}
+
+\begin{exigence}{TPB-ACT-009}{Montre sans connexion}[
+    justification = {La montre quitte souvent la portée du téléphone.},
+    priorite      = {Importante},
+    verification  = {T},
+    phase         = {Actualisation},
+  ]
+  Lorsque l'application ne peut pas joindre Tado, elle doit afficher la dernière situation
+  connue avec son âge et indiquer que la connexion manque.
+\end{exigence}
+
+\begin{exigence}{TPB-ACT-010}{Requêtes restantes non affichées}[
+    justification = {Un compteur de requêtes est une préoccupation technique que
+                     l'utilisateur n'a pas à porter.},
+    priorite      = {Importante},
+    verification  = {I},
+    phase         = {Actualisation},
+  ]
+  L'application ne doit pas afficher le nombre de requêtes qu'il reste à l'utilisateur.
+\end{exigence}

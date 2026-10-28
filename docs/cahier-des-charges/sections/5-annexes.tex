@@ -1,0 +1,84 @@
+\section{Annexes}
+
+\subsection{Hypothèses et dépendances}
+\label{sec:hypotheses}
+
+\begin{description}
+  \item[Tado reste l'unique source.] L'application ne mesure ni ne commande rien par
+    elle-même~: elle montre ce que Tado lui dit et lui transmet les ordres de l'utilisateur.
+    Ce que Tado ne met pas à la disposition des applications tierces est abandonné.
+  \item[Volume de requêtes.] Un compte standard n'autorise que 100 requêtes par jour [N2]. Les
+    exigences d'actualisation (§\ref{sec:actualisation}) en tirent les conséquences~; elles
+    deviennent moins contraintes pour un compte Auto-Assist.
+  \item[Eau chaude et climatisation exclues.] La maison n'en a pas~; l'application ne les
+    montre pas.
+  \item[Présence par géolocalisation.] Le mode \emph{Auto} de Tado se fonde sur la position
+    des appareils mobiles suivis, pas sur leur connexion au wifi~; ce choix est retenu. L'utilisateur n'a pas l'abonnement
+    Auto-Assist, mais la géolocalisation fonctionne dans son application Android~; que l'API
+    donne accès à ce mode sans l'abonnement reste à vérifier.
+  \item[Fonctions conditionnées à l'API Tado.] Le bien-être ambiant et les alertes
+    reprennent ce que montre l'application Android Tado. Toute information que l'API de
+    Tado ne fournit pas est abandonnée, avec la fonction qui en dépend.
+  \item[Montre associée à un téléphone.] Une montre Pebble n'atteint le réseau que par le
+    téléphone auquel elle est associée~; lorsqu'elle s'en éloigne, elle ne reçoit plus rien
+    de Tado (\refexig{TPB-ACT-009}).
+  \item[Programmation faite ailleurs.] Les plages horaires se règlent dans l'application
+    mobile Tado~; l'application les lit, ne les écrit pas.
+\end{description}
+
+\subsection{Exemple suivi~: la maison d'essai}
+\label{sec:maison-essai}
+
+La maison ci-dessous illustre les exigences et sert de jeu d'essai
+(§\ref{sec:verification}). Elle compte six pièces, un soir d'hiver, la maison étant
+\emph{Présent} en mode \emph{Auto} (deux appareils à la maison).
+
+\begin{table}[H]
+  \centering\small
+  \begin{tabularx}{\linewidth}{@{}lrrrlX@{}}
+    \toprule
+    \textbf{Pièce} & \textbf{Mesure} & \textbf{Demandée} & \textbf{Puissance} & \textbf{Mode} & \textbf{Couleur (§\ref{sec:affichage})} \\
+    \midrule
+    Salon         & 19,4~°C & 21~°C & 60~\% & Programme       & cyan \\
+    Cuisine       & 20,1~°C & 19~°C & 0~\%  & Programme       & ambre \\
+    Ch. parents   & 17,8~°C & 17~°C & 0~\%  & Programme       & bleu \\
+    Ch. enfant    & 18,2~°C & 19~°C & 35~\% & Forcé, encore 1~h & cyan \\
+    Bureau        & 19,9~°C & 20~°C & 15~\% & Programme       & ambre \\
+    Salle de bain & 21,3~°C & 22~°C & 0~\%  & Programme       & orange \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Les six pièces de la maison d'essai}
+  \label{tab:maison-essai}
+\end{table}
+
+Alertes en cours~: fenêtre ouverte au salon (chauffage coupé depuis 4~min)~; pile faible dans
+la chambre de l'enfant (tête thermostatique).
+
+Ce que l'exemple met à l'épreuve~:
+\begin{itemize}
+  \item le salon chauffe à 60~\% et une chambre à 35~\% (\refexig{TPB-PIE-002},
+        \refexig{TPB-PIE-003})~;
+  \item la cuisine est au-dessus de sa température demandée~: elle ne chauffe pas
+        (\refexig{TPB-PIE-004})~;
+  \item la chambre de l'enfant est forcée (\refexig{TPB-PIE-005}, \refexig{TPB-DET-002})~;
+  \item les quatre tranches de couleur apparaissent (\refexig{TPB-AFF-001})~;
+  \item la salle de bain, au-dessus de 21~°C, est la seule pièce orange~;
+  \item deux alertes de natures différentes (\refexig{TPB-ALE-002}, \refexig{TPB-ALE-003})~;
+  \item la maison est \emph{Présent} en mode \emph{Auto}, avec deux appareils
+        (\refexig{TPB-PRE-001}, \refexig{TPB-PRE-003}).
+\end{itemize}
+
+\subsection{Écarts avec l'existant}
+\label{sec:ecarts}
+
+Le tableau ci-dessous, généré à partir des exigences, récapitule celles que l'application
+ne satisfait pas aujourd'hui. L'application n'étant pas encore écrite, il reste vide.
+
+\listeecarts
+
+\subsection{Points ouverts}
+\label{sec:points-ouverts}
+
+Les douze points ouverts de la première rédaction ont été tranchés le 28 octobre 2026~;
+leurs décisions figurent dans les exigences concernées. Aucun point ne reste ouvert.
+% Réactiver \listepointsouverts dès qu'un nouveau \pointouvert apparaît.

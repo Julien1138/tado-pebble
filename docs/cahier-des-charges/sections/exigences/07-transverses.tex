@@ -1,0 +1,145 @@
+% =============================================================================
+\subsection{Exigences d'utilisabilité}
+
+\begin{exigence}{TPB-UTI-001}{Lecture d'un coup d'œil}[
+    justification = {On consulte sa montre en passant, souvent en une ou deux secondes.},
+    priorite      = {Essentielle},
+    verification  = {D},
+    phase         = {Transverse},
+  ]
+  L'application doit permettre de lire, sans autre action que son ouverture, la
+  température de chaque pièce et celles qui chauffent.
+\end{exigence}
+
+\begin{exigence}{TPB-UTI-002}{Peu d'appuis pour agir}[
+    justification = {Le geste le plus courant est de rejouer \enquote{21° pendant 1 h} dans
+                     une pièce.},
+    priorite      = {Essentielle},
+    verification  = {D},
+    phase         = {Transverse},
+    note          = {Chemin visé~: ouvrir la pièce, ouvrir le pilotage, choisir le dernier
+                     réglage. Le nombre maximal d'appuis reste à fixer.},
+  ]
+  L'application doit permettre de rejouer le dernier forçage d'une pièce en quelques
+  appuis, depuis la liste des pièces.
+\end{exigence}
+
+\begin{exigence}{TPB-UTI-003}{Aucune saisie de texte}[
+    justification = {Une montre n'a pas de clavier.},
+    priorite      = {Essentielle},
+    verification  = {I},
+    phase         = {Transverse},
+  ]
+  L'application ne doit demander à l'utilisateur la saisie d'aucun texte sur la montre.
+\end{exigence}
+
+\begin{exigence}{TPB-UTI-004}{Usage à une main}[
+    justification = {L'autre main porte le panier de linge ou la tasse.},
+    priorite      = {Importante},
+    verification  = {D},
+    phase         = {Transverse},
+  ]
+  L'application doit pouvoir être utilisée entièrement avec les boutons de la montre,
+  portée au poignet, d'une seule main.
+\end{exigence}
+
+\begin{exigence}{TPB-UTI-005}{Attente signalée}[
+    justification = {Un écran qui ne réagit pas fait croire que le bouton n'a pas
+                     marché.},
+    priorite      = {Importante},
+    verification  = {D},
+    phase         = {Transverse},
+  ]
+  Pendant qu'elle attend la réponse de Tado, l'application doit montrer qu'elle est en
+  cours d'échange.
+\end{exigence}
+
+\begin{exigence}{TPB-UTI-006}{Vocabulaire de Tado}[
+    justification = {L'utilisateur connaît déjà Tado~; il ne doit pas apprendre d'autres
+                     mots.},
+    priorite      = {Souhaitable},
+    verification  = {I},
+    phase         = {Transverse},
+  ]
+  L'application devrait nommer les pièces, les modes et les états comme l'application
+  mobile Tado.
+\end{exigence}
+
+% =============================================================================
+\subsection{Exigences d'interface}
+\label{sec:interfaces}
+
+L'application échange avec trois interlocuteurs. Le tableau ci-dessous dit, pour chaque
+échange, les exigences qui portent ce que l'application en attend.
+
+\begin{table}[H]
+  \centering\small
+  \begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}p{32mm}X>{\raggedright\arraybackslash}p{38mm}@{}}
+    \toprule
+    \textbf{Réf.} & \textbf{Partie} & \textbf{Échange} & \textbf{Exigences} \\
+    \midrule
+    IF-01 & Compte Tado & L'application lit la situation de la maison (pièces, températures, humidité, chauffe, présence, alertes, historique) et la modifie (consignes, modes, présence). & \refexig{TPB-CPT-001} à \refexig{TPB-CPT-005}, \refexig{TPB-ACT-001} à \refexig{TPB-ACT-009} \\
+    IF-02 & Montre de l'utilisateur & L'utilisateur lit l'écran, appuie sur les quatre boutons, reçoit une vibration lors d'une alerte. & \refexig{TPB-NAV-001} à \refexig{TPB-NAV-005}, \refexig{TPB-PLT-001} à \refexig{TPB-PLT-007}, \refexig{TPB-ALE-006} \\
+    IF-03 & Téléphone de l'utilisateur & La montre n'atteint Tado que lorsqu'elle est à portée du téléphone auquel elle est associée. & \refexig{TPB-ACT-009}, \refexig{TPB-PIL-011} \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Interfaces de l'application}
+  \label{tab:interfaces}
+\end{table}
+
+% =============================================================================
+\subsection{Exigences de droits d'accès}
+
+\begin{exigence}{TPB-SEC-001}{Accès limité au compte relié}[
+    justification = {La maison est un lieu privé~; la montre ne doit montrer et commander
+                     que celle de son propriétaire.},
+    priorite      = {Essentielle},
+    verification  = {T},
+    phase         = {Transverse},
+  ]
+  L'application ne doit donner accès qu'à la maison du compte Tado auquel elle est reliée.
+\end{exigence}
+
+\begin{exigence}{TPB-SEC-002}{Pas de mot de passe sur la montre}[
+    justification = {Une montre se perd ou se prête plus facilement qu'un téléphone.},
+    priorite      = {Importante},
+    verification  = {I},
+    phase         = {Transverse},
+  ]
+  L'application ne doit ni demander ni afficher le mot de passe Tado de l'utilisateur sur la
+  montre.
+\end{exigence}
+
+% =============================================================================
+\subsection{Exigences de gestion de l'information}
+
+\begin{exigence}{TPB-INF-001}{Dernière situation conservée}[
+    justification = {Afficher quelque chose dès l'ouverture, même sans réseau.},
+    priorite      = {Importante},
+    verification  = {T},
+    phase         = {Transverse},
+  ]
+  L'application doit conserver la dernière situation connue de la maison, d'une ouverture
+  à l'autre.
+\end{exigence}
+
+\begin{exigence}{TPB-INF-002}{Dernier forçage conservé}[
+    justification = {Rejouer le dernier réglage de chaque pièce (\refexig{TPB-PIL-004}).},
+    priorite      = {Importante},
+    verification  = {T},
+    phase         = {Transverse},
+  ]
+  L'application doit conserver, pour chaque pièce, le dernier forçage demandé par
+  l'utilisateur.
+\end{exigence}
+
+\begin{exigence}{TPB-INF-003}{Données limitées à l'usage}[
+    justification = {Les habitudes d'une maison (heures de chauffe, présence) en disent long
+                     sur ceux qui y vivent.},
+    priorite      = {Importante},
+    verification  = {I},
+    phase         = {Transverse},
+  ]
+  L'application ne doit transmettre les données de la maison à personne d'autre que Tado
+  et la montre de l'utilisateur, et ne doit conserver que ce qu'exigent ses écrans.
+\end{exigence}

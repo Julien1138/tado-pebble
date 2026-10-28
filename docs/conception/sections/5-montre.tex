@@ -1,0 +1,124 @@
+\section{Conception de la watchapp (montre)}
+\label{sec:montre}
+
+\subsection{Composants}
+
+\begin{table}[H]
+  \centering\small
+  \begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}p{30mm}X>{\raggedright\arraybackslash}p{30mm}@{}}
+    \toprule
+    \textbf{Réf.} & \textbf{Composant} & \textbf{Responsabilité} & \textbf{Exigences} \\
+    \midrule
+    M-01 & Application & Cycle de vie, pile de fenêtres, ouverture de la messagerie, affichage immédiat de la dernière situation. & \refexig{TPB-NAV-001}, \refexig{TPB-NAV-005}, \refexig{TPB-ACT-001} \\
+    M-02 & Messagerie & Ouvre AppMessage, envoie les demandes l'une après l'autre (attente de l'accusé d'envoi, un réessai), reçoit les vues, ignore les messages d'une demande périmée. & \refexig{TPB-ACT-009} \\
+    M-03 & Magasin & Garde en mémoire la vue de l'écran courant~; écrit dans le stockage la dernière liste des pièces avec son heure. & \refexig{TPB-INF-001}, \refexig{TPB-INF-002} \\
+    M-04 & Plateforme & Table de constantes par plateforme (§\ref{sec:plateformes}). Seul endroit où l'on teste la plateforme. & \refexig{TPB-PLT-001} à \refexig{TPB-PLT-007} \\
+    M-05 & Thème & Couleurs, motifs noir et blanc, tranches de température (§\ref{sec:theme}). & \refexig{TPB-AFF-001} à \refexig{TPB-AFF-004} \\
+    M-06 & Moteur de liste & Une seule liste pour tous les écrans de liste~: rectangulaire, ou ronde sur trois lignes avec la sélection au centre. Défilement, sélection, sous-titres, pastilles. & \refexig{TPB-NAV-002}, \refexig{TPB-PLT-004} \\
+    M-07 & Fenêtres & Une fenêtre par écran (§\ref{sec:fenetres}). Elles ne connaissent ni Tado ni le protocole~: elles lisent la vue du magasin et émettent des demandes. & \refexig{TPB-PIE-001} à \refexig{TPB-ALE-005} \\
+    M-08 & Textes & Ressources en français et en anglais, mise en forme des températures et des heures. & \refexig{TPB-AFF-005}, \refexig{TPB-AFF-006} \\
+    M-09 & Barre d'actions & Barre latérale des écrans rectangulaires (30~px sur Time~2, 24~px ailleurs). Absente des écrans ronds. & \refexig{TPB-PLT-005} \\
+    M-10 & Bandeau d'état & Âge des données, absence de connexion, quota épuisé, attente de réponse. & \refexig{TPB-ACT-002}, \refexig{TPB-ACT-007}, \refexig{TPB-UTI-005} \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Composants de la watchapp}
+\end{table}
+
+\subsection{Adaptation aux plateformes}
+\label{sec:plateformes}
+
+\begin{table}[H]
+  \centering\small
+  \begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}p{34mm}>{\raggedright\arraybackslash}p{22mm}>{\raggedright\arraybackslash}p{18mm}X@{}}
+    \toprule
+    \textbf{Plateforme} & \textbf{Montres} & \textbf{Écran} & \textbf{Stockage} & \textbf{Particularités de présentation} \\
+    \midrule
+    emery & Pebble Time~2 & 200\,×\,228, couleur & 1~Mo & Référence. Barre d'actions de 30~px, sous-titres visibles, légende complète de l'historique, douze colonnes. \\
+    basalt & Pebble Time, Time Steel & 144\,×\,168, couleur & 4~Ko & Barre d'actions de 24~px, sous-titres abrégés, noms de pièces abrégés dans l'historique. \\
+    chalk & Pebble Time Round & 180\,×\,180, rond, couleur & 4~Ko & Trois lignes, sélection au centre, pas de barre d'actions, historique sur huit colonnes. \\
+    gabbro & Pebble Round~2 & 260\,×\,260, rond, couleur & 1~Mo & Comme chalk, avec les textes et douze colonnes d'emery. \\
+    aplite & Pebble, Pebble Steel & 144\,×\,168, N\&B & 4~Ko & Vidéo inversée, contours, motifs. \\
+    diorite & Pebble~2 & 144\,×\,168, N\&B & 4~Ko & Comme aplite. \\
+    flint & Pebble~2 Duo & 144\,×\,168, N\&B & 1~Mo & Comme aplite (rendu identique). \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Plateformes et choix de présentation}
+\end{table}
+
+La table de constantes (M-04) porte, par plateforme~: hauteurs de ligne et de sous-titre,
+largeur de barre d'actions, nombre de colonnes d'historique, présence de la légende, indicateur
+\enquote{rond}, indicateur \enquote{couleur}. Elle se remplit en relevant les valeurs sur les
+maquettes (§\ref{sec:maquettes}). On teste \texttt{PBL\_ROUND}, \texttt{PBL\_COLOR} et
+\texttt{PBL\_DISPLAY\_WIDTH} plutôt que le nom de la plateforme, qui n'est utilisé que
+pour la table.
+
+\subsection{Thème}
+\label{sec:theme}
+
+Le thème \enquote{Tado tuiles} choisi sur les maquettes donne un fond noir, une barre de titre
+orange, une sélection ambre, et des tuiles de couleur selon la température (\refexig{TPB-AFF-001}).
+
+\begin{table}[H]
+  \centering\small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{34mm}>{\raggedright\arraybackslash}p{30mm}>{\raggedright\arraybackslash}p{50mm}X@{}}
+    \toprule
+    \textbf{Usage} & \textbf{Teinte} & \textbf{Constante du SDK (à vérifier)} & \textbf{Noir et blanc} \\
+    \midrule
+    Pièce sous 18~°C        & \texttt{\#00AAFF} & \texttt{GColorVividCerulean} & ligne blanche \\
+    18 à 19,5~°C            & \texttt{\#55FFFF} & \texttt{GColorCeleste}       & ligne blanche \\
+    19,5 à 21~°C            & \texttt{\#FFAA00} & \texttt{GColorChromeYellow}  & ligne blanche \\
+    21~°C et plus           & \texttt{\#FF5500} & \texttt{GColorOrange}        & ligne blanche \\
+    Pièce qui chauffe       & flamme et pourcentage & \texttt{GColorOrange}    & ligne inversée \\
+    Titre                   & \texttt{\#FF5500} & \texttt{GColorOrange}        & bandeau noir \\
+    Historique, niveaux 1 à 3 & \texttt{\#AA5500}, \texttt{\#FF5500}, \texttt{\#FFAA00} & \texttt{GColorWindsorTan}, \texttt{GColorOrange}, \texttt{GColorChromeYellow} & points, damier, plein \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Couleurs, toutes dans la palette de 64 couleurs (\refexig{TPB-AFF-002})}
+\end{table}
+
+Les seuils de température sont comparés dans l'unité du compte~: en degrés Fahrenheit, ils sont
+convertis une fois (64,4~; 67,1~; 69,8~°F) par le pkjs, qui envoie la \emph{tranche} avec la
+température. La watchapp ne compare donc jamais de seuils (DEC-02).
+
+\subsection{Fenêtres et navigation}
+\label{sec:fenetres}
+
+\begin{table}[H]
+  \centering\small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{27mm}>{\raggedright\arraybackslash}p{22mm}X@{}}
+    \toprule
+    \textbf{Fenêtre} & \textbf{Parent} & \textbf{Boutons} \\
+    \midrule
+    1 Pièces & aucun & Haut/Bas~: sélection. Sélection~: détail. Sélection long~: menu. Retour~: quitter. \\
+    2 Détail & Pièces & Haut/Bas (barre d'actions)~: pièce précédente/suivante. Sélection~: pilotage. Sélection long~: bien-être. Retour~: pièces. \\
+    3 Pilotage & Détail & Haut/Bas~: sélection. Sélection~: action (forcer, rejouer, programmation, éteindre). Retour~: détail. \\
+    4 Consigne & Pilotage & Haut/Bas~: $\pm 0{,}5$~° ($\pm 1$~°F). Sélection~: valider, ouvre la durée. Retour~: abandonner sans effet. \\
+    5 Durée & Consigne & Haut/Bas~: sélection. Sélection~: envoyer la commande. Retour~: consigne. \\
+    6 Menu & Pièces & Haut/Bas~: sélection. Sélection~: ouvrir. Retour~: pièces. \\
+    7 Historique & Menu & Retour seulement. Haut/Bas~: défilement s'il y a plus de pièces que de lignes. \\
+    8 Présence & Menu & Haut/Bas~: sélection. Sélection~: imposer le mode. Retour~: menu. \\
+    9 Raccourcis & Menu & Haut/Bas~: sélection. Sélection~: confirmation, puis commande. Retour~: menu. \\
+    10 Bien-être & Détail & Haut/Bas~: pièce précédente/suivante. Retour~: détail. \\
+    11 Alertes & Menu & Haut/Bas~: sélection. Retour~: menu. \\
+    12 Liaison & Pièces & Retour~: annuler la liaison. \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Fenêtres et fonction des boutons (\refexig{TPB-NAV-002} à \refexig{TPB-NAV-005})}
+  \label{tab:fenetres}
+\end{table}
+
+Une fenêtre n'existe que pendant qu'elle est empilée~: elle est créée à l'ouverture, détruite
+à la fermeture, et ne garde rien que la vue du magasin ne sache redonner. Cette sobriété est
+indispensable sur aplite, la plateforme dont la mémoire de travail est la plus étroite
+(point ouvert ci-dessous).
+
+\pointouvert{Quelle est la mémoire de travail disponible sur aplite pour la fenêtre la plus chargée (historique, six pièces)~? À mesurer sur l'émulateur avant de figer le moteur de liste.}
+
+\subsection{Données conservées sur la montre}
+
+Le magasin écrit, après chaque liste de pièces reçue, un enregistrement unique~:
+version du format (1 octet), heure d'obtention (4), nombre de pièces (1), puis pour chaque pièce son
+nom (20), son abréviation (4), sa température mesurée et sa consigne (2 chacune, en dixièmes), sa
+puissance (1), ses indicateurs (1) et sa tranche de couleur (1), soit 34 octets par pièce. Seize
+pièces tiennent dans 600 octets, loin des 4~Ko de la plus petite plateforme (C7). Rien d'autre
+n'est écrit~: pas de jeton, pas d'identifiant Tado.

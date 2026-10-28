@@ -1,0 +1,230 @@
+\section{Introduction}
+
+\subsection{Objet du système}
+
+\emph{Tado pour Pebble} est une application pour montres Pebble qui permet de consulter et de
+piloter, depuis le poignet, le chauffage Tado d'une maison. Elle répond à quatre besoins~:
+savoir quelle température il fait dans chaque pièce et où l'on chauffe, se souvenir où l'on
+a chauffé ces dernières heures, forcer la température d'une pièce ou la rendre à sa
+programmation, et dire au chauffage si la maison est habitée ou non.
+
+Le présent document spécifie les \emph{besoins fonctionnels} de l'application~: ce qu'elle
+montre, ce qu'elle permet de commander, et comment l'utilisateur s'y déplace. Il sert de
+référence pour la conception, la vérification et l'évolution de l'application. L'architecture
+logicielle (découpage entre la montre et le téléphone, échanges avec Tado, stockage,
+choix techniques) n'y figure pas~: elle fait l'objet d'un second document, qui s'appuie sur
+celui-ci.
+
+\subsection{Périmètre du système}
+
+\paragraph{Dans le périmètre.} Les fonctions de l'application sur la montre
+(figure~\ref{fig:navigation}, §\ref{sec:navigation})~:
+\begin{itemize}
+  \item la \textbf{consultation}~: température, chauffe en cours et puissance de chaque
+        pièce, détail d'une pièce, historique de chauffe des douze dernières heures~;
+  \item le \textbf{pilotage}~: forcer la température d'une pièce pour une durée, rendre la
+        main à la programmation, éteindre le chauffage d'une pièce~;
+  \item la \textbf{présence}~: imposer \emph{Présent} ou \emph{Absent}, ou laisser Tado
+        décider~;
+  \item les \textbf{compléments}~: raccourcis qui agissent sur toute la maison, alertes,
+        bien-être ambiant de chaque pièce~;
+  \item la \textbf{liaison au compte Tado} et l'\textbf{actualisation des données} dans le
+        volume de requêtes que Tado autorise~;
+  \item l'\textbf{adaptation aux modèles de montre} Pebble (sept plateformes d'affichage,
+        couleur et noir et blanc, écrans rectangulaires et ronds).
+\end{itemize}
+
+\paragraph{Hors périmètre.}
+\begin{itemize}
+  \item La \textbf{production d'eau chaude sanitaire} et la \textbf{climatisation}~: la
+        maison de l'utilisateur n'en a pas.
+  \item La \textbf{programmation} des plages horaires de chaque pièce~: elle se fait dans
+        l'application mobile Tado, que la montre ne remplace pas.
+  \item L'\textbf{installation} et la \textbf{configuration} des appareils Tado (pièces,
+        thermostats, capteurs).
+  \item L'\textbf{architecture logicielle}~: second document.
+\end{itemize}
+
+\paragraph{Niveau du document.} Ce document est l'unique spécification des besoins
+fonctionnels de l'application. Les besoins de l'utilisateur n'y font pas l'objet d'une
+spécification distincte~: ils figurent dans la justification de chaque exigence. Les
+maquettes des écrans [P1] illustrent les exigences~; en cas de désaccord, ce sont les
+exigences qui font foi.
+
+\subsection{Vue d'ensemble du système}
+
+\subsubsection{Les écrans}
+
+L'application s'organise autour de la liste des pièces. De là, l'utilisateur ouvre une pièce,
+la pilote, ou passe par le menu aux écrans qui concernent toute la maison. La
+figure~\ref{fig:navigation} (§\ref{sec:navigation}) donne cet enchaînement~; le
+tableau~\ref{tab:ecrans} rattache chaque écran aux fonctions.
+
+\begin{table}[H]
+  \centering\small
+  \begin{tabularx}{\linewidth}{@{}clX@{}}
+    \toprule
+    \textbf{N\textsuperscript{o}} & \textbf{Écran} & \textbf{Ce qu'il montre ou permet} \\
+    \midrule
+    1  & Pièces                  & Une ligne par pièce~: température, chauffe, puissance, forçage (F1). \\
+    2  & Détail d'une pièce      & Mode en cours, prochain changement, humidité (F2). \\
+    3  & Pilotage                & Forcer, rejouer, rendre à la programmation, éteindre (F3). \\
+    4  & Forcer une température  & Choix de la température au demi-degré (F3). \\
+    5  & Durée                   & Choix de la durée du forçage (F3). \\
+    6  & Menu                    & Accès à l'historique, la présence, les raccourcis, les alertes (F12). \\
+    7  & Historique              & Grille pièces\,×\,heures sur douze heures (F4). \\
+    8  & Présence                & Présent, Absent, Auto (F5). \\
+    9  & Raccourcis              & Actions sur toute la maison (F7). \\
+    10 & Bien-être ambiant       & Confort d'une pièce~: température, humidité, moisissure (F6). \\
+    11 & Alertes                 & Fenêtre ouverte, pile faible, appareil injoignable (F8). \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Les onze écrans de l'application}
+  \label{tab:ecrans}
+\end{table}
+
+\subsubsection{Fonctions du système}
+
+Le tableau~\ref{tab:fonctions} liste les fonctions de haut niveau. Elles structurent les
+exigences fonctionnelles du §\ref{sec:fonctionnelles}.
+
+\begin{table}[H]
+  \centering\small
+  \begin{tabularx}{\linewidth}{@{}lp{38mm}X@{}}
+    \toprule
+    \textbf{Réf.} & \textbf{Fonction} & \textbf{Description} \\
+    \midrule
+    F1  & Lister les pièces        & Montrer la température de chaque pièce, si elle chauffe et avec quelle puissance. \\
+    F2  & Détailler une pièce      & Montrer le mode en cours, le prochain changement et l'humidité d'une pièce. \\
+    F3  & Piloter une pièce        & Imposer une température pour une durée, revenir à la programmation, éteindre. \\
+    F4  & Se souvenir de la chauffe & Montrer où l'on a chauffé pendant les douze dernières heures. \\
+    F5  & Gérer la présence        & Imposer \emph{Présent} ou \emph{Absent}, ou laisser Tado décider. \\
+    F6  & Juger le confort         & Dire si l'on est bien dans une pièce~: température, humidité, moisissure. \\
+    F7  & Agir sur toute la maison & Les quatre raccourcis de l'application Android~: tout off, programmation partout, mode Absent, mode Géolocalisation. \\
+    F8  & Alerter                  & Signaler fenêtre ouverte, pile faible, appareil injoignable. \\
+    F9  & Relier le compte Tado    & Autoriser une fois l'accès à la maison, le retirer. \\
+    F10 & Actualiser               & Garder les données à jour dans le volume de requêtes autorisé, en dire l'âge. \\
+    F11 & Colorer et rendre lisible & Couleur selon la température, repères sans couleur, unités. \\
+    F12 & Naviguer                 & Se déplacer entre les écrans avec les quatre boutons. \\
+    F13 & S'adapter à la montre    & Même application sur les sept plateformes Pebble. \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Fonctions du système}
+  \label{tab:fonctions}
+\end{table}
+
+\subsubsection{Caractéristiques des utilisateurs}
+
+\begin{description}
+  \item[Utilisateur.] Propriétaire du compte Tado et de la montre. Consulte la montre en
+    passant, souvent en une ou deux secondes, parfois d'une seule main. Connaît l'application
+    mobile Tado, dont il retrouve le vocabulaire et les couleurs. Ne saisit jamais de texte
+    sur la montre.
+\end{description}
+
+\paragraph{Autres personnes.} Les autres occupants de la maison ne sont pas des utilisateurs
+de l'application~: ils ont leur propre application Tado, et c'est leur téléphone qui, avec
+celui de l'utilisateur, fait décider Tado de la présence.
+
+\subsection{Définitions}
+
+\begin{longtable}{@{}>{\bfseries}p{42mm}p{118mm}@{}}
+  Maison & Ensemble des pièces chauffées d'un compte Tado, avec leurs appareils et leur programmation. \\
+  Pièce (ou zone) & Partie de la maison dont Tado règle la température séparément~: \enquote{Salon}, \enquote{Ch. enfant}. \\
+  Température mesurée & Température relevée dans la pièce par les appareils Tado. \\
+  Température demandée & Température que le chauffage cherche à atteindre dans la pièce (aussi \enquote{consigne}). \\
+  Programmation & Plan horaire des températures demandées, réglé dans l'application mobile Tado. \\
+  Forçage & Température imposée à une pièce en dehors de la programmation, pour une durée. \\
+  Puissance de chauffe & Part de la puissance maximale que le chauffage de la pièce fournit à l'instant, en pourcentage. Une pièce chauffe lorsqu'elle est supérieure à zéro. \\
+  Intensité de chauffe & Puissance moyenne d'une pièce pendant une heure, en pourcentage de la pleine puissance, rangée en quatre plages (0 à 10, 10 à 25, 25 à 50, 50 à 100~\%). \\
+  Présence & État de la maison pour le chauffage~: \emph{Présent} (habitée) ou \emph{Absent}. \\
+  Mode de présence & Façon de déterminer la présence~: \emph{Présent} et \emph{Absent} (imposés par l'utilisateur) ou \emph{Auto} (décidé par Tado d'après la position des appareils mobiles qu'il suit). \\
+  Raccourci & Action unique qui modifie toute la maison à la fois, reprise de l'application Android Tado. \\
+  Alerte & Situation qui demande l'attention de l'utilisateur~: fenêtre ouverte, pile faible, appareil injoignable. \\
+  Bien-être ambiant & Jugement sur le confort d'une pièce d'après sa température, son humidité et le risque de moisissure. \\
+  Âge des données & Temps écoulé depuis que les données affichées ont été obtenues de Tado. \\
+  Volume de requêtes & Nombre de requêtes par jour que Tado autorise à une application tierce. \\
+  Plateforme & Famille de montres Pebble de même écran~: emery, basalt, chalk, gabbro, aplite, diorite, flint. \\
+\end{longtable}
+
+\subsection{Conventions de rédaction des exigences}
+
+\paragraph{Formes verbales.} Conformément à ISO/IEC/IEEE 29148, chaque forme verbale
+a un sens unique~:
+\begin{itemize}
+  \item \enquote{doit} exprime une exigence, obligatoire et vérifiable~;
+  \item \enquote{devrait} exprime une recommandation, sans caractère obligatoire~;
+  \item \enquote{peut} exprime une permission~;
+  \item l'indicatif (\enquote{est}, \enquote{sera}) exprime un fait ou une
+        déclaration d'intention, jamais une exigence.
+\end{itemize}
+
+\paragraph{Syntaxe.} Un énoncé suit la forme
+\textit{[Condition] [Sujet] doit [Action] [Objet] [Contrainte]}~; par exemple~:
+\textit{Lorsqu'une pièce chauffe, l'application doit afficher sur sa ligne la puissance de
+chauffe.}
+Chaque énoncé est singulier (une seule exigence), non ambigu, vérifiable et exempt
+de solution de conception. Le sujet \enquote{l'application} désigne l'application telle que
+l'utilisateur la perçoit sur sa montre, quelle que soit sa réalisation.
+
+\paragraph{Identifiants.} Un identifiant a la forme \texttt{TPB-\textit{DOM}-\textit{nnn}}.
+Le domaine \textit{DOM} renvoie à la section qui porte l'exigence~; le numéro est
+séquentiel au sein du domaine. Une nouvelle exigence prend le premier numéro libre de son
+domaine, quelle que soit sa place dans le document. Tant que le document n'a pas été
+approuvé une première fois, les exigences peuvent être renumérotées~; ensuite, un
+identifiant n'est jamais réattribué, même après retrait de l'exigence.
+
+\begin{table}[H]
+  \centering\small
+  \begin{tabular}{@{}llll@{}}
+    \toprule
+    \textbf{Domaine} & \textbf{Objet} & \textbf{Domaine} & \textbf{Objet} \\
+    \midrule
+    PIE & Liste des pièces (F1)        & DET & Détail d'une pièce (F2) \\
+    PIL & Pilotage (F3)                & HIS & Historique de chauffe (F4) \\
+    PRE & Présence (F5)                & AMB & Bien-être ambiant (F6) \\
+    RAC & Raccourcis (F7)              & ALE & Alertes (F8) \\
+    CPT & Compte Tado (F9)             & ACT & Actualisation (F10) \\
+    AFF & Couleurs et lisibilité (F11) & NAV & Navigation (F12) \\
+    PLT & Modèles de montre (F13)      & UTI & Utilisabilité \\
+    SEC & Droits d'accès               & INF & Gestion de l'information \\
+    \bottomrule
+  \end{tabular}
+  \caption{Domaines d'exigences}
+\end{table}
+
+\paragraph{Attributs.} Chaque exigence porte les attributs suivants~:
+\begin{description}
+  \item[Justification] raison d'être de l'exigence, besoin qu'elle sert~;
+  \item[Priorité] \textit{Essentielle} (l'application n'est pas acceptable sans elle), \textit{Importante}, \textit{Souhaitable}~;
+  \item[Vérification] méthode prévue~: \textbf{I}nspection, \textbf{A}nalyse,
+    \textbf{D}émonstration, \textbf{T}est (§\ref{sec:verification})~;
+  \item[Phase] la partie de l'application concernée~: \textit{Pièces}, \textit{Pilotage},
+    \textit{Historique}, \textit{Présence}, \textit{Ambiance}, \textit{Raccourcis},
+    \textit{Alertes}, \textit{Compte}, \textit{Actualisation}, \textit{Affichage},
+    \textit{Navigation}, \textit{Modèles} ou \textit{Transverse}~;
+  \item[État] \textit{Proposée}, \textit{Approuvée}, \textit{Retirée}~;
+  \item[Note] facultative~: précision de lecture, exemple~;
+  \item[Écart] facultatif~: différence constatée entre l'exigence et le comportement actuel
+    de l'application. L'application n'existe pas encore~: aucune exigence n'en présente
+    pour l'instant~;
+  \item[Piste d'amélioration] facultative~: évolution envisageable d'un comportement qui
+    satisfait l'exigence mais pourrait être amélioré.
+\end{description}
+
+L'état de chaque exigence figure dans son cartouche et dans la matrice de
+vérification. Une exigence \textit{Proposée} devient \textit{Approuvée} à la relecture.
+
+\begin{exigence*}{TPB-XXX-000}{Titre court de l'exigence}[
+    justification = {Besoin auquel répond l'exigence.},
+    priorite      = {Essentielle},
+    verification  = {T},
+    phase         = {Pièces},
+    etat          = {Approuvée},
+    note          = {Remarque facultative.},
+  ]
+  [Condition] l'application doit [action] [objet] [contrainte].
+\end{exigence*}
+
+\paragraph{Points ouverts.} Les questions qui restent à trancher sont signalées dans
+le corps du document et récapitulées en annexe (§\ref{sec:points-ouverts}).

@@ -1,0 +1,212 @@
+\section{Contraintes, hypothèses et décisions d'architecture}
+
+\subsection{Contraintes}
+\label{sec:contraintes}
+
+Ces contraintes ne se négocient pas~: la conception s'y plie.
+
+{\small
+\begin{longtable}{@{}l>{\raggedright\arraybackslash}p{70mm}>{\raggedright\arraybackslash}p{72mm}@{}}
+    \toprule
+    \textbf{Réf.} & \textbf{Contrainte} & \textbf{Conséquence pour la conception} \\
+    \midrule\endhead
+    \bottomrule\endfoot
+    C1 & Quota de 100 requêtes par jour pour un compte standard [E2]. Chaque réponse porte un en-tête \texttt{RateLimit} (restant, secondes avant renouvellement) et \texttt{RateLimit-Policy} (quota). Les écritures comptent [E4]. & Un composant unique compte, cache et limite toutes les requêtes (§\ref{sec:quota}). Le quota réel est lu dans l'en-tête, non supposé. \\
+    C2 & L'API de Tado est non officielle pour les tiers~; la spécification communautaire [E3] signale que les chemins de zone ne valent que pour les installations \emph{classiques}, pas pour Tado~X. & Toute dépendance à un chemin est isolée dans un seul composant (\texttt{J-03}). Hypothèse H1. \\
+    C3 & Authentification par code d'appareil [E1, N3]~: jeton d'accès de courte vie, jeton de rafraîchissement \emph{à rotation} (chaque usage invalide le précédent), valable 30 jours au plus. & Le jeton le plus récent est toujours écrit avant d'être utilisé~; une montre inutilisée plus de 30 jours impose une nouvelle liaison (\texttt{TPB-CPT-005}). \\
+    C4 & La géolocalisation de Tado et la restitution du mode \emph{Auto} (\texttt{DELETE presenceLock}) exigent un abonnement Auto-Assist~[E3]. & Le mode \emph{Auto} n'est offert que s'il est disponible (H2). \\
+    C5 & Le pkjs ne s'exécute que pendant que la watchapp est ouverte, ou qu'une page de configuration l'est. Il n'existe pas de tâche de fond. & Pas d'alerte poussée sans ouvrir l'application (DEC-08). \\
+    C6 & Les tampons AppMessage sont de taille fixe~; un message plus gros que le tampon est perdu. & Messages petits, paginés (§\ref{sec:protocole}). \\
+    C7 & Stockage de la watchapp~: 4~Ko sur aplite, basalt, chalk et diorite~; 1~Mo sur emery, gabbro et flint [E5]. Mémoire de travail réduite sur aplite. & La watchapp ne conserve que la dernière situation (quelques centaines d'octets) (\texttt{TPB-INF-001}). \\
+    C8 & Pas de clavier, quatre boutons, écrans de 144\,×\,168 à 260\,×\,260. & Pas de saisie de texte (\texttt{TPB-UTI-003})~; un moteur de listes unique pour toutes les formes d'écran. \\
+\end{longtable}}
+
+\subsection{Hypothèses}
+\label{sec:hypotheses}
+
+\begin{description}
+  \item[H1. Installation classique.] Confirmé par l'utilisateur~: la maison est équipée du
+    système Tado classique, non de Tado~X. Si cela changeait, les chemins de zone changeraient
+    d'hôte et de forme~: seul \texttt{J-03} serait à réécrire.
+  \item[H2. Pas d'Auto-Assist.] L'utilisateur n'a pas l'abonnement Auto-Assist, mais la
+  géolocalisation fonctionne dans son application Android Tado. Le quota est donc celui d'un compte
+  standard (100 requêtes par jour, à confirmer par l'en-tête). Que l'API accepte de rendre la
+  présence à la géolocalisation (\texttt{DELETE presenceLock}) sans l'abonnement n'est pas établi~:
+  l'application ne le suppose pas, elle découvre le refus de Tado (§\ref{sec:presence}).
+  \item[H3. Téléphone à portée.] La montre n'atteint Tado que par le téléphone associé
+    (cahier des charges, \texttt{TPB-ACT-009}).
+  \item[H4. Stockage local du pkjs.] Le \texttt{localStorage} du pkjs survit entre deux
+    ouvertures de la watchapp. Il peut être vidé par l'utilisateur (désinstallation, nettoyage)~:
+    l'application doit alors redemander la liaison.
+  \item[H5. Fuseau et unités de la maison.] La date locale de la maison (pour demander le
+    rapport du jour) et l'unité de température viennent des réglages de la maison
+    (\texttt{GET /homes/\{id\}}), non de la montre.
+\end{description}
+
+\subsection{Vue d'ensemble}
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+      font=\sffamily\footnotesize,
+      bloc/.style={draw=exigBleu, fill=exigBleu!5, rounded corners=3pt, align=center,
+                   text width=38mm, minimum height=22mm},
+      ext/.style={draw=exigGris, fill=exigGris!6, rounded corners=2pt, align=center,
+                  text width=34mm, minimum height=14mm},
+      fleche/.style={Stealth-Stealth, draw=exigGris!90!black},
+      lbl/.style={font=\sffamily\scriptsize, text=exigBleu!80!black, align=center},
+    ]
+    \node[bloc] (mon) at (0, 0)    {\textbf{Watchapp}\\langage C\\écrans, boutons,\\dernière situation};
+    \node[bloc] (tel) at (6.4, 0)  {\textbf{pkjs}\\JavaScript, téléphone\\logique Tado, cache,\\quota, vues};
+    \node[ext]  (log) at (12.2, 1.2)  {login.tado.com\\\textit{autorisation}};
+    \node[ext]  (api) at (12.2, -1.2) {my.tado.com\\\textit{API v2}};
+    \draw[fleche] (mon) -- node[lbl, above=1pt]{AppMessage} node[lbl, below=1pt]{Bluetooth} (tel);
+    \draw[fleche] (tel) -- node[lbl, above=1pt]{HTTPS} (log);
+    \draw[fleche] (tel) -- node[lbl, below=1pt]{HTTPS} (api);
+  \end{tikzpicture}
+  \caption{Contexte~: deux programmes, deux services de Tado}
+  \label{fig:contexte}
+\end{figure}
+
+La watchapp ne parle jamais à Tado. Elle envoie des \emph{demandes} au pkjs et reçoit des
+\emph{vues}~; le pkjs porte toute la connaissance de Tado, du quota et des jetons. Aucun
+serveur n'est ajouté entre le téléphone et Tado.
+
+\subsection{Décisions d'architecture}
+\label{sec:decisions}
+
+\begin{decision}{DEC-01}{Watchapp en C et pkjs en JavaScript}
+  \attr{Contexte} Une montre Pebble n'a pas de réseau propre~; le SDK offre le C natif (toutes
+  plateformes), le pkjs pour le téléphone, et des environnements JavaScript plus récents sur la montre.
+  \attr{Décision} La watchapp est écrite en C et le pkjs en JavaScript, comme les applications
+  précédentes de l'utilisateur (cohérence des outils et du savoir-faire).
+  \attr{Alternatives écartées} JavaScript sur la montre (Alloy)~: moins éprouvé, et le support
+  des sept plateformes est à établir. Rocky.js~: réservé aux cadrans.
+  \attr{Conséquences} Deux langages, un protocole à tenir à jour (§\ref{sec:protocole}).
+  \attr{Exigences} \refexig{TPB-PLT-001}, \refexig{TPB-PLT-002}.
+\end{decision}
+
+\begin{decision}{DEC-02}{Toute la logique Tado sur le téléphone}
+  \attr{Contexte} Il faut limiter la mémoire de la montre et ne pas dupliquer des règles.
+  \attr{Décision} Le pkjs fait toutes les requêtes, tous les calculs (intensité, niveaux,
+  abréviations, choix des raccourcis à proposer) et ne transmet à la montre que des vues
+  prêtes à afficher. La watchapp n'interprète aucune donnée de Tado.
+  \attr{Alternatives écartées} Faire calculer la montre~: code dupliqué en C, mémoire sur aplite.
+  \attr{Conséquences} Les règles se testent en JavaScript sans montre. La montre est
+  inutile sans téléphone, ce qui est déjà vrai (H3).
+  \attr{Exigences} \refexig{TPB-PIE-002}, \refexig{TPB-HIS-002}, \refexig{TPB-RAC-003} à
+  \refexig{TPB-RAC-005}, \refexig{TPB-PLT-006}.
+\end{decision}
+
+\begin{decision}{DEC-03}{Liaison par code d'appareil, jetons sur le téléphone}
+  \attr{Contexte} Tado a retiré l'authentification par mot de passe au profit du code
+  d'appareil [E1]~; la montre n'a pas de clavier.
+  \attr{Décision} Le flux de la RFC~8628 est conduit par le pkjs. La montre affiche le code
+  à saisir sur l'adresse de validation, que le téléphone ouvre (page de configuration ou
+  navigateur). Le pkjs interroge Tado toutes les cinq secondes jusqu'à validation ou
+  expiration (300~s). Les jetons sont conservés dans le \texttt{localStorage} du pkjs~; le
+  mot de passe ne passe jamais par l'application.
+  \attr{Alternatives écartées} Saisie du mot de passe dans une page de configuration~: flux
+  retiré par Tado, mot de passe conservé.
+  \attr{Conséquences} Un écran de liaison à ajouter aux maquettes (§\ref{sec:maquettes}).
+  Le jeton de rafraîchissement est réécrit à chaque usage (C3).
+  \attr{Exigences} \refexig{TPB-CPT-001}, \refexig{TPB-CPT-003} à \refexig{TPB-CPT-005},
+  \refexig{TPB-SEC-001}, \refexig{TPB-SEC-002}.
+\end{decision}
+
+\begin{decision}{DEC-04}{Requêtes groupées}
+  \attr{Contexte} Chaque requête coûte du quota (C1).
+  \attr{Décision} L'état de toutes les pièces vient d'une seule requête (\texttt{zoneStates}), la
+  présence d'une seule (\texttt{state}). Les raccourcis utilisent les routes groupées
+  \texttt{POST /overlay} et \texttt{DELETE /overlay?rooms=}. Aucune requête par pièce n'est faite pour la liste.
+  \attr{Conséquences} Le coût d'ouverture est de deux requêtes, quel que soit le nombre de pièces.
+  \attr{Exigences} \refexig{TPB-ACT-005}, \refexig{TPB-RAC-002}, \refexig{TPB-RAC-003}.
+\end{decision}
+
+\begin{decision}{DEC-05}{Historique par rapport du jour, avec cache}
+  \attr{Contexte} L'historique doit être complet même montre fermée (\refexig{TPB-HIS-007}).
+  \attr{Décision} Le pkjs demande le rapport du jour de chaque pièce (\texttt{dayReport}), qui
+  contient les périodes d'appel de chaleur, et en tire douze colonnes. Un rapport de jour échu
+  est conservé définitivement~; celui du jour courant se renouvelle au plus toutes les 30 minutes.
+  \attr{Alternatives écartées} Échantillonner la puissance à intervalles réguliers~: consomme du
+  quota à chaque ouverture, laisse des trous lorsque l'application est fermée.
+  \attr{Conséquences} Un historique complet coûte une requête par pièce, deux par pièce avant
+  midi (la fenêtre de douze heures chevauche minuit). Les niveaux de chauffe du rapport sont au
+  nombre de quatre, non des pourcentages~: voir DEC-11 et le retour R3 (§\ref{sec:retours}).
+  \attr{Exigences} \refexig{TPB-HIS-001}, \refexig{TPB-HIS-002}, \refexig{TPB-HIS-007}, \refexig{TPB-HIS-008}.
+\end{decision}
+
+\begin{decision}{DEC-06}{Un seul gardien du quota}
+  \attr{Contexte} Les consultations ne doivent pas empêcher une commande (\refexig{TPB-ACT-006}).
+  \attr{Décision} Toutes les requêtes passent par le composant \texttt{J-05}. Il lit les en-têtes
+  \texttt{RateLimit}, refuse toute \emph{lecture} lorsqu'il reste dix requêtes ou moins, et
+  n'accepte plus que les commandes. Il sert les données du cache lorsqu'il refuse.
+  \attr{Conséquences} Lorsque le quota est épuisé, l'application l'annonce
+  (\refexig{TPB-ACT-007}) et affiche le cache avec son âge. Le nombre de requêtes restantes n'est
+  jamais montré (\refexig{TPB-ACT-010}).
+  \attr{Exigences} \refexig{TPB-ACT-005} à \refexig{TPB-ACT-007}, \refexig{TPB-ACT-010}.
+\end{decision}
+
+\begin{decision}{DEC-07}{Dernière situation à deux endroits}
+  \attr{Contexte} L'ouverture doit être immédiate (\refexig{TPB-ACT-001}), y compris sans téléphone.
+  \attr{Décision} La watchapp conserve dans son stockage la dernière vue de la liste, avec
+  l'heure de son obtention~; le pkjs conserve dans son cache toutes les données de Tado
+  avec leur âge. À l'ouverture, la watchapp affiche sa copie, puis la remplace.
+  \attr{Conséquences} Quelques centaines d'octets sur la montre, compatibles avec 4~Ko.
+  \attr{Exigences} \refexig{TPB-ACT-001}, \refexig{TPB-ACT-002}, \refexig{TPB-ACT-009},
+  \refexig{TPB-INF-001}, \refexig{TPB-INF-002}.
+\end{decision}
+
+\begin{decision}{DEC-08}{Pas de serveur, pas de tâche de fond}
+  \attr{Contexte} Le pkjs ne tourne pas lorsque la watchapp est fermée (C5).
+  \attr{Décision} L'application n'a ni serveur propre ni exécution en arrière-plan. Elle ne peut donc
+  pas prévenir l'utilisateur d'une alerte qu'il n'a pas cherchée.
+  \attr{Alternatives écartées} Un serveur qui interroge Tado et pousse des notifications~:
+  hébergement, jetons hors du téléphone, et quota consommé en continu.
+  \attr{Conséquences} \refexig{TPB-ALE-006} (Souhaitable) n'est pas satisfaite dans la première
+  version~; voir le retour R4.
+  \attr{Exigences} \refexig{TPB-ALE-006}, \refexig{TPB-INF-003}.
+\end{decision}
+
+\begin{decision}{DEC-09}{Un seul code C pour sept plateformes}
+  \attr{Contexte} Les plateformes diffèrent par la forme, la couleur et la taille.
+  \attr{Décision} Un seul code, adapté à la compilation par les macros du SDK (\texttt{PBL\_COLOR},
+  \texttt{PBL\_ROUND}, \texttt{PBL\_DISPLAY\_WIDTH}) et par une table de constantes par plateforme
+  (hauteurs de ligne, nombre de colonnes d'historique, largeur de la barre d'actions).
+  \attr{Conséquences} Les maquettes de chaque plateforme (§\ref{sec:maquettes}) fournissent les
+  valeurs de la table.
+  \attr{Exigences} \refexig{TPB-PLT-001} à \refexig{TPB-PLT-007}, \refexig{TPB-AFF-003}.
+\end{decision}
+
+\begin{decision}{DEC-10}{Une commande n'est jamais présumée réussie}
+  \attr{Contexte} Afficher la valeur demandée avant la confirmation de Tado tromperait l'utilisateur.
+  \attr{Décision} Après chaque commande, le pkjs relit l'état de la pièce (ou de la maison) et
+  ne renvoie à la montre que cet état. Une commande refusée est annoncée comme telle, sans
+  réessai automatique, et sans file d'attente (\refexig{TPB-PIL-011}).
+  \attr{Conséquences} Une commande coûte deux requêtes (l'écriture et la relecture).
+  \attr{Exigences} \refexig{TPB-PIL-008} à \refexig{TPB-PIL-011}, \refexig{TPB-ACT-008}.
+\end{decision}
+
+\begin{decision}{DEC-11}{Intensité de chauffe pondérée}
+  \attr{Contexte} Le cahier des charges définit l'intensité d'une heure comme la puissance moyenne
+  de l'heure, en pourcentage de la pleine puissance (\refexig{TPB-HIS-002}). Le rapport du jour ne
+  donne pas de pourcentage mais quatre niveaux (aucun, faible, moyen, fort) par période.
+  \attr{Décision} Chaque niveau reçoit un poids~: aucun 0~\%, faible 25~\%, moyen 50~\%, fort
+  100~\%. L'intensité d'une heure est la moyenne de ces poids, pondérée par la durée de chaque période
+  dans l'heure. Elle est rangée dans les quatre plages du cahier des charges.
+  \attr{Conséquences} Les poids sont provisoires~: à étalonner en comparant, sur quelques jours,
+  les niveaux du rapport à la puissance en pourcentage de \texttt{zoneStates}.
+  \attr{Exigences} \refexig{TPB-HIS-001}, \refexig{TPB-HIS-002}.
+\end{decision}
+
+\begin{decision}{DEC-12}{Textes fixes sur la montre, textes variables sur le téléphone}
+  \attr{Contexte} Deux langues (français et anglais) et deux unités de température
+  (\refexig{TPB-AFF-005}, \refexig{TPB-AFF-006}).
+  \attr{Décision} Les libellés fixes (titres, modes, boutons) sont des ressources de la
+  watchapp, une par langue, choisies selon la langue de la montre. Le pkjs envoie des codes
+  pour ces libellés et des textes pour ce qui varie (noms de pièces, abréviations). Les
+  températures voyagent en dixièmes de degré dans l'unité du compte~; la watchapp
+  les met en forme (virgule ou point).
+  \attr{Conséquences} Ajouter une langue ne touche que les ressources de la montre.
+  \attr{Exigences} \refexig{TPB-AFF-005}, \refexig{TPB-AFF-006}.
+\end{decision}

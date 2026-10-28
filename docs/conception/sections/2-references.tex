@@ -1,0 +1,28 @@
+\section{Références}
+
+\subsection*{Références normatives}
+
+\begin{longtable}{@{}p{22mm}p{138mm}@{}}
+  {[N1]} & ISO/IEC/IEEE 42010:2022, \textit{Software, systems and enterprise --- Architecture description}. \\
+  {[N2]} & ISO/IEC/IEEE 1016:2009, \textit{Systems and software engineering --- Software design descriptions}. \\
+  {[N3]} & RFC~8628, \textit{OAuth 2.0 Device Authorization Grant}. \\
+\end{longtable}
+
+\subsection*{Références du projet}
+
+\begin{longtable}{@{}p{22mm}p{138mm}@{}}
+  {[P1]} & Cahier des charges \textit{Tado pour Pebble}, TPB-SyRS, 28 octobre 2026. \\
+  {[P2]} & Maquettes des écrans (canevas \enquote{Tado pour Pebble}), reproduites en annexe (§\ref{sec:maquettes}). \\
+\end{longtable}
+
+\subsection*{Références externes}
+
+\begin{longtable}{@{}p{22mm}p{138mm}@{}}
+  {[E1]} & \textit{How do I authenticate to access the REST API?}, Tado, support.tado.com, article 8565472~: flux d'autorisation par code d'appareil, durées de vie des jetons. \\
+  {[E2]} & \textit{Limitation for REST API usage}, Tado, support.tado.com, article 12165739, janvier 2026~: 100 requêtes par jour (compte standard), 20\,000 (Auto-Assist), en-têtes \texttt{RateLimit}. \\
+  {[E3]} & Spécification OpenAPI communautaire de l'API Tado v2, \texttt{github.com/kritsel/tado-openapispec-v2}~: chemins, schémas, valeurs énumérées. Non officielle. \\
+  {[E4]} & Analyse du coût en requêtes de l'intégration Tado de Home Assistant, \texttt{home-assistant/core}, ticket 162858~: \texttt{zoneStates} regroupe toutes les pièces, les écritures comptent. \\
+  {[E5]} & Documentation du SDK Pebble, \texttt{developer.repebble.com}~: plateformes et macros, stockage persistant, AppMessage, PebbleKit JS. \\
+\end{longtable}
+
+L'API de Tado n'est pas documentée officiellement pour les applications tierces. Les chemins et les schémas ci-dessous viennent de la spécification communautaire [E3], recoupée avec les articles de Tado [E1, E2]. Rien n'a été essayé contre un compte réel au moment de la rédaction~: c'est la première chose à faire (§\ref{sec:points-ouverts}).

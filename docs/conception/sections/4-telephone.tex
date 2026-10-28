@@ -1,0 +1,290 @@
+\section{Conception du pkjs (téléphone)}
+\label{sec:telephone}
+
+\subsection{Composants}
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+      font=\sffamily\scriptsize,
+      c/.style={draw=exigBleu, fill=exigBleu!5, rounded corners=2pt, align=center,
+                text width=21mm, minimum height=8mm},
+      b/.style={draw=exigGris, fill=exigGris!6, rounded corners=2pt, align=center,
+                text width=21mm, minimum height=8mm},
+      fleche/.style={-Stealth, draw=exigGris!90!black},
+    ]
+    \node[b] (msg) at (0, 0)     {J-01 Messagerie};
+    \node[c] (vue) at (0, -1.6)  {J-11 Vues};
+    \node[c] (hom) at (3.5, 1.2) {J-06 Maison};
+    \node[c] (his) at (3.5, 0)   {J-07 Historique};
+    \node[c] (con) at (3.5, -1.2) {J-08 Confort};
+    \node[c] (ale) at (3.5, -2.4) {J-09 Alertes};
+    \node[c] (ctl) at (3.5, -3.6) {J-10 Commandes};
+    \node[c] (cac) at (7.2, 0.6) {J-04 Cache};
+    \node[c] (quo) at (7.2, -1.0) {J-05 Quota};
+    \node[c] (cli) at (7.2, -2.6) {J-03 Client Tado};
+    \node[c] (aut) at (10.9, -2.6) {J-02 Liaison};
+    \node[b] (ext) at (10.9, -0.6) {Tado};
+    \draw[fleche] (msg) -- (vue);
+    \draw[fleche] (vue.east) -- ++(0.4,0) |- (hom.west);
+    \draw[fleche] (vue.east) -- ++(0.4,0) |- (his.west);
+    \draw[fleche] (vue.east) -- ++(0.4,0) |- (con.west);
+    \draw[fleche] (vue.east) -- ++(0.4,0) |- (ale.west);
+    \draw[fleche] (vue.east) -- ++(0.4,0) |- (ctl.west);
+    \draw[fleche] (hom.east) -- ++(0.5,0) |- (cac.west);
+    \draw[fleche] (cac) -- (quo);
+    \draw[fleche] (quo) -- (cli);
+    \draw[fleche] (cli) -- (aut);
+    \draw[fleche] (cli.east) -- ++(0.35,0) |- (ext.west);
+  \end{tikzpicture}
+  \caption{Composants du pkjs~; une flèche va d'un composant à celui dont il se sert (les services
+    J-06 à J-10 passent tous par le cache, le quota et le client)}
+  \label{fig:composants-js}
+\end{figure}
+
+\begin{table}[H]
+  \centering\small
+  \begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}p{28mm}X>{\raggedright\arraybackslash}p{34mm}@{}}
+    \toprule
+    \textbf{Réf.} & \textbf{Composant} & \textbf{Responsabilité} & \textbf{Exigences} \\
+    \midrule
+    J-01 & Messagerie & Reçoit les demandes de la montre, découpe les vues en petits messages, les envoie un à un en attendant l'accusé de chaque envoi. Gère l'attente de l'événement \texttt{ready}. & \refexig{TPB-UTI-005}, \refexig{TPB-ACT-001} \\
+    J-02 & Liaison & Conduit le flux de code d'appareil (RFC~8628), conserve les jetons, les rafraîchit, sait les révoquer. Seul composant à connaître les jetons. & \refexig{TPB-CPT-001} à \refexig{TPB-CPT-005}, \refexig{TPB-SEC-001}, \refexig{TPB-SEC-002} \\
+    J-03 & Client Tado & Seul composant à connaître les adresses, les formes des requêtes et des réponses. Ajoute le jeton, relit les en-têtes, normalise les erreurs (\S\ref{sec:erreurs}). & \refexig{TPB-ACT-005} \\
+    J-04 & Cache & Conserve chaque réponse avec l'heure de son obtention et son TTL, dans le \texttt{localStorage}. Sert les âges. & \refexig{TPB-ACT-002}, \refexig{TPB-INF-001} \\
+    J-05 & Quota & Compte les requêtes, lit le quota réel, applique la réserve, refuse les lectures lorsqu'il ne reste que la réserve. & \refexig{TPB-ACT-005} à \refexig{TPB-ACT-007} \\
+    J-06 & Maison & Liste des pièces, détail d'une pièce, présence de la maison. & \refexig{TPB-PIE-001} à \refexig{TPB-PIE-010}, \refexig{TPB-DET-001} à \refexig{TPB-DET-008}, \refexig{TPB-PRE-001} à \refexig{TPB-PRE-005} \\
+    J-07 & Historique & Rapports du jour, calcul des douze colonnes. & \refexig{TPB-HIS-001} à \refexig{TPB-HIS-008} \\
+    J-08 & Confort & Niveaux de confort d'une pièce. & \refexig{TPB-AMB-001} à \refexig{TPB-AMB-006} \\
+    J-09 & Alertes & Alertes de fenêtre ouverte, de pile, de connexion. & \refexig{TPB-ALE-001} à \refexig{TPB-ALE-005} \\
+    J-10 & Commandes & Forçages, retour à la programmation, extinction, présence, raccourcis~; relecture après chaque commande. & \refexig{TPB-PIL-001} à \refexig{TPB-PIL-011}, \refexig{TPB-RAC-001} à \refexig{TPB-RAC-007} \\
+    J-11 & Vues & Construit les vues envoyées à la montre~: noms abrégés et distincts, températures en dixièmes dans l'unité du compte, niveaux, indicateurs d'âge, liste des raccourcis offerts. & \refexig{TPB-PLT-006}, \refexig{TPB-AFF-001}, \refexig{TPB-AFF-005} \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Composants du pkjs}
+\end{table}
+
+\subsection{Requêtes vers Tado}
+\label{sec:requetes}
+
+Le tableau~\ref{tab:requetes} fait le lien entre ce que l'utilisateur fait et ce que cela coûte. Les
+chemins viennent de [E3] (base \texttt{https://my.tado.com/api/v2}, \texttt{\{h\}} pour l'identifiant de maison,
+\texttt{\{z\}} pour celui de pièce)~; ils sont à vérifier (point ouvert ci-dessus).
+
+\pointouvert{Les chemins et les schémas viennent d'une spécification communautaire, non vérifiée contre le compte de l'utilisateur. Faut-il, avant tout code, enregistrer la réponse réelle de chaque requête du tableau~\ref{tab:requetes}~? C'est la première tâche proposée~; elle établit aussi si la restitution du mode \emph{Auto} (\texttt{DELETE presenceLock}) est acceptée sans abonnement Auto-Assist, que l'utilisateur n'a pas bien que sa géolocalisation fonctionne (H2).}
+
+\begin{table}[H]
+  \centering\small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{30mm}>{\raggedright\arraybackslash}p{58mm}>{\raggedright\arraybackslash}p{16mm}X@{}}
+    \toprule
+    \textbf{Besoin} & \textbf{Requête(s)} & \textbf{TTL} & \textbf{Coût et remarques} \\
+    \midrule
+    Liste des pièces (F1), détail (F2) & \texttt{GET /homes/\{h\}/zoneStates} & 5 min & 1. Température, puissance, consigne, forçage, fenêtre ouverte, prochain changement, humidité de toutes les pièces. \\
+    Présence (F5) & \texttt{GET /homes/\{h\}/state} & 5 min & 1. \texttt{presence} et \texttt{presenceLocked}. \\
+    Appareils présents & \texttt{GET /homes/\{h\}/mobileDevices} & 10 min & 1, à l'ouverture de l'écran Présence seulement. Appareils où \texttt{geoTrackingEnabled} et \texttt{atHome}. \\
+    Historique (F4) & \texttt{GET /homes/\{h\}/zones/\{z\}/dayReport?date=} & 30 min (jour courant), illimité (jour échu) & 1 par pièce~; 2 par pièce avant midi. \\
+    Confort (F6) & \texttt{GET /homes/\{h\}/airComfort} & 10 min & 1 pour toutes les pièces. \\
+    Alertes (F8) & \texttt{GET /homes/\{h\}/zones} (appareils de chaque pièce, pile, connexion), jointe à \texttt{zoneStates} (fenêtre, liaison) & 15 min & 1 en plus de \texttt{zoneStates}. \\
+    Réglages de la maison & \texttt{GET /homes/\{h\}} & illimité & 1, à la liaison. Unité de température, fuseau (H5). \\
+    Plage de consigne & \texttt{GET /homes/\{h\}/zones/\{z\}/capabilities} & illimité & 1 par pièce, à la première ouverture de l'écran de consigne. Valeurs d'attente~: 5 à 25~°C, pas de 0,5. \\
+    Forcer, éteindre (F3) & \texttt{PUT /homes/\{h\}/zones/\{z\}/overlay} & --- & 1, puis relecture \texttt{GET .../zones/\{z\}/state} (1). Total 2. \\
+    Retour à la programmation & \texttt{DELETE /homes/\{h\}/zones/\{z\}/overlay} & --- & 1, puis relecture (1). Total 2. \\
+    Raccourcis \enquote{tout off} & \texttt{POST /homes/\{h\}/overlay} & --- & 1, puis \texttt{zoneStates} (1). Total 2. \\
+    Raccourci \enquote{programmation partout} & \texttt{DELETE /homes/\{h\}/overlay?rooms=} & --- & 1, puis \texttt{zoneStates} (1). Total 2. \\
+    Présence imposée & \texttt{PUT /homes/\{h\}/presenceLock} & --- & 1, puis \texttt{state} (1). Total 2. \\
+    Présence rendue à Tado & \texttt{DELETE /homes/\{h\}/presenceLock} & --- & 1, puis \texttt{state} (1). Refus \texttt{403} sans Auto-Assist. \\
+    Liaison & \texttt{POST login.tado.com/oauth2/device\_authorize}, \texttt{.../token} & --- & Hors de l'API v2~; compté ou non par Tado, ce n'est pas établi. \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Requêtes de l'application, coût et durée de validité}
+  \label{tab:requetes}
+\end{table}
+
+\subsection{Budget de requêtes}
+\label{sec:quota}
+
+Avec 100 requêtes par jour et une réserve de dix pour les commandes (\refexig{TPB-ACT-006}),
+il reste 90 requêtes de lecture. Le tableau~\ref{tab:budget} chiffre une journée soutenue
+(six pièces)~; elle tient avec près de la moitié du quota de lecture à l'abri.
+
+\begin{table}[H]
+  \centering\small
+  \begin{tabular}{@{}lrrr@{}}
+    \toprule
+    \textbf{Usage} & \textbf{Nombre} & \textbf{Coût unitaire} & \textbf{Total} \\
+    \midrule
+    Ouvertures (liste des pièces)                  & 8 & 2 & 16 \\
+    Forçages, retours, présence (commande + relecture) & 4 & 2 & 8 \\
+    Raccourcis                                     & 1 & 2 & 2 \\
+    Consultations de l'historique                  & 2 & 6 & 12 \\
+    Historique de la veille (une fois, avant midi) & 1 & 6 & 6 \\
+    Confort d'une pièce                            & 2 & 1 & 2 \\
+    Alertes                                        & 2 & 1 & 2 \\
+    Écran Présence (appareils)                     & 1 & 1 & 1 \\
+    \midrule
+    \multicolumn{3}{@{}l}{\textbf{Total d'une journée soutenue}} & \textbf{49} \\
+    \bottomrule
+  \end{tabular}
+  \caption{Estimation du budget d'une journée}
+  \label{tab:budget}
+\end{table}
+
+\paragraph{Politique.}
+\begin{enumerate}
+  \item Toute lecture passe par le cache~: si la donnée a moins de son TTL, aucune requête.
+  \item Après une commande, la relecture ignore le cache (\refexig{TPB-ACT-008}).
+  \item L'action \enquote{actualiser} de l'utilisateur (\refexig{TPB-ACT-003}) ignore le cache de la
+        donnée de l'écran en cours, et d'elle seule.
+  \item Le quota restant est lu dans l'en-tête de chaque réponse. Lorsque \texttt{r} $\leq 10$,
+        J-05 refuse les lectures, sert le cache et le signale (\refexig{TPB-ACT-007}).
+  \item Si l'en-tête \texttt{RateLimit-Policy} indique un quota plus grand (Auto-Assist), le seuil
+        de réserve reste dix et les TTL sont divisés par cinq~; l'application n'a pas d'autre mode.
+  \item L'actualisation automatique pendant la consultation (\refexig{TPB-ACT-004}) vaut un
+        \texttt{zoneStates} toutes les cinq minutes tant que l'écran des pièces est affiché,
+        soit au plus douze requêtes par heure d'affichage.
+\end{enumerate}
+
+\subsection{Règles de calcul}
+
+\subsubsection{Historique}
+\label{sec:calcul-historique}
+
+Pour chaque pièce, le rapport du jour donne des périodes d'appel de chaleur
+(\texttt{callForHeat.dataIntervals}, chacune avec un début, une fin et une valeur parmi
+\texttt{NONE}, \texttt{LOW}, \texttt{MEDIUM}, \texttt{HIGH}). L'historique affiche les $n$ dernières heures
+pleines (douze, huit sur Time Round), la dernière étant l'heure en cours.
+
+\begin{enumerate}
+  \item Les colonnes sont les heures locales de la maison (H5). Si l'heure locale est avant
+        midi, le rapport de la veille est aussi demandé.
+  \item L'intensité d'une colonne est $\sum_i d_i\,w(v_i) / D$, où $d_i$ est la durée de la période $i$
+        recouvrant la colonne, $w$ le poids de DEC-11 (0, 25, 50, 100~\%) et $D$ la durée écoulée de
+        la colonne (une heure, ou le temps écoulé pour l'heure en cours).
+  \item Elle est rangée dans la plage $[0;10[$, $[10;25[$, $[25;50[$, $[50;100]$ (niveaux 0 à 3). Une valeur à
+        la limite va à la plage supérieure (\refexig{TPB-HIS-002}).
+  \item Si les périodes du rapport ne couvrent pas au moins 90~\% de la durée écoulée de la
+        colonne, la colonne est \emph{inconnue}, non nulle (\refexig{TPB-HIS-008}).
+  \item La colonne de l'heure en cours est marquée (\refexig{TPB-HIS-003}).
+\end{enumerate}
+
+\subsubsection{Bien-être ambiant}
+
+\texttt{airComfort} donne, par pièce, un niveau de température (\texttt{COLD}, \texttt{COMFY}, \texttt{WARM}, \texttt{HOT})
+et un niveau d'humidité (\texttt{HUMID}, \texttt{COMFY}, \texttt{DRY}). Il ne donne \emph{pas} de risque de moisissure~; cette
+fonction est abandonnée (\refexig{TPB-AMB-006}, retour R1).
+
+\begin{table}[H]
+  \centering\small
+  \begin{tabular}{@{}ll@{}}
+    \toprule
+    \textbf{Niveaux reçus} & \textbf{Verdict affiché} \\
+    \midrule
+    température \texttt{COMFY} et humidité \texttt{COMFY} & Confortable \\
+    température \texttt{COLD} / \texttt{WARM} / \texttt{HOT} & Froid / Un peu chaud / Trop chaud \\
+    humidité \texttt{DRY} / \texttt{HUMID} & Air trop sec / Air trop humide \\
+    deux écarts à la fois & celui de la température, puis celui de l'humidité \\
+    niveaux absents (appareil injoignable) & Mesure indisponible \\
+    humidité absente seule (pas de capteur) & température seule, \enquote{humidité non mesurée} \\
+    \bottomrule
+  \end{tabular}
+  \caption{Verdict de bien-être ambiant}
+\end{table}
+
+Les jauges reprennent la température et l'humidité de \texttt{zoneStates}, placées par rapport aux
+zones fixes du cahier des charges (19 à 21~°C, 40 à 60~\%).
+
+\subsubsection{Alertes}
+
+\begin{table}[H]
+  \centering\small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{34mm}>{\raggedright\arraybackslash}p{58mm}X@{}}
+    \toprule
+    \textbf{Alerte} & \textbf{Condition} & \textbf{Détail} \\
+    \midrule
+    Fenêtre ouverte & \texttt{zoneStates[z].openWindow} non nul & Depuis \texttt{detectedTime}, en minutes. \\
+    Pile faible & Un appareil de la pièce avec \texttt{batteryState = LOW} & Type d'appareil (tête thermostatique, thermostat). \\
+    Appareil injoignable & \texttt{link.state = OFFLINE}, ou \texttt{connectionState.value = false} & Motif de \texttt{link.reason.title}, s'il existe. \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Règles d'alerte}
+\end{table}
+
+Une alerte n'est présentée que tant que sa condition est vraie dans la dernière donnée
+obtenue (\refexig{TPB-ALE-005}). Le nombre d'alertes du menu (\refexig{TPB-ALE-003}) vient de la
+dernière donnée en cache~; il n'ouvre aucune requête à lui seul.
+
+\subsection{Commandes}
+
+\subsubsection{Forçage d'une pièce}
+
+\begin{table}[H]
+  \centering\small
+  \begin{tabular}{@{}ll@{}}
+    \toprule
+    \textbf{Choix de l'utilisateur} & \textbf{Condition de fin envoyée à Tado} \\
+    \midrule
+    30 min, 1 h, 2 h & \texttt{TIMER}, \texttt{durationInSeconds} = 1800, 3600, 7200 \\
+    Prochain créneau & \texttt{TADO\_MODE} \\
+    Jusqu'à nouvel ordre & \texttt{MANUAL} \\
+    Éteindre le chauffage & \texttt{power = OFF}, \texttt{TADO\_MODE} \\
+    \bottomrule
+  \end{tabular}
+  \caption{Correspondance entre durées et conditions de fin}
+\end{table}
+
+La température est envoyée en degrés Celsius. Lorsque l'unité du compte est le degré
+Fahrenheit, la montre propose des degrés entiers et le pkjs convertit (à vérifier,
+point ouvert ci-dessous). Le dernier forçage d'une pièce (\refexig{TPB-INF-002}) est mémorisé par le pkjs
+dans son stockage, après confirmation de Tado.
+
+\pointouvert{Tado accepte-t-il une consigne exprimée en degrés Fahrenheit, ou la conversion en degrés Celsius par le pkjs est-elle nécessaire~? À vérifier avec la première requête de forçage.}
+
+\subsubsection{Présence et raccourcis}
+\label{sec:presence}
+
+\paragraph{Mode de présence.} Le pkjs déduit le mode de \texttt{state}~:
+\texttt{presenceLocked = false} donne \emph{Auto}~; \texttt{true} donne \emph{Présent} ou
+\emph{Absent} selon \texttt{presence}. Imposer un mode est \texttt{PUT presenceLock}~; revenir à
+\emph{Auto} est \texttt{DELETE presenceLock}. Un refus \texttt{403} de ce dernier signale l'absence
+d'abonnement Auto-Assist~: le pkjs l'annonce, mémorise que \emph{Auto} n'est pas
+disponible, et ne l'offre plus (H2).
+
+\paragraph{Raccourcis offerts.} Le pkjs construit la liste à chaque ouverture de l'écran.
+
+\begin{table}[H]
+  \centering\small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{40mm}>{\raggedright\arraybackslash}p{50mm}X@{}}
+    \toprule
+    \textbf{Raccourci} & \textbf{Offert si} & \textbf{Effet} \\
+    \midrule
+    Tout off & toujours & \texttt{POST /overlay}~: toutes les pièces à \texttt{power = OFF}, \texttt{MANUAL} (jusqu'à nouvel ordre, comme l'application Android). \\
+    Activer la programmation dans toutes les pièces & au moins une pièce a un forçage (\texttt{overlay} non nul dans \texttt{zoneStates}) & \texttt{DELETE /overlay?rooms=} avec les pièces forcées. \\
+    Mode Absent & \texttt{presence = HOME} et \texttt{presenceLocked = false} (la géolocalisation identifie l'utilisateur comme présent) & \texttt{PUT presenceLock} \texttt{AWAY}. \\
+    Mode Géolocalisation & \texttt{presenceLocked = true}, Auto-Assist non exclu & \texttt{DELETE presenceLock}. \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Raccourcis et conditions d'offre}
+\end{table}
+
+\subsection{Liaison au compte Tado}
+\label{sec:liaison}
+
+\begin{enumerate}
+  \item La montre demande la liaison (au premier lancement, ou après une liaison perdue).
+  \item J-02 appelle \texttt{device\_authorize} avec \texttt{scope=offline\_access} et reçoit
+        \texttt{user\_code}, \texttt{verification\_uri\_complete}, \texttt{expires\_in} (300~s) et
+        \texttt{interval} (5~s).
+  \item J-01 envoie à la montre le code et son délai~; la montre l'affiche (écran Liaison). Le
+        pkjs ouvre aussi sur le téléphone la page de validation.
+  \item J-02 interroge \texttt{token} toutes les cinq secondes (valeur de \texttt{interval}) jusqu'à
+        recevoir les jetons, un refus, ou l'expiration.
+  \item Les jetons sont écrits dans le \texttt{localStorage}, puis J-06 lit les réglages de la maison
+        (H5) et le choix de la maison est fait (\refexig{TPB-CPT-002}).
+  \item À chaque usage, J-02 vérifie l'âge du jeton d'accès~; s'il est périmé, il rafraîchit,
+        \emph{écrit le nouveau jeton de rafraîchissement avant de poursuivre}, puis rejoue la requête
+        une seule fois.
+\end{enumerate}
+
+Une requête qui reçoit un refus d'accès après rafraîchissement déclenche la liaison perdue
+(\refexig{TPB-CPT-005}). Délier (\refexig{TPB-CPT-004}) efface les jetons, le cache et le
+stockage de la montre.

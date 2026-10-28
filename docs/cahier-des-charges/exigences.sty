@@ -1,0 +1,286 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{exigences}[2026/10/11 Exigences au format ISO/IEC/IEEE 29148]
+
+\RequirePackage{iftex}
+\ifPDFTeX
+  \RequirePackage[T1]{fontenc}
+  \RequirePackage[utf8]{inputenc}
+  \RequirePackage{lmodern}
+\else
+  \RequirePackage{fontspec}
+\fi
+\RequirePackage[french]{babel}
+
+\RequirePackage[a4paper, top=25mm, bottom=25mm, left=22mm, right=22mm, headheight=14pt]{geometry}
+\RequirePackage[dvipsnames, table]{xcolor}
+\RequirePackage{csquotes}
+\RequirePackage{microtype}
+\RequirePackage{array, booktabs, tabularx, longtable, float}
+\RequirePackage{enumitem}
+\RequirePackage{tikz}
+\usetikzlibrary{positioning, arrows.meta, fit, backgrounds, babel}
+\RequirePackage[skins]{tcolorbox}
+\RequirePackage{fancyhdr, lastpage}
+\RequirePackage[hidelinks]{hyperref}
+
+\definecolor{exigBleu}{HTML}{1F5F4A}
+\definecolor{exigGris}{HTML}{5A6270}
+\definecolor{exigOrange}{HTML}{B35C00}
+\definecolor{exigVert}{HTML}{2E7D32}
+
+\setlist{nosep, leftmargin=*, before=\vspace{2pt}, after=\vspace{2pt}}
+\renewcommand{\arraystretch}{1.15}
+
+% --- Métadonnées du document ------------------------------------------------
+
+\newcommand\docreference[1]{\def\@docreference{#1}}
+\def\@docversion{}
+\newcommand\docversion[1]{\def\@docversion{#1}}
+\newcommand\docstatut[1]{\def\@docstatut{#1}}
+\newcommand\docsysteme[1]{\def\@docsysteme{#1}}
+\newcommand\lareference{\@docreference}
+\newcommand\laversion{\@docversion}
+\newcommand\lestatut{\@docstatut}
+\newcommand\lesysteme{\@docsysteme}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\sffamily\color{exigGris}\@docreference\ -- Spécification des exigences système}
+\fancyhead[R]{\small\sffamily\color{exigGris}\ifx\@docversion\@empty\else Version \@docversion\ -- \fi\@docstatut}
+\fancyfoot[C]{\small\sffamily\color{exigGris}Page \thepage\ / \pageref{LastPage}}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% --- Exigences --------------------------------------------------------------
+
+\pgfkeys{
+  /exig/.cd,
+  justification/.store in = \exig@justification,
+  source/.store in        = \exig@source,
+  priorite/.store in      = \exig@priorite,
+  verification/.store in  = \exig@verification,
+  phase/.store in         = \exig@phase,
+  etat/.store in          = \exig@etat,
+  note/.store in          = \exig@note,
+  ecart/.store in         = \exig@ecart,
+  amelioration/.store in  = \exig@amelioration,
+  support/.store in       = \exig@support,
+}
+
+\newcommand\exig@defauts{%
+  \pgfkeys{/exig/.cd,
+    justification = {},
+    source        = {},
+    priorite      = {Importante},
+    verification  = {T},
+    phase         = {Transverse},
+    etat          = {Proposée},
+    note          = {},
+    ecart         = {},
+    amelioration  = {},
+    support       = {},
+  }%
+}
+
+\tcbset{
+  exig@style/.style={
+    enhanced,
+    colback=white, colframe=exigBleu, colbacktitle=exigBleu!8,
+    coltitle=exigBleu!85!black, colbacklower=exigBleu!3,
+    fonttitle=\sffamily\small, boxrule=0.5pt, arc=1mm,
+    left=2mm, right=2mm, top=1.5mm, bottom=1.5mm,
+    toptitle=0.7mm, bottomtitle=0.7mm,
+    segmentation style={draw=exigBleu!25, solid},
+    before skip=7pt, after skip=7pt,
+  },
+  exig@ecart/.style={
+    colframe=exigOrange, colbacktitle=exigOrange!10,
+    coltitle=exigOrange!80!black, colbacklower=exigOrange!4,
+    segmentation style={draw=exigOrange!30, solid},
+  },
+  exig@variante/.style={},
+  po@style/.style={
+    enhanced,
+    colback=exigOrange!4, colframe=exigOrange, boxrule=0.4pt, arc=1mm,
+    leftrule=2.5mm, left=2mm, right=2mm, top=1mm, bottom=1mm,
+    fontupper=\small, before skip=6pt, after skip=6pt,
+  },
+}
+
+% Chaque exigence est aussi ajoutée aux listes qui alimentent la matrice de
+% vérification et le récapitulatif des écarts : \matriceverification et
+% \listeecarts peuvent ainsi être placées après les exigences sans seconde
+% compilation.
+\newcommand\exig@liste{}
+\newcommand\exig@ecarts{}
+\newcommand\exig@enregistrer[2]{%
+  \xdef\exig@liste{%
+    \unexpanded\expandafter{\exig@liste}%
+    \noexpand\exig@ligne
+      {\unexpanded{#1}}%
+      {\unexpanded{#2}}%
+      {\thesubsection}%
+      {\unexpanded\expandafter{\exig@priorite}}%
+      {\unexpanded\expandafter{\exig@verification}}%
+      {\unexpanded\expandafter{\exig@phase}}%
+      {\unexpanded\expandafter{\exig@etat}}%
+      {\ifx\exig@ecart\@empty\else e\fi}%
+      {\unexpanded\expandafter{\exig@support}}}%
+  \ifx\exig@ecart\@empty\else
+    \xdef\exig@ecarts{%
+      \unexpanded\expandafter{\exig@ecarts}%
+      \noexpand\ecart@ligne
+        {\unexpanded{#1}}%
+        {\unexpanded{#2}}%
+        {\unexpanded\expandafter{\exig@ecart}}}%
+  \fi
+}
+
+% Une conditionnelle ne peut pas enjamber les cellules d'un tableau : les lignes
+% facultatives sont donc préparées avant d'ouvrir tabularx.
+\newcommand\exig@attributs{%
+  \small
+  \ifx\exig@source\@empty
+    \let\exig@ligneSource\@empty
+  \else
+    \def\exig@ligneSource{Source & \exig@source \\}%
+  \fi
+  \ifx\exig@note\@empty
+    \let\exig@ligneNote\@empty
+  \else
+    \def\exig@ligneNote{Note & \exig@note \\}%
+  \fi
+  \ifx\exig@ecart\@empty
+    \let\exig@ligneEcart\@empty
+  \else
+    \def\exig@ligneEcart{\textcolor{exigOrange}{\bfseries Écart} & \exig@ecart \\}%
+  \fi
+  \ifx\exig@amelioration\@empty
+    \let\exig@ligneAmelioration\@empty
+  \else
+    \def\exig@ligneAmelioration{\textcolor{exigVert}{Piste d'amélioration} & \exig@amelioration \\}%
+  \fi
+  \ifx\exig@support\@empty
+    \let\exig@ligneSupport\@empty
+  \else
+    \def\exig@ligneSupport{Support & \textbf{\exig@support} \\}%
+  \fi
+  \begin{tabularx}{\linewidth}{@{}>{\sffamily\raggedright\leavevmode\color{exigGris}}p{24mm}X@{}}
+    Justification & \exig@justification \\
+    \exig@ligneSupport
+    \exig@ligneSource
+    \exig@ligneNote
+    \exig@ligneEcart
+    \exig@ligneAmelioration
+  \end{tabularx}\par\vspace{2pt}%
+  {\sffamily\footnotesize\color{exigGris}%
+   Priorité~: \textcolor{black}{\exig@priorite}\hfill
+   Vérification~: \textcolor{black}{\exig@verification}\hfill
+   Phase~: \textcolor{black}{\exig@phase}\hfill
+   État~: \textcolor{black}{\exig@etat}}%
+}
+
+\newcommand\exig@badge{%
+  {\sffamily\scriptsize\bfseries\setlength{\fboxsep}{1.2pt}%
+   \colorbox{exigOrange}{\textcolor{white}{ÉCART}}}\enspace}
+
+\newcommand\exig@ouvrir[3]{%
+  \exig@defauts
+  \pgfkeys{/exig/.cd,#3}%
+  \ifx\exig@ecart\@empty
+    \let\exig@marqueTitre\@empty
+  \else
+    \tcbset{exig@variante/.style={exig@ecart}}%
+    \let\exig@marqueTitre\exig@badge
+  \fi
+  \begin{tcolorbox}[exig@style, exig@variante,
+    title={\hypertarget{exig:#1}{}\texttt{#1}\hfill\exig@marqueTitre\textbf{#2}}]%
+}
+\newcommand\exig@fermer{%
+  \tcblower
+  \exig@attributs
+  \end{tcolorbox}%
+}
+
+\NewDocumentEnvironment{exigence}{m m O{}}
+  {\exig@ouvrir{#1}{#2}{#3}\exig@enregistrer{#1}{#2}}
+  {\exig@fermer}
+
+% Même présentation, hors matrice de vérification : pour les exemples.
+\NewDocumentEnvironment{exigence*}{m m O{}}
+  {\exig@ouvrir{#1}{#2}{#3}}
+  {\exig@fermer}
+
+\newcommand\refexig[1]{\hyperlink{exig:#1}{\texttt{#1}}}
+
+\newcommand\exig@marque[2]{%
+  \ifx\relax#1\relax#2\else\textcolor{exigOrange}{\bfseries#2}\fi}
+
+\newcommand\exig@ligne[9]{%
+  \hyperlink{exig:#1}{\exig@marque{#8}{\texttt{#1}}} & #2 & #3 & #4 & #5 & #6 & #7 & #9 \\}
+
+\newcommand\ecart@ligne[3]{%
+  \hyperlink{exig:#1}{\textcolor{exigOrange}{\texttt{#1}}} & #2 & #3 \\}
+
+\newcommand\listeecarts{%
+  {\small
+  \begin{longtable}{@{}p{23mm}>{\raggedright\arraybackslash}p{45mm}p{86mm}@{}}
+    \toprule
+    \textbf{Identifiant} & \textbf{Titre} & \textbf{Écart constaté} \\
+    \midrule\endhead
+    \bottomrule\endfoot
+    \exig@ecarts
+  \end{longtable}}%
+}
+
+\newcommand\matriceverification{%
+  {\small
+  \begin{longtable}{@{}p{23mm}>{\raggedright\arraybackslash}p{29mm}cp{18mm}cp{20mm}p{14mm}>{\raggedright\arraybackslash}p{17mm}@{}}
+    \toprule
+    \textbf{Identifiant} & \textbf{Titre} & \textbf{§} & \textbf{Priorité} &
+    \textbf{Méth.} & \textbf{Phase} & \textbf{État} & \textbf{Support} \\
+    \midrule\endhead
+    \bottomrule\endfoot
+    \exig@liste
+  \end{longtable}}%
+}
+
+% --- Points ouverts et contenus à compléter ---------------------------------
+
+\newcounter{pointouvert}
+\renewcommand\thepointouvert{PO-\two@digits{\value{pointouvert}}}
+
+\newcommand\exig@points{}
+\NewDocumentCommand\pointouvert{m}{%
+  \refstepcounter{pointouvert}%
+  \xdef\exig@points{%
+    \unexpanded\expandafter{\exig@points}%
+    \noexpand\po@ligne{\thepointouvert}{\thesubsection}{\unexpanded{#1}}}%
+  \begin{tcolorbox}[po@style]%
+    \hypertarget{po:\thepointouvert}{}%
+    {\sffamily\bfseries\color{exigOrange}Point ouvert \thepointouvert.}~#1%
+  \end{tcolorbox}%
+}
+
+\newcommand\po@ligne[3]{%
+  \hyperlink{po:#1}{\texttt{#1}} & #2 & #3 \\}
+
+\newcommand\listepointsouverts{%
+  {\small
+  \begin{longtable}{@{}p{14mm}p{10mm}p{130mm}@{}}
+    \toprule
+    \textbf{N\textsuperscript{o}} & \textbf{§} & \textbf{Question à trancher} \\
+    \midrule\endhead
+    \bottomrule\endfoot
+    \exig@points
+  \end{longtable}}%
+}
+
+\newcommand\acompleter[1]{%
+  \begin{tcolorbox}[enhanced, colback=exigGris!5, colframe=exigGris!50,
+    boxrule=0.4pt, arc=1mm, borderline={0.4pt}{0pt}{exigGris!50, dashed},
+    fontupper=\small\itshape\color{exigGris}, before skip=6pt, after skip=6pt]
+    À compléter~--- #1
+  \end{tcolorbox}%
+}
+
+\endinput

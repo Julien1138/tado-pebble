@@ -1,0 +1,59 @@
+\section{Annexes}
+
+\subsection{Maquettes de référence}
+\label{sec:maquettes}
+
+Les maquettes ci-dessous illustrent les écrans décrits au §\ref{sec:fenetres}. Elles ne sont pas
+normatives~: en cas de désaccord, ce sont les exigences du cahier des charges et la conception qui font foi.
+Elles fournissent les valeurs de la table de constantes de chaque plateforme (M-04). Chaque plateforme est
+présentée avec ses treize vues~: les onze écrans du cahier des charges, l'écran de liaison au compte
+(\refdec{DEC-03}) et la liste des pièces hors connexion (\refexig{TPB-ACT-009}). La Pebble~2 Duo (flint) a
+le rendu de la Pebble~2 (diorite).
+
+\newcommand\maquette[2]{%
+  \begin{figure}[p]
+    \centering
+    \includegraphics[width=\linewidth, height=0.86\textheight, keepaspectratio]{maquettes/#1.png}
+    \caption{#2}
+  \end{figure}}
+
+\maquette{emery}{Pebble Time~2 (emery, 200\,×\,228, couleur)~: plateforme de référence}
+\maquette{basalt}{Pebble Time et Time Steel (basalt, 144\,×\,168, couleur)}
+\maquette{chalk}{Pebble Time Round (chalk, 180\,×\,180, rond, couleur)}
+\maquette{gabbro}{Pebble Round~2 (gabbro, 260\,×\,260, rond, couleur)}
+\maquette{aplite}{Pebble et Pebble Steel (aplite, 144\,×\,168, noir et blanc)}
+\maquette{diorite}{Pebble~2 et Pebble~2 Duo (diorite et flint, 144\,×\,168, noir et blanc)}
+
+\clearpage
+\subsection{Arborescence du projet}
+
+\begin{verbatim}
+tado-pebble/
+  package.json            métadonnées, plateformes cibles, clés de messages
+  src/c/
+    main.c                M-01  cycle de vie
+    comms.c               M-02  messagerie
+    store.c               M-03  magasin, stockage persistant
+    platform.c            M-04  table de constantes
+    theme.c               M-05  couleurs, motifs
+    list.c                M-06  moteur de liste (rect, rond)
+    win_pieces.c ... win_liaison.c    M-07  une fenêtre par écran
+    text.c                M-08  textes, formats
+    actionbar.c           M-09
+    banner.c              M-10
+  src/pkjs/
+    index.js              J-01  messagerie
+    link.js               J-02  liaison
+    tado.js               J-03  client Tado
+    cache.js              J-04
+    quota.js              J-05
+    home.js history.js comfort.js alerts.js control.js   J-06 à J-10
+    views.js              J-11
+  resources/              images, ressources de textes fr et en
+  test/                   tests du pkjs avec faux client Tado
+\end{verbatim}
+
+\subsection{Points ouverts}
+\label{sec:points-ouverts}
+
+\listepointsouverts

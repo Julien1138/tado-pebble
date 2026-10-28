@@ -1,0 +1,61 @@
+\documentclass[11pt, a4paper]{article}
+
+\usepackage{exigences}
+
+\docreference{TPB-SyRS}
+\docstatut{Ébauche}
+\docsysteme{Tado pour Pebble}
+
+\title{Cahier des charges}
+\author{Julien Aupart}
+\date{28 octobre 2026}
+
+\begin{document}
+
+\hypersetup{pageanchor=false}
+\begin{titlepage}
+  \sffamily
+  \vspace*{30mm}
+  {\color{exigGris}\large Spécification des exigences système (SyRS)\par}
+  \vspace{4mm}
+  {\color{exigBleu}\Huge\bfseries Cahier des charges\par}
+  \vspace{3mm}
+  {\color{exigBleu}\LARGE \lesysteme\par}
+  \vspace{8mm}
+  {\color{exigGris}Rédigé selon ISO/IEC/IEEE 29148:2018 --- Ingénierie des exigences\par}
+  \vfill
+  \noindent\begin{tabularx}{\linewidth}{@{}>{\color{exigGris}}p{35mm}X@{}}
+    Référence & \lareference \\
+    Statut    & \lestatut \\
+    Date      & 28 octobre 2026 \\
+    Rédaction & Julien Aupart \\
+  \end{tabularx}
+\end{titlepage}
+\hypersetup{pageanchor=true}
+
+\section*{Suivi du document}
+
+\subsection*{Historique des révisions}
+Le document n'est pas versionné tant qu'il n'a pas été approuvé une première fois~;
+son historique est, d'ici là, celui du dépôt.
+
+\subsection*{Approbation}
+\noindent\begin{tabularx}{\linewidth}{@{}p{40mm}Xp{30mm}p{30mm}@{}}
+  \toprule
+  \textbf{Rôle} & \textbf{Nom} & \textbf{Date} & \textbf{Visa} \\
+  \midrule
+  Rédaction   & Julien Aupart & & \\
+  Approbation & & & \\
+  \bottomrule
+\end{tabularx}
+
+\tableofcontents
+\clearpage
+
+\input{sections/1-introduction}
+\input{sections/2-references}
+\input{sections/3-exigences}
+\input{sections/4-verification}
+\input{sections/5-annexes}
+
+\end{document}

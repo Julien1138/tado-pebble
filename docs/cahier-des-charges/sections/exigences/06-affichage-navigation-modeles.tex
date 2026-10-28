@@ -1,0 +1,273 @@
+% -----------------------------------------------------------------------------
+\subsubsection{Couleurs et lisibilité (F11)}
+\label{sec:affichage}
+
+L'application emprunte à l'application mobile Tado son principe~: la couleur d'une pièce dit
+sa température. Un utilisateur de Tado ne doit pas être dépaysé.
+
+\begin{exigence}{TPB-AFF-001}{Couleur selon la température}[
+    justification = {Repérer les pièces froides et chaudes sans lire un chiffre.},
+    priorite      = {Importante},
+    verification  = {D},
+    phase         = {Affichage},
+    note          = {Quatre tranches~: moins de 18~°C (bleu), de 18 à 19,5~°C (cyan), de
+                     19,5 à 21~°C (ambre), 21~°C et plus (orange).},
+  ]
+  Sur les montres couleur, l'application doit présenter chaque pièce de la liste dans une
+  couleur qui dépend de sa température mesurée.
+\end{exigence}
+
+\begin{exigence}{TPB-AFF-002}{Palette de la montre}[
+    justification = {Une couleur hors palette est approchée par la montre, et change.},
+    priorite      = {Importante},
+    verification  = {I},
+    phase         = {Affichage},
+  ]
+  L'application ne doit employer que les couleurs de la palette de 64 couleurs des montres
+  Pebble.
+\end{exigence}
+
+\begin{exigence}{TPB-AFF-003}{Jamais la couleur seule}[
+    justification = {Les montres noir et blanc n'ont pas de couleurs~; une couleur seule
+                     exclut aussi ceux qui distinguent mal les teintes.},
+    priorite      = {Essentielle},
+    verification  = {I},
+    phase         = {Affichage},
+  ]
+  L'application ne doit porter aucune information par la couleur seule~: la température,
+  l'état de chauffe, la sélection et l'intensité de l'historique doivent se lire aussi par
+  un texte, une forme, un contour ou un motif.
+\end{exigence}
+
+\begin{exigence}{TPB-AFF-004}{Sélection visible}[
+    justification = {Les boutons agissent sur la ligne choisie~; elle doit se voir de loin.},
+    priorite      = {Essentielle},
+    verification  = {D},
+    phase         = {Affichage},
+  ]
+  L'application doit faire ressortir l'élément sélectionné de tous les autres.
+\end{exigence}
+
+\begin{exigence}{TPB-AFF-005}{Unités et formats}[
+    justification = {Lire la température et l'heure comme chez soi.},
+    priorite      = {Importante},
+    verification  = {T},
+    phase         = {Affichage},
+    note          = {Les seuils de couleur (\refexig{TPB-AFF-001}) sont donnés en degrés
+                     Celsius et convertis en degrés Fahrenheit.},
+  ]
+  L'application doit exprimer les températures dans l'unité du compte Tado, degré Celsius
+  ou degré Fahrenheit, et les heures dans le format de la montre.
+\end{exigence}
+
+\begin{exigence}{TPB-AFF-006}{Langue}[
+    justification = {L'utilisateur lit son chauffage dans sa langue.},
+    priorite      = {Importante},
+    verification  = {I},
+    phase         = {Affichage},
+    note          = {Le français et l'anglais sont pris en charge. Le séparateur décimal
+                     suit la langue (virgule en français, point en anglais).},
+  ]
+  L'application doit présenter tous ses textes dans la langue de la montre, en français ou
+  en anglais, et en anglais pour toute autre langue.
+\end{exigence}
+
+% -----------------------------------------------------------------------------
+\subsubsection{Navigation (F12)}
+\label{sec:navigation}
+
+Une montre Pebble se manipule avec quatre boutons~: \emph{Haut}, \emph{Sélection},
+\emph{Bas} et \emph{Retour}. Rien n'oblige à toucher l'écran, et il n'y a pas de clavier.
+La figure~\ref{fig:navigation} montre l'enchaînement des écrans.
+
+\begin{exigence}{TPB-NAV-001}{Ouverture sur la liste des pièces}[
+    justification = {C'est la question la plus fréquente.},
+    priorite      = {Essentielle},
+    verification  = {D},
+    phase         = {Navigation},
+  ]
+  À son ouverture, l'application doit afficher la liste des pièces.
+\end{exigence}
+
+\begin{exigence}{TPB-NAV-002}{Fonction des boutons}[
+    justification = {Les montres Pebble se manipulent aux boutons, avec toujours le même
+                     sens.},
+    priorite      = {Essentielle},
+    verification  = {D},
+    phase         = {Navigation},
+  ]
+  Dans toutes les listes, l'application doit faire défiler la sélection avec les boutons
+  \emph{Haut} et \emph{Bas}, ouvrir l'élément sélectionné avec \emph{Sélection} et revenir à
+  l'écran précédent avec \emph{Retour}.
+\end{exigence}
+
+\begin{exigence}{TPB-NAV-003}{Menu général}[
+    justification = {Les écrans qui concernent toute la maison ne sont pas des pièces.},
+    priorite      = {Essentielle},
+    verification  = {D},
+    phase         = {Navigation},
+  ]
+  L'application doit ouvrir, par un appui long sur \emph{Sélection} depuis la liste des
+  pièces, un menu qui donne accès à l'historique, à la présence, aux raccourcis et aux
+  alertes.
+\end{exigence}
+
+\begin{exigence}{TPB-NAV-004}{Bien-être depuis le détail}[
+    justification = {Même geste pour la même idée~: l'appui long mène à ce qui complète
+                     l'écran.},
+    priorite      = {Importante},
+    verification  = {D},
+    phase         = {Navigation},
+  ]
+  L'application doit ouvrir le bien-être ambiant de la pièce par un appui long sur
+  \emph{Sélection} depuis le détail d'une pièce.
+\end{exigence}
+
+\begin{exigence}{TPB-NAV-005}{Quitter}[
+    justification = {Les montres Pebble se quittent par \emph{Retour}.},
+    priorite      = {Essentielle},
+    verification  = {D},
+    phase         = {Navigation},
+  ]
+  Depuis la liste des pièces, le bouton \emph{Retour} doit quitter l'application.
+\end{exigence}
+
+\begin{figure}[H]
+  \centering
+  \begin{tikzpicture}[
+      font=\sffamily\footnotesize,
+      ecr/.style={draw=exigBleu, fill=exigBleu!5, rounded corners=3pt, align=center,
+                  text width=22mm, minimum height=9mm},
+      men/.style={draw=exigGris, fill=exigGris!6, rounded corners=3pt, align=center,
+                  text width=22mm, minimum height=9mm},
+      fleche/.style={-Stealth, draw=exigGris!90!black},
+      lbl/.style={font=\sffamily\scriptsize, text=exigBleu!80!black, align=center},
+    ]
+    \node[ecr] (pie) at (0, 0)    {\textbf{Pièces}};
+    \node[ecr] (det) at (3.4, 0)  {\textbf{Détail}};
+    \node[ecr] (pil) at (6.8, 0)  {\textbf{Pilotage}};
+    \node[ecr] (con) at (10.2, 0) {\textbf{Forcer}\\température};
+    \node[ecr] (dur) at (13.6, 0) {\textbf{Durée}};
+    \node[ecr] (amb) at (3.4, -1.8) {\textbf{Bien-être}\\ambiant};
+    \node[men] (men) at (0, -3.6)   {\textbf{Menu}};
+    \node[ecr] (his) at (3.4, -3.6) {\textbf{Historique}};
+    \node[ecr] (pre) at (6.8, -3.6) {\textbf{Présence}};
+    \node[ecr] (rac) at (10.2, -3.6) {\textbf{Raccourcis}};
+    \node[ecr] (ale) at (13.6, -3.6) {\textbf{Alertes}};
+    \draw[fleche] (pie) -- node[lbl, above=1pt]{Sél.} (det);
+    \draw[fleche] (det) -- node[lbl, above=1pt]{Sél.} (pil);
+    \draw[fleche] (pil) -- node[lbl, above=1pt]{Sél.} (con);
+    \draw[fleche] (con) -- node[lbl, above=1pt]{valider} (dur);
+    \draw[fleche] (det) -- node[lbl, right=1pt]{Sél. long} (amb);
+    \draw[fleche] (pie) -- node[lbl, left=1pt]{Sél. long} (men);
+    \draw[fleche] (men) -- (his);
+    \draw[fleche] (men.south) -- ++(0,-0.7) -| (pre.south);
+    \draw[fleche] (men.south) -- ++(0,-0.7) -| (rac.south);
+    \draw[fleche] (men.south) -- ++(0,-0.7) -| (ale.south);
+  \end{tikzpicture}
+  \caption{Enchaînement des écrans~; \emph{Retour} revient à l'écran précédent depuis chacun
+    d'eux}
+  \label{fig:navigation}
+\end{figure}
+
+% -----------------------------------------------------------------------------
+\subsubsection{Modèles de montre (F13)}
+\label{sec:modeles}
+
+L'application est conçue pour la Pebble Time~2, et doit rester utilisable sur les autres
+modèles Pebble. Les écrans diffèrent par leur taille, leur forme et leur nombre de couleurs~;
+les fonctions, non.
+
+\begin{table}[H]
+  \centering\small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{40mm}l>{\raggedright\arraybackslash}p{27mm}X@{}}
+    \toprule
+    \textbf{Modèle} & \textbf{Plateforme} & \textbf{Écran} & \textbf{Particularités} \\
+    \midrule
+    Pebble Time~2 & emery & 200\,×\,228, couleur & Barre d'actions de 30~px. Modèle de référence. \\
+    Pebble Time, Time Steel & basalt & 144\,×\,168, couleur & Barre d'actions de 24~px. \\
+    Pebble Time Round & chalk & 180\,×\,180, rond, couleur & Trois lignes, sélection au centre, pas de barre d'actions. Historique sur huit heures. \\
+    Pebble Round~2 & gabbro & 260\,×\,260, rond, couleur & Comme chalk, avec les textes plus lisibles de emery. \\
+    Pebble, Pebble Steel & aplite & 144\,×\,168, noir et blanc & Sans couleur~: inversions, contours et motifs. \\
+    Pebble~2 & diorite & 144\,×\,168, noir et blanc & Rendu identique à aplite. \\
+    Pebble~2 Duo & flint & 144\,×\,168, noir et blanc & Rendu identique à aplite et diorite. \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Modèles pris en charge}
+  \label{tab:modeles}
+\end{table}
+
+\begin{exigence}{TPB-PLT-001}{Sept plateformes}[
+    justification = {Les montres Pebble existent en sept plateformes d'affichage.},
+    priorite      = {Essentielle},
+    verification  = {D},
+    phase         = {Modèles},
+    note          = {Toutes les montres Pebble sont prises en charge.},
+  ]
+  L'application doit fonctionner sur les montres des sept plateformes du
+  tableau~\ref{tab:modeles}.
+\end{exigence}
+
+\begin{exigence}{TPB-PLT-002}{Mêmes fonctions partout}[
+    justification = {Choisir sa montre ne doit pas priver de fonctions.},
+    priorite      = {Essentielle},
+    verification  = {D},
+    phase         = {Modèles},
+  ]
+  L'application doit offrir sur chaque plateforme les mêmes écrans et les mêmes fonctions,
+  l'adaptation ne portant que sur leur présentation.
+\end{exigence}
+
+\begin{exigence}{TPB-PLT-003}{Noir et blanc}[
+    justification = {Les Pebble et Pebble~2 n'ont pas de couleur.},
+    priorite      = {Essentielle},
+    verification  = {D},
+    phase         = {Modèles},
+  ]
+  Sur les montres noir et blanc, l'application doit présenter une pièce qui chauffe en
+  vidéo inversée, la sélection par un contour épais et les niveaux de l'historique par des
+  motifs distincts.
+\end{exigence}
+
+\begin{exigence}{TPB-PLT-004}{Écrans ronds}[
+    justification = {Sur un écran rond, les lignes du haut et du bas sont rognées.},
+    priorite      = {Essentielle},
+    verification  = {D},
+    phase         = {Modèles},
+  ]
+  Sur les montres à écran rond, l'application doit présenter les listes sur trois lignes
+  visibles, l'élément sélectionné occupant la ligne du centre.
+\end{exigence}
+
+\begin{exigence}{TPB-PLT-005}{Barre d'actions}[
+    justification = {Les écrans rectangulaires ont la place d'afficher les gestes
+                     possibles~; les écrans ronds non.},
+    priorite      = {Souhaitable},
+    verification  = {D},
+    phase         = {Modèles},
+  ]
+  Sur les montres à écran rectangulaire, l'application devrait afficher à côté des boutons
+  les actions qu'ils déclenchent sur l'écran en cours.
+\end{exigence}
+
+\begin{exigence}{TPB-PLT-006}{Textes abrégés}[
+    justification = {\enquote{Salle de bain} ne tient pas sur une ligne de 144 pixels.},
+    priorite      = {Importante},
+    verification  = {D},
+    phase         = {Modèles},
+  ]
+  Lorsque la place manque, l'application doit abréger les noms de pièce et les
+  indications, sans que deux pièces deviennent indiscernables.
+\end{exigence}
+
+\begin{exigence}{TPB-PLT-007}{Durée de l'historique selon l'écran}[
+    justification = {Douze colonnes ne tiennent pas dans la largeur utile d'un écran rond de
+                     180 pixels.},
+    priorite      = {Importante},
+    verification  = {D},
+    phase         = {Modèles},
+  ]
+  Sur la Pebble Time Round, l'application doit présenter l'historique des huit dernières
+  heures, au lieu des douze.
+\end{exigence}
+

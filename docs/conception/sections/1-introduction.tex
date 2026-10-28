@@ -1,0 +1,63 @@
+\section{Introduction}
+
+\subsection{Objet du document}
+
+Ce document décrit comment l'application \emph{Tado pour Pebble} est conçue pour satisfaire
+le cahier des charges TPB-SyRS [P1]. Le cahier des charges dit \emph{ce que} l'application
+fait~; le présent document dit \emph{comment} elle est découpée, quelles briques portent
+quelle exigence, comment elles échangent, et pourquoi ces choix ont été faits plutôt que
+d'autres.
+
+Il s'adresse à celui qui écrira le code (le découpage, les protocoles, les règles de calcul)
+et à celui qui le relira (les décisions, leurs raisons, leurs conséquences). Il n'est pas le
+code~: il s'arrête là où l'écriture devient évidente.
+
+\subsection{Périmètre}
+
+\paragraph{Dans le périmètre.}
+\begin{itemize}
+  \item le découpage en programmes (montre, téléphone) et en composants~;
+  \item les échanges avec Tado, leur coût en requêtes et la politique qui les contient~;
+  \item le protocole entre la montre et le téléphone~;
+  \item les modèles de données manipulés à chaque étape~;
+  \item l'adaptation à chacune des sept plateformes Pebble~;
+  \item les comportements dynamiques (ouverture, commande, liaison, erreurs)~;
+  \item la traçabilité entre exigences et composants, et les retours que cette conception
+        fait au cahier des charges (§\ref{sec:retours}).
+\end{itemize}
+
+\paragraph{Hors périmètre.} Le code source, les procédures de publication sur le catalogue
+de montres, et tout ce qui relève des besoins fonctionnels, déjà spécifiés.
+
+\subsection{Principes de rédaction}
+
+\paragraph{Décisions.} Chaque choix structurant est une \emph{décision}, identifiée
+\texttt{DEC-nn}, présentée dans un cartouche (contexte, décision, alternatives écartées,
+conséquences, exigences concernées). Une décision n'est jamais supprimée~: si elle change,
+on la déclare remplacée.
+
+\paragraph{Composants.} Les composants du téléphone sont identifiés \texttt{J-nn}, ceux de la
+montre \texttt{M-nn}, les messages \texttt{MSG-nn}. Les exigences du cahier des charges sont
+citées par leur identifiant \texttt{TPB-\textit{DOM}-\textit{nnn}}.
+
+\paragraph{Formes verbales.} Les mêmes que dans le cahier des charges~: \enquote{doit}
+exprime une obligation, \enquote{devrait} une recommandation, l'indicatif un fait de
+conception.
+
+\paragraph{Points ouverts.} Les questions qui restent à trancher sont signalées dans le corps
+du document et récapitulées en annexe (§\ref{sec:points-ouverts}).
+
+\subsection{Définitions complémentaires}
+
+\begin{longtable}{@{}>{\bfseries}p{42mm}p{118mm}@{}}
+  Watchapp & Programme qui s'exécute sur la montre, écrit en C avec le SDK Pebble. \\
+  PebbleKit JS (pkjs) & Programme JavaScript qui s'exécute sur le téléphone, dans l'application Pebble qui accompagne la montre. Il peut faire des requêtes réseau et converse avec la watchapp. \\
+  AppMessage & Mécanisme de messages entre la watchapp et le pkjs, par paires clé-valeur dans des tampons de taille fixe. \\
+  Vue (modèle de vue) & Données déjà préparées pour un écran~: noms abrégés, températures arrondies, niveaux calculés. La montre n'affiche que des vues. \\
+  Quota & Volume de requêtes par jour que Tado autorise à l'application. \\
+  Réserve & Part du quota que les consultations ne peuvent pas entamer, réservée aux commandes. \\
+  TTL & Durée pendant laquelle une donnée mise en cache est tenue pour assez fraîche pour être affichée sans nouvelle requête. \\
+  Consigne & Température demandée à une pièce. \\
+  Forçage (overlay) & Ordre manuel qui remplace la programmation d'une pièce, avec une condition de fin. \\
+  Zone & Terme de l'API Tado pour une pièce. \\
+\end{longtable}

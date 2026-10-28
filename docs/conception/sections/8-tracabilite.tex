@@ -1,0 +1,60 @@
+\section{Traçabilité}
+
+\subsection{Des exigences vers les composants}
+
+\begin{table}[H]
+  \centering\small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{36mm}>{\raggedright\arraybackslash}p{58mm}X@{}}
+    \toprule
+    \textbf{Exigences} & \textbf{Composants} & \textbf{Décisions} \\
+    \midrule
+    \texttt{TPB-PIE-001} à \texttt{011} & J-06, J-11~; M-06, M-07 (fenêtre 1) & DEC-02, DEC-04 \\
+    \texttt{TPB-DET-001} à \texttt{008} & J-06~; M-07 (fenêtre 2), M-09 & DEC-04 \\
+    \texttt{TPB-PIL-001} à \texttt{011} & J-10, J-11~; M-07 (fenêtres 3 à 5) & DEC-10 \\
+    \texttt{TPB-HIS-001} à \texttt{008} & J-07~; M-07 (fenêtre 7) & DEC-05, DEC-11 \\
+    \texttt{TPB-PRE-001} à \texttt{005} & J-06, J-10~; M-07 (fenêtre 8) & DEC-02 \\
+    \texttt{TPB-AMB-001} à \texttt{006} & J-08~; M-07 (fenêtre 10) & DEC-02 \\
+    \texttt{TPB-RAC-001} à \texttt{007} & J-10, J-11~; M-07 (fenêtre 9) & DEC-04 \\
+    \texttt{TPB-ALE-001} à \texttt{005} & J-09~; M-07 (fenêtre 11) & DEC-02 \\
+    \texttt{TPB-ALE-006} & non satisfaite dans la première version & DEC-08 \\
+    \texttt{TPB-CPT-001} à \texttt{005} & J-02~; M-07 (fenêtre 12) & DEC-03 \\
+    \texttt{TPB-ACT-001} à \texttt{010} & J-01, J-04, J-05~; M-02, M-03, M-10 & DEC-06, DEC-07, DEC-10 \\
+    \texttt{TPB-AFF-001} à \texttt{006} & J-11~; M-05, M-08 & DEC-09, DEC-12 \\
+    \texttt{TPB-NAV-001} à \texttt{005} & M-01, M-06, M-07 & --- \\
+    \texttt{TPB-PLT-001} à \texttt{007} & M-04, M-06, M-09 & DEC-01, DEC-09 \\
+    \texttt{TPB-UTI-001} à \texttt{006} & M-06, M-10~; J-01 & --- \\
+    \texttt{TPB-SEC-001}, \texttt{002} & J-02 & DEC-03 \\
+    \texttt{TPB-INF-001} à \texttt{003} & J-04~; M-03 & DEC-07, DEC-08 \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Traçabilité exigences, composants, décisions}
+\end{table}
+
+\subsection{Retours sur le cahier des charges}
+\label{sec:retours}
+
+La conception a rencontré des limites de l'API de Tado que le cahier des charges ne
+connaissait pas. Le tableau recense ce qui demande une décision de l'utilisateur, puis une
+mise à jour du cahier des charges.
+
+\pointouvert{Dans quelle mesure le cahier des charges doit-il être mis à jour avec les retours R1 à R9 (retrait de \texttt{TPB-AMB-004}, conditions Auto-Assist, sort de \texttt{TPB-ALE-006})~?}
+
+\begin{table}[H]
+  \centering\small
+  \begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}p{26mm}>{\raggedright\arraybackslash}p{50mm}X@{}}
+    \toprule
+    \textbf{Réf.} & \textbf{Exigences} & \textbf{Constat} & \textbf{Proposition} \\
+    \midrule
+    R1 & \texttt{TPB-AMB-001}, \texttt{AMB-004}, \texttt{AMB-006} & L'API ne fournit pas de risque de moisissure. \texttt{airComfort} donne un niveau de température et un niveau d'humidité. & Retirer \texttt{AMB-004} (état \emph{Retirée}) conformément à la règle \enquote{abandonner ce que l'API ne donne pas}~; fonder le verdict sur les niveaux. \\
+    R2 & \texttt{TPB-AMB-002} & Les zones de confort fixes (19--21~°C, 40--60~\%) ne sont pas celles de Tado. & Garder les zones pour les jauges, et faire dire le verdict par Tado~; ou abandonner les zones. À trancher. \\
+    R3 & \texttt{TPB-HIS-002} & L'historique est connu par quatre niveaux, non par une puissance en pourcentage. & Reformuler la note~: intensité estimée par niveaux pondérés (DEC-11)~; les plages sont inchangées. \\
+    R4 & \texttt{TPB-ALE-006} & Rien ne s'exécute hors de l'application ouverte (C5). & Passer l'exigence hors de la première version, ou la remplacer par \enquote{vibrer à l'ouverture si une alerte est apparue depuis la dernière}. \\
+    R5 & \texttt{TPB-PRE-002}, \texttt{PRE-003}, \texttt{RAC-004}, \texttt{RAC-005} & L'utilisateur n'a pas l'abonnement Auto-Assist, mais sa géolocalisation fonctionne dans l'application Android. L'API documente le retour au mode \emph{Auto} comme relevant de l'abonnement. & Garder les exigences~; la conception gère un refus éventuel de Tado (désactiver l'offre d'\emph{Auto}). À vérifier par la première requête. \\
+    R6 & \texttt{TPB-RAC-002} & Durée du \enquote{Tout off} relevée~: indéfinie. & Préciser \enquote{jusqu'à nouvel ordre} dans l'exigence (fait dans le cahier des charges). Résolu. \\
+    R7 & \texttt{TPB-ACT-004} & L'actualisation périodique consomme du quota. & Fixer une période de cinq minutes (§\ref{sec:quota})~; à confirmer à l'usage. \\
+    R8 & \texttt{TPB-PIL-002}, \texttt{AFF-005} & En degrés Fahrenheit, les valeurs ne sont pas des demi-degrés Celsius. & Préciser le pas de un degré Fahrenheit (déjà noté dans \texttt{PIL-002}). \\
+    R9 & \texttt{TPB-CPT-001} & L'écran de liaison n'est pas dans les maquettes du cahier des charges. & L'ajouter aux maquettes (§\ref{sec:maquettes}). \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Retours sur le cahier des charges}
+\end{table}

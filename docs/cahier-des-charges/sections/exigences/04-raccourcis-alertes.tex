@@ -1,0 +1,161 @@
+% -----------------------------------------------------------------------------
+\subsubsection{Raccourcis (F7)}
+\label{sec:raccourcis}
+
+Un raccourci agit sur toute la maison en une seule action~: partir, se coucher, rentrer.
+
+\begin{exigence}{TPB-RAC-001}{Raccourcis de l'application Android}[
+    justification = {L'utilisateur retrouve sur la montre les raccourcis qu'il connaît dans
+                     l'application Android Tado.},
+    priorite      = {Importante},
+    verification  = {D},
+    phase         = {Raccourcis},
+    note          = {Quatre raccourcis~: \enquote{Tout off}, \enquote{Activer la
+                     programmation dans toutes les pièces}, \enquote{Mode Absent},
+                     \enquote{Mode Géolocalisation}. Les trois derniers ne sont proposés que
+                     dans les cas décrits par \refexig{TPB-RAC-003} à
+                     \refexig{TPB-RAC-005}.},
+  ]
+  L'application doit proposer les raccourcis de l'application Android Tado, qui agissent sur
+  toute la maison à la fois.
+\end{exigence}
+
+\begin{exigence}{TPB-RAC-002}{Tout off}[
+    justification = {Couper le chauffage de toute la maison en un geste.},
+    priorite      = {Importante},
+    verification  = {T},
+    phase         = {Raccourcis},
+    note          = {Sans limite de durée, comme dans l'application Android Tado.},
+  ]
+  L'application doit proposer en permanence un raccourci qui éteint le chauffage de toutes
+  les pièces jusqu'à nouvel ordre.
+\end{exigence}
+
+\begin{exigence}{TPB-RAC-003}{Activer la programmation partout}[
+    justification = {Annuler d'un coup tous les forçages, sans proposer une action qui ne
+                     ferait rien.},
+    priorite      = {Importante},
+    verification  = {T},
+    phase         = {Raccourcis},
+  ]
+  Lorsqu'au moins une pièce n'est pas en mode programmation, l'application doit proposer un
+  raccourci qui remet toutes les pièces en programmation, et ne doit pas le proposer
+  autrement.
+\end{exigence}
+
+\begin{exigence}{TPB-RAC-004}{Mode Absent}[
+    justification = {Dire au chauffage que l'on est parti alors que la géolocalisation
+                     croit l'utilisateur présent.},
+    priorite      = {Importante},
+    verification  = {T},
+    phase         = {Raccourcis},
+  ]
+  Lorsque la géolocalisation identifie l'utilisateur comme présent, l'application doit
+  proposer un raccourci qui impose le mode de présence \emph{Absent}, et ne doit pas le
+  proposer autrement.
+\end{exigence}
+
+\begin{exigence}{TPB-RAC-005}{Mode Géolocalisation}[
+    justification = {Rendre à Tado la décision de présence après l'avoir imposée.},
+    priorite      = {Importante},
+    verification  = {T},
+    phase         = {Raccourcis},
+  ]
+  Lorsque le mode de présence est imposé (\emph{Présent} ou \emph{Absent}), l'application
+  doit proposer un raccourci qui rétablit le mode \emph{Auto}, et ne doit pas le proposer
+  autrement.
+\end{exigence}
+
+\begin{exigence}{TPB-RAC-006}{Confirmation avant d'agir}[
+    justification = {Un raccourci touche toute la maison~: une pression malheureuse se paie
+                     partout.},
+    priorite      = {Importante},
+    verification  = {D},
+    phase         = {Raccourcis},
+  ]
+  L'application ne doit appliquer un raccourci qu'après confirmation de l'utilisateur.
+\end{exigence}
+
+\begin{exigence}{TPB-RAC-007}{Résultat partiel}[
+    justification = {Un raccourci qui réussit dans cinq pièces sur six doit le dire.},
+    priorite      = {Importante},
+    verification  = {T},
+    phase         = {Raccourcis},
+  ]
+  Lorsqu'un raccourci n'a pas pu être appliqué à toutes les pièces, l'application doit
+  indiquer à l'utilisateur lesquelles n'ont pas été modifiées.
+\end{exigence}
+
+% -----------------------------------------------------------------------------
+\subsubsection{Alertes (F8)}
+\label{sec:alertes}
+
+Les alertes rassemblent ce qui, dans la maison, demande l'attention de l'utilisateur sans
+qu'il l'ait cherché.
+
+\begin{exigence}{TPB-ALE-001}{Liste des alertes}[
+    justification = {Savoir ce qui ne va pas sans parcourir chaque pièce.},
+    priorite      = {Importante},
+    verification  = {D},
+    phase         = {Alertes},
+  ]
+  L'application doit présenter la liste des alertes en cours, chacune avec la pièce
+  concernée, sa nature et un détail.
+\end{exigence}
+
+\begin{exigence}{TPB-ALE-002}{Natures d'alerte}[
+    justification = {Les trois situations qui font perdre du confort ou de l'énergie sans
+                     que rien ne le signale.},
+    priorite      = {Importante},
+    verification  = {T},
+    phase         = {Alertes},
+    note          = {Détail~: pour une fenêtre ouverte, depuis combien de temps le
+                     chauffage est coupé~; pour une pile faible, l'appareil concerné. Les
+                     alertes sont celles de l'application Android Tado~; une nature d'alerte
+                     que l'API de Tado ne fournit pas est abandonnée.},
+  ]
+  L'application doit signaler les alertes de trois natures~: fenêtre ouverte détectée,
+  pile faible d'un appareil, appareil injoignable.
+\end{exigence}
+
+\begin{exigence}{TPB-ALE-003}{Nombre d'alertes dans le menu}[
+    justification = {Savoir qu'il y a quelque chose à voir avant d'ouvrir l'écran.},
+    priorite      = {Importante},
+    verification  = {D},
+    phase         = {Alertes},
+  ]
+  L'application doit afficher, dans le menu, le nombre d'alertes en cours.
+\end{exigence}
+
+\begin{exigence}{TPB-ALE-004}{Aucune alerte}[
+    justification = {Un écran vide laisse croire à une panne de l'application.},
+    priorite      = {Importante},
+    verification  = {D},
+    phase         = {Alertes},
+  ]
+  Lorsqu'il n'y a aucune alerte, l'application doit le dire.
+\end{exigence}
+
+\begin{exigence}{TPB-ALE-005}{Alerte résolue}[
+    justification = {Une alerte qui reste après sa cause fait perdre confiance dans les
+                     autres.},
+    priorite      = {Importante},
+    verification  = {T},
+    phase         = {Alertes},
+  ]
+  L'application ne doit plus présenter une alerte dès que sa cause a disparu.
+\end{exigence}
+
+\begin{exigence}{TPB-ALE-006}{Alerte signalée à la montre}[
+    justification = {Une pile qui s'épuise ne se découvre pas en ouvrant l'application par
+                     hasard.},
+    priorite      = {Souhaitable},
+    verification  = {D},
+    phase         = {Alertes},
+    note          = {Soumis au volume de requêtes autorisé par Tado
+                     (\refexig{TPB-ACT-005}).},
+  ]
+  Lorsqu'une nouvelle alerte apparaît, l'application devrait la signaler à l'utilisateur
+  sur sa montre, sans qu'il ait ouvert l'application.
+\end{exigence}
+

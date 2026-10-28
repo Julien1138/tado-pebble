@@ -1,0 +1,94 @@
+\section{Protocole entre la montre et le téléphone}
+\label{sec:protocole}
+
+\subsection{Principes}
+
+\begin{itemize}
+  \item La montre \emph{demande}, le téléphone \emph{répond}~; hors liaison et état d'attente, le
+        téléphone n'envoie rien de lui-même.
+  \item Un message ne contient qu'un élément (une pièce, une rangée d'historique, une alerte), jamais
+        une liste. Une liste est une tête suivie de ses éléments (C6).
+  \item Toute demande porte un numéro de séquence que la réponse reprend. La montre ignore les
+        réponses d'une séquence qui n'est plus la sienne (l'utilisateur a changé d'écran).
+  \item Les températures voyagent en dixièmes de degré, dans l'unité du compte (DEC-12). Les
+        durées en minutes, les heures en minutes depuis minuit.
+  \item Les textes ne voyagent que lorsqu'ils varient (noms de pièces, abréviations)~; tout le reste
+        est un code que la montre traduit (DEC-12).
+  \item La taille des tampons se règle sur le plus gros message (la pièce, environ 70 octets avec
+        deux textes)~; la valeur est à confirmer sur chaque plateforme (point ouvert ci-dessous).
+\end{itemize}
+
+\pointouvert{Quelle taille donner aux tampons AppMessage sur chaque plateforme (le SDK fournit la taille maximale par plateforme)~? Le plus gros message (une pièce, environ 70 octets) doit y tenir avec marge.}
+
+\subsection{Messages}
+
+\begin{table}[H]
+  \centering\small
+  \begin{tabularx}{\linewidth}{@{}l>{\raggedright\arraybackslash}p{23mm}X@{}}
+    \toprule
+    \textbf{Réf.} & \textbf{Nom} & \textbf{Contenu} \\
+    \midrule
+    \multicolumn{3}{@{}l}{\textit{De la montre vers le téléphone}} \\
+    MSG-01 & HELLO & Langue de la montre, forme de l'écran, nombre de colonnes d'historique souhaité. Envoyé à l'ouverture, après \texttt{ready}. \\
+    MSG-02 & GET & Séquence~; objet demandé (pièces, détail, historique, confort, alertes, présence, raccourcis, plage de consigne)~; indice de pièce~; indicateur \enquote{actualiser}. \\
+    MSG-03 & DO & Séquence~; commande (forcer, programmation, éteindre, présence, raccourci, lier, délier)~; indice de pièce~; température en dixièmes~; durée (code)~; numéro de raccourci. \\
+    \midrule
+    \multicolumn{3}{@{}l}{\textit{Du téléphone vers la montre}} \\
+    MSG-11 & STATUS & Séquence~; état de la liaison (non liée, perdue, active)~; âge de la donnée affichée (secondes)~; indicateurs~: hors connexion, quota épuisé, attente~; mode et état de présence~; nombre d'alertes. \\
+    MSG-12 & ROOMS\_HEAD & Séquence~; nombre de pièces~; unité (C ou F). \\
+    MSG-13 & ROOM & Séquence~; indice~; nom (20 octets)~; abréviation (4)~; température mesurée~; consigne~; puissance (\%)~; tranche de couleur~; indicateurs (chauffe, forcée, éteinte, hors ligne, fenêtre ouverte)~; code de mode et durée restante. \\
+    MSG-14 & DETAIL & Séquence~; indice~; code de mode~; heure de fin~; heure et température du prochain changement~; humidité (\%)~; minutes de fenêtre ouverte. \\
+    MSG-15 & HISTORY\_ROW & Séquence~; indice~; niveaux des $n$ colonnes (2 bits chacune)~; masque des colonnes inconnues~; indice de la colonne en cours. \\
+    MSG-16 & COMFORT & Séquence~; indice~; température et humidité en dixièmes~; code du verdict~; indicateur \enquote{humidité non mesurée}. \\
+    MSG-17 & ALERT & Séquence~; indice~; indice de pièce~; nature~; détail (minutes ou code). \\
+    MSG-18 & PRESENCE & Séquence~; mode (Présent, Absent, Auto)~; état~; nombre d'appareils présents~; indicateur \enquote{Auto indisponible}. \\
+    MSG-19 & SHORTCUTS & Séquence~; masque des raccourcis offerts. \\
+    MSG-20 & CAPS & Séquence~; indice de pièce~; minimum, maximum et pas de consigne, en dixièmes. \\
+    MSG-21 & ACK & Séquence~; résultat (pris en compte, refusé, échec, indisponible, quota, hors connexion, Auto indisponible). Suivi de la vue relue. \\
+    MSG-22 & LINK\_CODE & Code à saisir (6 caractères)~; secondes restantes~; état (en attente, validé, expiré, refusé). \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Messages}
+\end{table}
+
+\subsection{Échanges types}
+
+\paragraph{Ouverture.} MSG-01~; la watchapp affiche sa copie (DEC-07)~; MSG-02 \enquote{pièces}~;
+MSG-11~; MSG-12~; MSG-13 $\times n$~; la watchapp remplace sa copie lorsque les $n$ pièces sont
+reçues, ou signale un résultat partiel après un délai (§\ref{sec:erreurs}).
+
+\paragraph{Commande.} MSG-03~; MSG-21 (résultat)~; la vue relue (MSG-13 ou MSG-12 puis MSG-13 $\times n$)~;
+la montre n'affiche l'état de la pièce qu'à cette réception (DEC-10).
+
+\paragraph{Historique.} MSG-02 \enquote{historique}~; MSG-11~; MSG-15 $\times n$ (une par pièce). La montre
+dessine chaque rangée à sa réception, ce qui montre une grille qui se remplit plutôt qu'un
+écran vide.
+
+\subsection{Vues}
+
+Le tableau~\ref{tab:vues} donne la correspondance entre les écrans et les vues que
+le pkjs construit (J-11).
+
+\begin{table}[H]
+  \centering\small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{30mm}>{\raggedright\arraybackslash}p{32mm}X@{}}
+    \toprule
+    \textbf{Écran} & \textbf{Messages} & \textbf{Données d'origine (Tado)} \\
+    \midrule
+    1 Pièces & MSG-11, 12, 13 & \texttt{zoneStates}, \texttt{state}. \\
+    2 Détail & MSG-14 & \texttt{zoneStates} (ou relecture d'une pièce). \\
+    3 Pilotage & MSG-14 & Mode et consigne en cours~; dernier forçage mémorisé par le pkjs. \\
+    4 Consigne & MSG-20 & \texttt{capabilities}. \\
+    5 Durée & aucun & Constantes de la montre. \\
+    6 Menu & MSG-11 & Nombre d'alertes, présence. \\
+    7 Historique & MSG-15 & \texttt{dayReport} par pièce. \\
+    8 Présence & MSG-18 & \texttt{state}, \texttt{mobileDevices}. \\
+    9 Raccourcis & MSG-19 & \texttt{zoneStates}, \texttt{state}. \\
+    10 Bien-être & MSG-16 & \texttt{airComfort}, \texttt{zoneStates}. \\
+    11 Alertes & MSG-17 & \texttt{zones}, \texttt{zoneStates}. \\
+    12 Liaison & MSG-22 & \texttt{login.tado.com}. \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Vues et données d'origine}
+  \label{tab:vues}
+\end{table}

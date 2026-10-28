@@ -1,0 +1,77 @@
+\documentclass[11pt, a4paper]{article}
+
+\usepackage{exigences}
+\usepackage{graphicx}
+
+\docreference{TPB-SDD}
+\docstatut{Ébauche}
+\docsysteme{Tado pour Pebble}
+
+\title{Document de conception logicielle}
+\author{Julien Aupart}
+\date{28 octobre 2026}
+
+% --- Décisions de conception : même présentation que les exigences ---------
+\tcbuselibrary{breakable}
+\emergencystretch=3em
+\newtcolorbox{decision}[2]{exig@style, breakable,
+  title={\hypertarget{dec:#1}{}\texttt{#1}\hfill\textbf{#2}},
+  fontupper=\small}
+\renewcommand\refexig[1]{\texttt{#1}}
+\newcommand\refdec[1]{\hyperlink{dec:#1}{\texttt{#1}}}
+\newcommand\attr[1]{\par\smallskip\noindent{\sffamily\footnotesize\bfseries\color{exigGris}#1}\enspace}
+
+\begin{document}
+
+\hypersetup{pageanchor=false}
+\begin{titlepage}
+  \sffamily
+  \vspace*{30mm}
+  {\color{exigGris}\large Description de l'architecture et de la conception (SDD)\par}
+  \vspace{4mm}
+  {\color{exigBleu}\Huge\bfseries Document de conception logicielle\par}
+  \vspace{3mm}
+  {\color{exigBleu}\LARGE \lesysteme\par}
+  \vspace{8mm}
+  {\color{exigGris}Rédigé selon ISO/IEC/IEEE 42010:2022 et ISO/IEC/IEEE 1016:2009\par}
+  \vfill
+  \noindent\begin{tabularx}{\linewidth}{@{}>{\color{exigGris}}p{35mm}X@{}}
+    Référence & \lareference \\
+    Statut    & \lestatut \\
+    Date      & 28 octobre 2026 \\
+    Rédaction & Julien Aupart \\
+    Spécification de référence & TPB-SyRS, cahier des charges (besoins fonctionnels) \\
+  \end{tabularx}
+\end{titlepage}
+\hypersetup{pageanchor=true}
+
+\section*{Suivi du document}
+
+\subsection*{Historique des révisions}
+Le document n'est pas versionné tant qu'il n'a pas été approuvé une première fois~;
+son historique est, d'ici là, celui du dépôt.
+
+\subsection*{Approbation}
+\noindent\begin{tabularx}{\linewidth}{@{}p{40mm}Xp{30mm}p{30mm}@{}}
+  \toprule
+  \textbf{Rôle} & \textbf{Nom} & \textbf{Date} & \textbf{Visa} \\
+  \midrule
+  Rédaction   & Julien Aupart & & \\
+  Approbation & & & \\
+  \bottomrule
+\end{tabularx}
+
+\tableofcontents
+\clearpage
+
+\input{sections/1-introduction}
+\input{sections/2-references}
+\input{sections/3-contraintes-decisions}
+\input{sections/4-telephone}
+\input{sections/5-montre}
+\input{sections/6-protocole}
+\input{sections/7-comportements}
+\input{sections/8-tracabilite}
+\input{sections/9-annexes}
+
+\end{document}

@@ -1,0 +1,226 @@
+% -----------------------------------------------------------------------------
+\subsubsection{Pilotage d'une pièce (F3)}
+
+Piloter une pièce, c'est ou bien imposer une température pour un temps, ou bien rendre la
+main à la programmation, ou bien éteindre le chauffage. Le pilotage ne porte jamais sur
+plusieurs pièces à la fois~: pour cela, voir les raccourcis (§\ref{sec:raccourcis}).
+
+\begin{exigence}{TPB-PIL-001}{Forcer une température}[
+    justification = {Avoir plus chaud ou moins chaud tout de suite, sans toucher à la
+                     programmation.},
+    priorite      = {Essentielle},
+    verification  = {T},
+    phase         = {Pilotage},
+  ]
+  L'application doit permettre à l'utilisateur d'imposer une température à une pièce,
+  pour une durée qu'il choisit.
+\end{exigence}
+
+\begin{exigence}{TPB-PIL-002}{Choix de la température}[
+    justification = {Les thermostats se règlent au demi-degré, pas plus finement.},
+    priorite      = {Essentielle},
+    verification  = {T},
+    phase         = {Pilotage},
+    note          = {La plage est celle que les appareils de la pièce acceptent~; la
+                     température proposée au départ est la température demandée en ce
+                     moment. Le pas est de 1~°F lorsque l'unité est le degré Fahrenheit
+                     (\refexig{TPB-AFF-005}).},
+  ]
+  L'application doit permettre de choisir la température à imposer, par pas de
+  0,5~°C, dans la plage acceptée par les appareils de la pièce, et refuser toute valeur
+  en dehors.
+\end{exigence}
+
+\begin{exigence}{TPB-PIL-003}{Choix de la durée}[
+    justification = {Un forçage qui ne finit jamais est un forçage oublié.},
+    priorite      = {Essentielle},
+    verification  = {T},
+    phase         = {Pilotage},
+    note          = {Choix proposés~: 30~min, 1~h, 2~h, jusqu'au prochain créneau de la
+                     programmation, jusqu'à nouvel ordre.},
+  ]
+  L'application doit permettre de choisir, pour un forçage, entre plusieurs durées
+  prédéfinies, dont \enquote{jusqu'au prochain créneau} et \enquote{jusqu'à nouvel ordre}.
+\end{exigence}
+
+\begin{exigence}{TPB-PIL-004}{Rejouer le dernier réglage}[
+    justification = {Le même geste revient chaque soir~: \enquote{21° pendant 1 h}.},
+    priorite      = {Importante},
+    verification  = {D},
+    phase         = {Pilotage},
+  ]
+  L'application doit proposer, dans le pilotage d'une pièce, le dernier forçage demandé
+  par l'utilisateur pour cette pièce, applicable en un seul geste.
+\end{exigence}
+
+\begin{exigence}{TPB-PIL-005}{Retour à la programmation}[
+    justification = {Annuler un forçage, c'est rendre la main au programme que l'on a
+                     écrit.},
+    priorite      = {Essentielle},
+    verification  = {T},
+    phase         = {Pilotage},
+  ]
+  L'application doit permettre à l'utilisateur de mettre fin au forçage d'une pièce, qui
+  reprend alors sa température programmée.
+\end{exigence}
+
+\begin{exigence}{TPB-PIL-006}{Mode actuel repéré}[
+    justification = {Savoir dans quel état on est avant de décider de le changer.},
+    priorite      = {Importante},
+    verification  = {D},
+    phase         = {Pilotage},
+  ]
+  L'application doit présenter, dans le pilotage d'une pièce, le mode en cours (programme
+  ou forçage) et la température qu'il impose.
+\end{exigence}
+
+\begin{exigence}{TPB-PIL-007}{Éteindre le chauffage d'une pièce}[
+    justification = {Une pièce que l'on n'utilise pas ne mérite pas d'être chauffée.},
+    priorite      = {Importante},
+    verification  = {T},
+    phase         = {Pilotage},
+    note          = {Jusqu'au prochain créneau de la programmation.},
+  ]
+  L'application doit permettre d'éteindre le chauffage d'une pièce jusqu'au prochain
+  changement de la programmation.
+\end{exigence}
+
+\begin{exigence}{TPB-PIL-008}{Aucun effet sans validation}[
+    justification = {Une pression de trop sur une montre au poignet est vite arrivée.},
+    priorite      = {Essentielle},
+    verification  = {T},
+    phase         = {Pilotage},
+  ]
+  L'application ne doit modifier le chauffage d'une pièce qu'après une validation
+  explicite de l'utilisateur, et ne rien changer lorsqu'il abandonne la saisie.
+\end{exigence}
+
+\begin{exigence}{TPB-PIL-009}{Résultat d'une commande}[
+    justification = {Savoir si la commande est passée, sans aller le vérifier ailleurs.},
+    priorite      = {Essentielle},
+    verification  = {T},
+    phase         = {Pilotage},
+  ]
+  Après chaque commande, l'application doit indiquer à l'utilisateur si elle a été prise en
+  compte ou non, et afficher l'état de la pièce tel qu'il est alors.
+\end{exigence}
+
+\begin{exigence}{TPB-PIL-010}{Pas de succès présumé}[
+    justification = {Afficher 21° quand le chauffage est resté à 17° fait croire à l'utilisateur
+                     qu'il va avoir chaud.},
+    priorite      = {Essentielle},
+    verification  = {T},
+    phase         = {Pilotage},
+  ]
+  Lorsqu'une commande échoue, l'application ne doit pas présenter la pièce comme réglée
+  sur la valeur demandée, et doit dire que la commande a échoué.
+\end{exigence}
+
+\begin{exigence}{TPB-PIL-011}{Commande sans connexion}[
+    justification = {Une commande jouée plus tard, à un moment imprévu, surprend plus
+                     qu'elle ne sert.},
+    priorite      = {Importante},
+    verification  = {T},
+    phase         = {Pilotage},
+  ]
+  Lorsque l'application ne peut pas joindre Tado, elle doit refuser les commandes et
+  l'indiquer, plutôt que de les mettre en attente.
+\end{exigence}
+
+% -----------------------------------------------------------------------------
+\subsubsection{Historique de chauffe (F4)}
+\label{sec:historique}
+
+L'historique répond à la question \enquote{où a-t-on chauffé ces dernières heures~?}. Il
+se présente en grille~: une ligne par pièce, une colonne par heure.
+
+\begin{exigence}{TPB-HIS-001}{Grille des douze dernières heures}[
+    justification = {Voir d'un coup d'œil quelles pièces ont chauffé, et quand.},
+    priorite      = {Essentielle},
+    verification  = {D},
+    phase         = {Historique},
+  ]
+  L'application doit présenter, pour chaque pièce, l'intensité de chauffe de chacune des
+  douze dernières heures.
+\end{exigence}
+
+\begin{exigence}{TPB-HIS-002}{Quatre niveaux d'intensité}[
+    justification = {Une grille de montre doit se lire sans chiffres.},
+    priorite      = {Importante},
+    verification  = {T},
+    phase         = {Historique},
+    note          = {L'intensité d'une heure est le rapport entre l'énergie fournie pendant
+                     cette heure et celle qu'une chauffe à pleine puissance pendant une
+                     heure aurait fournie, soit la puissance moyenne de l'heure. Plages~:
+                     de 0 à 10~\% (aucune), de 10 à 25~\% (faible), de 25 à 50~\% (moyenne),
+                     de 50 à 100~\% (forte). Une valeur à la limite de deux plages va à la
+                     plage supérieure, sauf 100~\%.},
+  ]
+  L'application doit ranger l'intensité de chauffe de chaque pièce et de chaque heure dans
+  l'une des quatre plages ci-contre, de l'absence de chauffe à la chauffe forte.
+\end{exigence}
+
+\begin{exigence}{TPB-HIS-003}{Heure en cours}[
+    justification = {La dernière colonne n'est pas finie~; elle ne doit pas laisser croire
+                     que le chauffage s'est arrêté.},
+    priorite      = {Souhaitable},
+    verification  = {D},
+    phase         = {Historique},
+  ]
+  L'application doit distinguer l'heure en cours des heures écoulées.
+\end{exigence}
+
+\begin{exigence}{TPB-HIS-004}{Repères de temps}[
+    justification = {Placer chaque colonne dans le temps.},
+    priorite      = {Importante},
+    verification  = {D},
+    phase         = {Historique},
+  ]
+  L'application doit accompagner la grille de repères indiquant l'ancienneté des
+  colonnes, par exemple \enquote{-12~h} et \enquote{-6~h}.
+\end{exigence}
+
+\begin{exigence}{TPB-HIS-005}{Légende}[
+    justification = {Une teinte ne dit rien sans sa légende.},
+    priorite      = {Souhaitable},
+    verification  = {I},
+    phase         = {Historique},
+    note          = {Sur les écrans trop petits, la légende peut être omise.},
+  ]
+  Lorsque la place le permet, l'application doit accompagner la grille d'une légende des
+  niveaux d'intensité.
+\end{exigence}
+
+\begin{exigence}{TPB-HIS-006}{Toutes les pièces, même sans chauffe}[
+    justification = {Une pièce qui n'a pas chauffé est une information, pas un oubli.},
+    priorite      = {Importante},
+    verification  = {D},
+    phase         = {Historique},
+  ]
+  L'application doit présenter dans la grille toutes les pièces de la maison, y compris
+  celles qui n'ont pas chauffé.
+\end{exigence}
+
+\begin{exigence}{TPB-HIS-007}{Historique complet, application ouverte ou non}[
+    justification = {Le chauffage fonctionne que l'on regarde la montre ou non~; l'historique
+                     ne doit pas avoir de trous aux heures où on ne l'a pas regardée.},
+    priorite      = {Essentielle},
+    verification  = {T},
+    phase         = {Historique},
+    note          = {Le volume de requêtes autorisé par Tado limite la finesse de
+                     l'historique~; voir \refexig{TPB-ACT-005}.},
+  ]
+  L'application doit présenter l'historique des douze dernières heures, y compris pour les
+  heures pendant lesquelles elle n'a pas été ouverte.
+\end{exigence}
+
+\begin{exigence}{TPB-HIS-008}{Heures inconnues}[
+    justification = {Ne pas confondre \enquote{pas chauffé} et \enquote{on ne sait pas}.},
+    priorite      = {Importante},
+    verification  = {T},
+    phase         = {Historique},
+  ]
+  Lorsque l'intensité de chauffe d'une heure n'est pas connue, l'application doit la
+  présenter comme inconnue, et non comme une absence de chauffe.
+\end{exigence}
+

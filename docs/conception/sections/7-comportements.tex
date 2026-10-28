@@ -1,0 +1,63 @@
+\section{Comportements dynamiques}
+
+\subsection{États de l'application}
+
+\begin{table}[H]
+  \centering\small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{32mm}>{\raggedright\arraybackslash}p{50mm}X@{}}
+    \toprule
+    \textbf{État} & \textbf{Entrée} & \textbf{Comportement} \\
+    \midrule
+    Non liée & Premier lancement, ou après une déliaison & Écran Liaison seul (\refexig{TPB-CPT-001}). \\
+    Liaison en cours & Code demandé & Code et délai affichés~; interrogation de Tado toutes les cinq secondes (§\ref{sec:liaison}). \\
+    Active & Jetons obtenus & Fonctionnement normal. \\
+    Hors connexion & Téléphone ou Tado injoignable & Dernière situation avec son âge~; commandes refusées (\refexig{TPB-ACT-009}, \refexig{TPB-PIL-011}). \\
+    Quota épuisé & Lectures refusées par J-05 & Cache et âge~; annonce~; commandes encore possibles tant que la réserve dure (\refexig{TPB-ACT-007}). \\
+    Liaison perdue & Accès refusé après rafraîchissement & Retour à l'écran Liaison (\refexig{TPB-CPT-005}). \\
+    \bottomrule
+  \end{tabularx}
+  \caption{États de l'application}
+\end{table}
+
+\subsection{Gestion des erreurs}
+\label{sec:erreurs}
+
+J-03 ramène toute erreur à une famille, que J-11 traduit en indicateurs du message STATUS ou en
+résultat de MSG-21.
+
+\begin{table}[H]
+  \centering\small
+  \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{36mm}>{\raggedright\arraybackslash}p{54mm}X@{}}
+    \toprule
+    \textbf{Situation} & \textbf{Comportement} & \textbf{Exigences} \\
+    \midrule
+    Pas de téléphone à portée & La montre n'a pas de réponse après un délai~: elle garde sa copie, signale \enquote{hors connexion}. & \refexig{TPB-ACT-009} \\
+    Tado injoignable ou erreur serveur & Une seule nouvelle tentative~; sinon cache et \enquote{hors connexion}~; une commande est refusée, sans mise en attente. & \refexig{TPB-ACT-009}, \refexig{TPB-PIL-011} \\
+    Jeton périmé (401) & Rafraîchissement, une seule relecture de la requête. & \refexig{TPB-CPT-003} \\
+    Accès refusé après rafraîchissement & Liaison perdue. & \refexig{TPB-CPT-005} \\
+    Quota atteint (429, ou réserve atteinte) & Cache, annonce, commandes jusqu'à la réserve. & \refexig{TPB-ACT-006}, \refexig{TPB-ACT-007} \\
+    Commande refusée (422) & \enquote{Refusé}, état inchangé. & \refexig{TPB-PIL-009}, \refexig{TPB-PIL-010} \\
+    Auto-Assist absent (403 sur présence) & \enquote{Auto indisponible}, mode précédent conservé, \emph{Auto} retiré de l'offre. & \refexig{TPB-PRE-002}, \refexig{TPB-PRE-005} \\
+    Pièce hors ligne & Température \enquote{indisponible} sur sa ligne. & \refexig{TPB-PIE-007} \\
+    Historique incomplet & Colonnes \emph{inconnues}, non nulles. & \refexig{TPB-HIS-008} \\
+    Liste partielle & Au bout d'un délai, la montre affiche les pièces reçues et indique que la liste est incomplète. & \refexig{TPB-PIE-009} \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Erreurs et comportements}
+\end{table}
+
+\subsection{Vérification de la conception}
+
+\begin{itemize}
+  \item \textbf{Tests du pkjs sans montre.} Les composants J-04 à J-11 se testent avec un faux client
+        Tado qui rejoue des réponses enregistrées~: compte des requêtes et réserve (J-05), calcul des
+        colonnes d'historique y compris le chevauchement de minuit et les trous (J-07),
+        verdicts de confort (J-08), offre des raccourcis (J-10), abréviations distinctes (J-11).
+  \item \textbf{Réponses réelles.} Avant d'écrire J-03, enregistrer les réponses de chaque requête du
+        tableau~\ref{tab:requetes} sur le compte de l'utilisateur, et les prendre pour jeu d'essai
+        (point ouvert ci-dessus).
+  \item \textbf{Émulateur.} Les onze écrans et l'écran de liaison sur chacune des sept plateformes,
+        à comparer aux maquettes (§\ref{sec:maquettes}).
+  \item \textbf{Montre réelle.} Une semaine d'usage~: consommation du quota (comptée par J-05 et
+        relevée à la fin de chaque journée), nombre d'appuis des parcours fréquents.
+\end{itemize}

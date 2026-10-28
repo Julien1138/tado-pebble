@@ -1,0 +1,133 @@
+% -----------------------------------------------------------------------------
+\subsubsection{Présence (F5)}
+\label{sec:presence}
+
+Tado règle le chauffage selon que la maison est habitée ou non. L'utilisateur peut laisser
+Tado en décider d'après ses appareils mobiles (mode \emph{Auto}), ou l'imposer lui-même.
+
+\begin{exigence}{TPB-PRE-001}{Présence actuelle}[
+    justification = {Savoir ce que Tado croit, avant de le corriger.},
+    priorite      = {Essentielle},
+    verification  = {T},
+    phase         = {Présence},
+  ]
+  L'application doit afficher, dans l'écran de présence, l'état de présence actuel de la
+  maison (\emph{Présent} ou \emph{Absent}) et le mode qui le détermine.
+\end{exigence}
+
+\begin{exigence}{TPB-PRE-002}{Trois modes}[
+    justification = {Forcer l'un ou l'autre état, ou laisser faire Tado.},
+    priorite      = {Essentielle},
+    verification  = {T},
+    phase         = {Présence},
+  ]
+  L'application doit permettre à l'utilisateur de choisir entre trois modes de présence~:
+  \emph{Présent}, \emph{Absent} et \emph{Auto}.
+\end{exigence}
+
+\begin{exigence}{TPB-PRE-003}{Mode Auto expliqué}[
+    justification = {Comprendre pourquoi la maison est considérée comme présente ou
+                     absente.},
+    priorite      = {Importante},
+    verification  = {T},
+    phase         = {Présence},
+    note          = {Tado décide d'après la position des téléphones qu'il suit (géolocalisation),
+                     non d'après leur connexion au wifi~: c'est le choix retenu.},
+  ]
+  Lorsque le mode \emph{Auto} est choisi, l'application doit indiquer sur quoi repose
+  l'état de présence, en donnant le nombre d'appareils mobiles présents à la maison.
+\end{exigence}
+
+\begin{exigence}{TPB-PRE-004}{Mode actuel repéré}[
+    justification = {Voir le mode choisi sans le relire dans une phrase.},
+    priorite      = {Importante},
+    verification  = {D},
+    phase         = {Présence},
+  ]
+  L'application doit marquer, parmi les trois modes, celui qui est en vigueur.
+\end{exigence}
+
+\begin{exigence}{TPB-PRE-005}{Changement confirmé}[
+    justification = {Un chauffage laissé en absence par erreur coûte une soirée froide.},
+    priorite      = {Essentielle},
+    verification  = {T},
+    phase         = {Présence},
+  ]
+  Après un changement de mode de présence, l'application doit indiquer s'il a été pris en
+  compte et afficher le mode et l'état de présence qui en résultent.
+\end{exigence}
+
+% -----------------------------------------------------------------------------
+\subsubsection{Bien-être ambiant (F6)}
+\label{sec:ambiance}
+
+La page de bien-être ambiant dit, pour une pièce, si l'on y est bien~: ni trop froid, ni trop
+sec ou trop humide, sans risque de moisissure.
+
+\begin{exigence}{TPB-AMB-001}{Page de bien-être d'une pièce}[
+    justification = {Une pièce peut être à la bonne température et rester malsaine.},
+    priorite      = {Importante},
+    verification  = {D},
+    phase         = {Ambiance},
+  ]
+  L'application doit présenter, pour chaque pièce, une page de bien-être ambiant portant
+  sa température, son humidité et un verdict de confort.
+\end{exigence}
+
+\begin{exigence}{TPB-AMB-002}{Zones de confort}[
+    justification = {Une valeur isolée ne dit pas si elle est bonne.},
+    priorite      = {Importante},
+    verification  = {T},
+    phase         = {Ambiance},
+    note          = {Zones de confort retenues~: de 19 à 21~°C et de 40 à 60~\% d'humidité
+                     relative. Elles sont fixes~: l'utilisateur ne les règle pas.},
+  ]
+  L'application doit situer la température et l'humidité de la pièce par rapport à une
+  zone de confort, et dire si chacune est dans la zone, en dessous ou au-dessus.
+\end{exigence}
+
+\begin{exigence}{TPB-AMB-003}{Verdict en une ligne}[
+    justification = {L'utilisateur veut une réponse, pas deux jauges à interpréter.},
+    priorite      = {Importante},
+    verification  = {D},
+    phase         = {Ambiance},
+    note          = {Exemples~: \enquote{Confortable}, \enquote{Un peu froid}, \enquote{Air
+                     trop sec}.},
+  ]
+  L'application doit résumer le confort de la pièce en une phrase courte.
+\end{exigence}
+
+\begin{exigence}{TPB-AMB-004}{Risque de moisissure}[
+    justification = {Un air humide et des murs froids abîment le logement.},
+    priorite      = {Importante},
+    verification  = {T},
+    phase         = {Ambiance},
+  ]
+  Lorsque Tado fournit un niveau de risque de moisissure pour la pièce, l'application doit
+  l'afficher (\emph{faible}, \emph{moyen} ou \emph{élevé}).
+\end{exigence}
+
+\begin{exigence}{TPB-AMB-006}{Fonction abandonnée si Tado ne fournit pas la donnée}[
+    justification = {Une donnée recalculée par l'application ne vaudrait pas celle de
+                     Tado.},
+    priorite      = {Importante},
+    verification  = {A},
+    phase         = {Ambiance},
+    note          = {Le bien-être ambiant reprend ce que montre l'application Android
+                     Tado. Si l'API de Tado ne fournit pas une information (risque de
+                     moisissure, par exemple), la fonction qui en dépend est abandonnée.},
+  ]
+  L'application ne doit présenter du bien-être ambiant que les informations fournies par
+  Tado.
+\end{exigence}
+
+\begin{exigence}{TPB-AMB-005}{Pièce sans capteur d'humidité}[
+    justification = {Toutes les pièces n'ont pas le même équipement.},
+    priorite      = {Importante},
+    verification  = {T},
+    phase         = {Ambiance},
+  ]
+  Lorsque la pièce n'a pas de capteur d'humidité, l'application doit présenter la page de
+  bien-être avec la seule température, et dire que l'humidité n'est pas mesurée.
+\end{exigence}
+

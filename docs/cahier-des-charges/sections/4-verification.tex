@@ -1,0 +1,49 @@
+\section{Vérification}
+\label{sec:verification}
+
+\subsection{Méthodes de vérification}
+
+\begin{table}[H]
+  \centering\small
+  \begin{tabularx}{\linewidth}{@{}lp{28mm}X@{}}
+    \toprule
+    \textbf{Code} & \textbf{Méthode} & \textbf{Définition} \\
+    \midrule
+    I & Inspection    & Examen de l'application, de ses écrans ou de sa documentation, sans la faire fonctionner. \\
+    A & Analyse       & Démonstration par le calcul, la modélisation ou la revue de conception. \\
+    D & Démonstration & Fonctionnement de l'application observé, sans instrumentation ni mesure chiffrée. \\
+    T & Test          & Fonctionnement de l'application dans des conditions contrôlées, résultat comparé à un critère. \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Méthodes de vérification}
+\end{table}
+
+\subsection{Niveaux et moyens de vérification}
+
+\begin{table}[H]
+  \centering\small
+  \begin{tabularx}{\linewidth}{@{}p{32mm}p{52mm}X@{}}
+    \toprule
+    \textbf{Niveau} & \textbf{Moyens} & \textbf{Portée} \\
+    \midrule
+    Émulateur Pebble & Application lancée sur l'émulateur de chacune des sept plateformes, avec une maison simulée (annexe, §\ref{sec:maison-essai}). & Écrans, navigation, lisibilité, adaptation à chaque modèle (couleur, noir et blanc, rond). \\
+    Compte Tado d'essai & Application reliée à un vrai compte Tado, sur une maison dont on connaît l'état. & Lecture de la situation, commandes, présence, alertes, messages d'erreur, liaison et rupture de liaison. \\
+    Recette à la maison & Une montre réelle portée une semaine dans la maison de l'utilisateur. & Usage au poignet, nombre d'appuis, consommation du volume de requêtes sur la journée, fraîcheur des données. \\
+    \bottomrule
+  \end{tabularx}
+  \caption{Niveaux de vérification}
+\end{table}
+
+La maison d'essai décrite en annexe (§\ref{sec:maison-essai}) sert de jeu d'essai commun~:
+elle contient une pièce qui chauffe fort, une pièce forcée, une pièce sans chauffe récente,
+une pièce froide, des alertes et une humidité mesurée.
+
+\acompleter{niveau retenu pour chaque exigence, critères d'acceptation chiffrés
+(nombre d'appuis, âge maximal des données, fréquence d'actualisation), référence du test qui
+la vérifie.}
+
+\subsection{Matrice de vérification}
+
+La matrice ci-dessous est générée à partir des exigences du §3.
+
+\matriceverification
