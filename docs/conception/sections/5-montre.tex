@@ -68,13 +68,17 @@ orange, une sélection ambre, et des tuiles de couleur selon la température (\r
     18 à 19,5~°C            & \texttt{\#55FFFF} & \texttt{GColorCeleste}       & ligne blanche \\
     19,5 à 21~°C            & \texttt{\#FFAA00} & \texttt{GColorChromeYellow}  & ligne blanche \\
     21~°C et plus           & \texttt{\#FF5500} & \texttt{GColorOrange}        & ligne blanche \\
-    Pièce qui chauffe       & flamme et pourcentage & \texttt{GColorOrange}    & ligne inversée \\
+    Pièce qui chauffe       & un à trois traits de chaleur et pourcentage & \texttt{GColorOrange}    & ligne inversée \\
     Titre                   & \texttt{\#FF5500} & \texttt{GColorOrange}        & bandeau noir \\
     Historique, niveaux 1 à 3 & \texttt{\#AA5500}, \texttt{\#FF5500}, \texttt{\#FFAA00} & \texttt{GColorWindsorTan}, \texttt{GColorOrange}, \texttt{GColorChromeYellow} & points, damier, plein \\
     \bottomrule
   \end{tabularx}
   \caption{Couleurs, toutes dans la palette de 64 couleurs (\refexig{TPB-AFF-002})}
 \end{table}
+
+Le niveau de chauffe se lit sur les traits de chaleur de la liste, comme dans l'application Tado~: un trait
+jusqu'à 33~\%, deux jusqu'à 66~\%, trois au-delà (seuils à confirmer sur l'application Android)~; le
+pourcentage est écrit à côté (\refexig{TPB-AFF-003}).
 
 Les seuils de température sont comparés dans l'unité du compte~: en degrés Fahrenheit, ils sont
 convertis une fois (64,4~; 67,1~; 69,8~°F) par le pkjs, qui envoie la \emph{tranche} avec la

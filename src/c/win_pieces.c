@@ -22,20 +22,6 @@ static AppTimer *s_timer;
 static bool s_link_dismissed;
 static char s_banner_text[32];
 
-#ifndef PBL_ROUND
-static GPath *s_flame;
-// Flamme : silhouette à mèche, avec un cœur de la couleur du fond.
-static const GPathInfo FLAME_INFO = {
-  .num_points = 14, .points = (GPoint[]){
-    {1, -12}, {3, -9}, {5, -6}, {6, -2}, {6, 2}, {4, 5}, {1, 6}, {-2, 6}, {-5, 4}, {-6, 0},
-    {-5, -3}, {-3, -3}, {-2, -7}, {0, -9}
-  }
-};
-static GPath *s_flame_core;
-static const GPathInfo FLAME_CORE_INFO = {
-  .num_points = 6, .points = (GPoint[]){ {0, -1}, {2, 2}, {2, 4}, {0, 5}, {-2, 4}, {-2, 2} }
-};
-#endif
 
 // --- Couleurs (M-05) --------------------------------------------------------------------
 
@@ -63,13 +49,36 @@ static void temp_text(const Room *room, char *out, size_t size) {
 }
 
 #ifndef PBL_ROUND
-static void draw_flame(GContext *ctx, GPoint at, GColor color, GColor core) {
-  graphics_context_set_fill_color(ctx, color);
-  gpath_move_to(s_flame, at);
-  gpath_draw_filled(ctx, s_flame);
-  graphics_context_set_fill_color(ctx, core);
-  gpath_move_to(s_flame_core, at);
-  gpath_draw_filled(ctx, s_flame_core);
+// Traits de chaleur (TPB-PIE-002, PIE-003) : un, deux ou trois traits ondulés selon la puissance,
+// comme dans l'application Tado. Les traits absents sont estompés en couleur, omis en noir et blanc.
+// Le pourcentage est aussi écrit à côté (TPB-AFF-003).
+#define HEAT_BARS 3
+#define HEAT_BAR_GAP 6
+#define HEAT_BAR_H 18
+#define HEAT_STEP 3
+
+static int heat_bars_for(uint8_t power) {
+  return power <= 33 ? 1 : (power <= 66 ? 2 : 3);
+}
+
+static void draw_heat_bars(GContext *ctx, GPoint top_center, GColor fg, GColor dim, uint8_t power) {
+  static const int8_t WAVE[] = { 0, 2, 0, -2, 0, 2, 0 };
+  int lit = heat_bars_for(power);
+  graphics_context_set_stroke_width(ctx, 2);
+  for (int bar = 0; bar < HEAT_BARS; bar++) {
+    bool on = bar < lit;
+#ifndef PBL_COLOR
+    if (!on) {
+      continue;
+    }
+#endif
+    graphics_context_set_stroke_color(ctx, on ? fg : dim);
+    int x = top_center.x + (bar - 1) * HEAT_BAR_GAP;
+    for (int k = 0; k + 1 < (int)(sizeof(WAVE) / sizeof(WAVE[0])); k++) {
+      graphics_draw_line(ctx, GPoint(x + WAVE[k], top_center.y + k * HEAT_STEP),
+                         GPoint(x + WAVE[k + 1], top_center.y + (k + 1) * HEAT_STEP));
+    }
+  }
 }
 
 // Ligne rectangulaire : nom et consigne à gauche, température et puissance à droite.
@@ -91,7 +100,8 @@ static void draw_row_rect(GContext *ctx, GRect b, const Room *room, GColor fg, G
   if (room->flags & FLAG_HEATING) {
     snprintf(power, sizeof(power), "%d %%", room->power);
     ui_draw_text(ctx, power, F_SUB, GRect(b.size.w - temp_w - 2, name_h - 4, temp_w, name_h), GTextAlignmentRight);
-    draw_flame(ctx, GPoint(b.size.w - temp_w + 5, b.size.h - (PBL_DISPLAY_WIDTH >= 200 ? 17 : 10)), fg, bg);
+    draw_heat_bars(ctx, GPoint(b.size.w - temp_w + 5, b.size.h - HEAT_BAR_H - (PBL_DISPLAY_WIDTH >= 200 ? 14 : 3)),
+                   fg, PBL_IF_COLOR_ELSE(GColorDarkGray, fg), room->power);
   } else if (!(room->flags & (FLAG_OFF | FLAG_OFFLINE))) {
     ui_draw_text(ctx, text_get(T_IDLE), F_SUB, GRect(b.size.w - temp_w - 2, name_h - 4, temp_w, name_h), GTextAlignmentRight);
   }
@@ -319,10 +329,6 @@ static void window_load(Window *window) {
   layer_add_child(root, s_banner);
   layer_add_child(root, s_title);
   layer_add_child(root, text_layer_get_layer(s_empty));
-#ifndef PBL_ROUND
-  s_flame = gpath_create(&FLAME_INFO);
-  s_flame_core = gpath_create(&FLAME_CORE_INFO);
-#endif
   tick_timer_service_subscribe(MINUTE_UNIT, on_minute);
   s_timer = app_timer_register(REFRESH_MS, on_refresh_timer, NULL);
   relayout();
@@ -334,10 +340,6 @@ static void window_unload(Window *window) {
     app_timer_cancel(s_timer);
     s_timer = NULL;
   }
-#ifndef PBL_ROUND
-  gpath_destroy(s_flame);
-  gpath_destroy(s_flame_core);
-#endif
   text_layer_destroy(s_empty);
   menu_layer_destroy(s_menu);
   layer_destroy(s_banner);
