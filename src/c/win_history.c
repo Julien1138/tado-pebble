@@ -29,7 +29,7 @@ static int visible_rows(int height) {
   return n < 1 ? 1 : n;
 }
 
-// Niveau 1 à 3 : teintes du thème (marron, orange, ambre) ; en noir et blanc, trois motifs distincts.
+// Niveau 1 à 3 : jaune, orange, rouge sombre, de luminances bien écartées pour se distinguer d'un coup d'œil ; en noir et blanc, trois motifs distincts.
 static void draw_cell(GContext *ctx, GRect r, int level, bool unknown, bool current) {
   if (unknown) {
     // Inconnue, non nulle (TPB-HIS-008) : case grisée barrée d'une diagonale.
@@ -40,8 +40,8 @@ static void draw_cell(GContext *ctx, GRect r, int level, bool unknown, bool curr
     graphics_draw_line(ctx, GPoint(r.origin.x, r.origin.y + r.size.h - 1), GPoint(r.origin.x + r.size.w - 1, r.origin.y));
   } else if (level > 0) {
 #ifdef PBL_COLOR
-    static const GColor SHADES[3] = { { .argb = GColorWindsorTanARGB8 }, { .argb = GColorOrangeARGB8 },
-                                      { .argb = GColorChromeYellowARGB8 } };
+    static const GColor SHADES[3] = { { .argb = GColorYellowARGB8 }, { .argb = GColorOrangeARGB8 },
+                                      { .argb = GColorDarkCandyAppleRedARGB8 } };
     graphics_context_set_fill_color(ctx, SHADES[level - 1]);
     graphics_fill_rect(ctx, r, 0, GCornerNone);
 #else

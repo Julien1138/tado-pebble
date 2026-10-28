@@ -124,7 +124,7 @@ serveur n'est ajouté entre le téléphone et Tado.
 \end{decision}
 
 \begin{decision}{DEC-05}{Historique par rapport du jour, avec cache}
-  \attr{Contexte} L'historique doit être complet même montre fermée (\refexig{TPB-HIS-007}).
+  \attr{Contexte} L'historique doit être complet même montre fermée (\refexig{TPB-HIS-006}).
   \attr{Décision} Le pkjs demande le rapport du jour de chaque pièce (\texttt{dayReport}), qui
   contient les périodes d'appel de chaleur, et en tire douze colonnes. Un rapport de jour échu
   est conservé définitivement~; celui du jour courant se renouvelle au plus toutes les 30 minutes.
@@ -132,7 +132,7 @@ serveur n'est ajouté entre le téléphone et Tado.
   \attr{Conséquences} Un historique complet coûte une requête par pièce, deux par pièce avant
   midi (la fenêtre de douze heures chevauche minuit). Les niveaux de chauffe du rapport sont au
   nombre de quatre, non des pourcentages~: voir DEC-11 et le retour R3 (§\ref{sec:retours}).
-  \attr{Exigences} \refexig{TPB-HIS-001}, \refexig{TPB-HIS-002}, \refexig{TPB-HIS-007}, \refexig{TPB-HIS-008}.
+  \attr{Exigences} \refexig{TPB-HIS-001}, \refexig{TPB-HIS-002}, \refexig{TPB-HIS-006}, \refexig{TPB-HIS-007}.
 \end{decision}
 
 \begin{decision}{DEC-06}{Un seul gardien du quota (remplacée)}

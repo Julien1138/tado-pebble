@@ -51,7 +51,7 @@
     J-03 & Client Tado & Seul composant à connaître les adresses, les formes des requêtes et des réponses. Ajoute le jeton, relit les en-têtes, normalise les erreurs (\S\ref{sec:erreurs}). & \refexig{TPB-ACT-005} \\
     J-04 & Cache & Conserve chaque réponse avec l'heure de son obtention et son TTL, dans le \texttt{localStorage}. Sert les âges. & \refexig{TPB-ACT-002}, \refexig{TPB-INF-001} \\
     J-06 & Maison & Liste des pièces, détail d'une pièce, présence de la maison. & \refexig{TPB-PIE-001} à \refexig{TPB-PIE-010}, \refexig{TPB-DET-001} à \refexig{TPB-DET-008}, \refexig{TPB-PRE-001} à \refexig{TPB-PRE-005} \\
-    J-07 & Historique & Rapports du jour, calcul des douze colonnes. & \refexig{TPB-HIS-001} à \refexig{TPB-HIS-008} \\
+    J-07 & Historique & Rapports du jour, calcul des douze colonnes. & \refexig{TPB-HIS-001} à \refexig{TPB-HIS-007} \\
     J-08 & Confort & Niveaux de confort d'une pièce. & \refexig{TPB-AMB-001} à \refexig{TPB-AMB-006} \\
     J-09 & Alertes & Alertes de fenêtre ouverte, de pile, de connexion. & \refexig{TPB-ALE-001} à \refexig{TPB-ALE-005} \\
     J-10 & Commandes & Forçages, retour à la programmation, extinction, présence, raccourcis~; relecture après chaque commande. & \refexig{TPB-PIL-001} à \refexig{TPB-PIL-011}, \refexig{TPB-RAC-001} à \refexig{TPB-RAC-007} \\
@@ -170,7 +170,7 @@ pleines (douze, huit sur Time Round), la dernière étant l'heure en cours.
   \item Elle est rangée dans la plage $[0;10[$, $[10;25[$, $[25;50[$, $[50;100]$ (niveaux 0 à 3). Une valeur à
         la limite va à la plage supérieure (\refexig{TPB-HIS-002}).
   \item Si les périodes du rapport ne couvrent pas au moins 90~\% de la durée écoulée de la
-        colonne, la colonne est \emph{inconnue}, non nulle (\refexig{TPB-HIS-008}).
+        colonne, la colonne est \emph{inconnue}, non nulle (\refexig{TPB-HIS-007}).
   \item La colonne de l'heure en cours est marquée (\refexig{TPB-HIS-003}).
 \end{enumerate}
 

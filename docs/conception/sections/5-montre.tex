@@ -33,7 +33,7 @@
     \toprule
     \textbf{Plateforme} & \textbf{Montres} & \textbf{Écran} & \textbf{Stockage} & \textbf{Particularités de présentation} \\
     \midrule
-    emery & Pebble Time~2 & 200\,×\,228, couleur & 1~Mo & Référence. Barre d'actions de 30~px, sous-titres visibles, légende complète de l'historique, douze colonnes. \\
+    emery & Pebble Time~2 & 200\,×\,228, couleur & 1~Mo & Référence. Barre d'actions de 30~px, sous-titres visibles, douze colonnes d'historique. \\
     basalt & Pebble Time, Time Steel & 144\,×\,168, couleur & 4~Ko & Barre d'actions de 24~px, sous-titres abrégés, noms de pièces abrégés dans l'historique. \\
     chalk & Pebble Time Round & 180\,×\,180, rond, couleur & 4~Ko & Trois lignes, sélection au centre, pas de barre d'actions, historique sur huit colonnes. \\
     gabbro & Pebble Round~2 & 260\,×\,260, rond, couleur & 1~Mo & Comme chalk, avec les textes et douze colonnes d'emery. \\
@@ -45,7 +45,7 @@
 \end{table}
 
 La table de constantes (M-04) porte, par plateforme~: hauteurs de ligne et de sous-titre,
-largeur de barre d'actions, nombre de colonnes d'historique, présence de la légende, indicateur
+largeur de barre d'actions, nombre de colonnes d'historique, indicateur
 \enquote{rond}, indicateur \enquote{couleur}. Elle se remplit en relevant les valeurs sur les
 maquettes (§\ref{sec:maquettes}). On teste \texttt{PBL\_ROUND}, \texttt{PBL\_COLOR} et
 \texttt{PBL\_DISPLAY\_WIDTH} plutôt que le nom de la plateforme, qui n'est utilisé que
@@ -69,7 +69,7 @@ orange, une sélection ambre, et des tuiles de couleur selon la température (\r
     21~°C et plus           & \texttt{\#FF5500} & \texttt{GColorOrange}        & ligne blanche \\
     Pièce qui chauffe       & un à trois traits de chaleur et pourcentage & \texttt{GColorOrange}    & ligne inversée \\
     Titre                   & \texttt{\#FF5500} & \texttt{GColorOrange}        & bandeau noir \\
-    Historique, niveaux 1 à 3 & \texttt{\#AA5500}, \texttt{\#FF5500}, \texttt{\#FFAA00} & \texttt{GColorWindsorTan}, \texttt{GColorOrange}, \texttt{GColorChromeYellow} & points, damier, plein \\
+    Historique, niveaux 1 à 3 & \texttt{\#FFFF00}, \texttt{\#FF5500}, \texttt{\#AA0000} & \texttt{GColorYellow}, \texttt{GColorOrange}, \texttt{GColorDarkCandyAppleRed} & points, damier, plein \\
     \bottomrule
   \end{tabularx}
   \caption{Couleurs, toutes dans la palette de 64 couleurs (\refexig{TPB-AFF-002})}
