@@ -2,7 +2,9 @@
   "name": "tado-pebble",
   "author": "Julien Aupart <julien.aupart@gmail.com>",
   "version": "1.0.0",
-  "keywords": ["pebble-app"],
+  "keywords": [
+    "pebble-app"
+  ],
   "private": true,
   "dependencies": {},
   "pebble": {
@@ -28,5 +30,8 @@
     "resources": {
       "media": []
     }
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js"
   }
 }
