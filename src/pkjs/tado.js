@@ -85,7 +85,6 @@ function createClient(deps) {
     getState: function(h, cb) { get(home(h) + '/state')(cb); },
     getMobileDevices: function(h, cb) { get(home(h) + '/mobileDevices')(cb); },
     getZones: function(h, cb) { get(home(h) + '/zones')(cb); },
-    getAirComfort: function(h, cb) { get(home(h) + '/airComfort')(cb); },
     getCapabilities: function(h, z, cb) { get(zone(h, z) + '/capabilities')(cb); },
     getDayReport: function(h, z, date, cb) {
       get(zone(h, z) + '/dayReport?date=' + encodeURIComponent(date))(cb);

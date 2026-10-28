@@ -36,7 +36,7 @@ test('lecture : adresse, jeton porteur, corps décodé', async function() {
 });
 
 test('adresses des requêtes vérifiées sur le compte', async function() {
-  var t = setup(new Array(12).fill({ status: 204 }));
+  var t = setup(new Array(11).fill({ status: 204 }));
   var c = t.client;
   var calls = [
     function(cb) { c.getMe(cb); },
@@ -44,7 +44,6 @@ test('adresses des requêtes vérifiées sur le compte', async function() {
     function(cb) { c.getState(1, cb); },
     function(cb) { c.getMobileDevices(1, cb); },
     function(cb) { c.getZones(1, cb); },
-    function(cb) { c.getAirComfort(1, cb); },
     function(cb) { c.getCapabilities(1, 5, cb); },
     function(cb) { c.getDayReport(1, 5, '2026-10-28', cb); },
     function(cb) { c.getZoneState(1, 5, cb); },
@@ -58,11 +57,11 @@ test('adresses des requêtes vérifiées sur le compte', async function() {
   var urls = t.http.calls.map(function(x) { return x.method + ' ' + x.url.replace('https://my.tado.com/api/v2', ''); });
   assert.deepEqual(urls, [
     'GET /me', 'GET /homes/1', 'GET /homes/1/state', 'GET /homes/1/mobileDevices',
-    'GET /homes/1/zones', 'GET /homes/1/airComfort', 'GET /homes/1/zones/5/capabilities',
+    'GET /homes/1/zones', 'GET /homes/1/zones/5/capabilities',
     'GET /homes/1/zones/5/dayReport?date=2026-10-28', 'GET /homes/1/zones/5/state',
     'DELETE /homes/1/zones/5/overlay', 'PUT /homes/1/presenceLock', 'DELETE /homes/1/presenceLock'
   ]);
-  assert.equal(t.http.calls[10].body, '{"homePresence":"AWAY"}');
+  assert.equal(t.http.calls[9].body, '{"homePresence":"AWAY"}');
 });
 
 test('forçage : forme du corps vérifiée sur le compte', async function() {
