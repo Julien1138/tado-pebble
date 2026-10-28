@@ -25,7 +25,35 @@
       "watchface": false
     },
     "messageKeys": [
-      "dummy"
+      "MsgType",
+      "Seq",
+      "Object",
+      "Refresh",
+      "Command",
+      "Lang",
+      "Shape",
+      "Columns",
+      "Link",
+      "Age",
+      "Indicators",
+      "PresenceMode",
+      "PresenceState",
+      "Alerts",
+      "Count",
+      "Unit",
+      "Index",
+      "Name",
+      "Abbrev",
+      "Temp",
+      "Setpoint",
+      "Power",
+      "Band",
+      "Flags",
+      "Mode",
+      "Remaining",
+      "LinkCode",
+      "LinkSeconds",
+      "LinkState"
     ],
     "resources": {
       "media": []
