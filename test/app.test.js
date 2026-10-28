@@ -189,3 +189,18 @@ test('messagerie : un envoi refusé est retenté une fois, puis la file est aban
   m.replace([{ n: 3 }]);
   assert.deepEqual(sent, [1, 1, 3]);
 });
+
+test('liaison : l\'adresse de validation reste disponible tant que la liaison est en cours', async function() {
+  var steps = [
+    { status: 200, body: { device_code: 'DC', user_code: 'ABC123', verification_uri_complete: 'https://x/y', expires_in: 300, interval: 5 } },
+    { status: 200, body: { access_token: 'A', refresh_token: 'R', expires_in: 600 } }
+  ];
+  var t = setup(steps, false);
+  assert.equal(t.app.pendingLinkUrl(), null);
+  t.app.onMessage({ MsgType: P.MSG_DO, Seq: 4, Command: P.CMD_LINK });
+  await f.settle();
+  assert.equal(t.app.pendingLinkUrl(), 'https://x/y');
+  t.clock.tick(5000);
+  await f.settle(); await f.settle();
+  assert.equal(t.app.pendingLinkUrl(), null);
+});

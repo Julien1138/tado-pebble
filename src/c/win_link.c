@@ -65,11 +65,11 @@ static void window_load(Window *window) {
   s_title = make_layer(root, GRect(PBL_IF_ROUND_ELSE(0, 0), 0, b.size.w, TITLE_H),
                        FONT_KEY_GOTHIC_18_BOLD, PBL_IF_ROUND_ELSE(GTextAlignmentCenter, GTextAlignmentLeft),
                        title_fg, title_bg);
-  s_code = make_layer(root, GRect(pad, TITLE_H + 10, w, 40), FONT_KEY_GOTHIC_28_BOLD, align,
+  s_code = make_layer(root, GRect(pad, TITLE_H + 6, w, 36), FONT_KEY_GOTHIC_28_BOLD, align,
                       PBL_IF_COLOR_ELSE(GColorChromeYellow, GColorWhite), GColorClear);
-  s_help = make_layer(root, GRect(pad, TITLE_H + 56, w, 56), FONT_KEY_GOTHIC_18, align,
+  s_help = make_layer(root, GRect(pad, TITLE_H + 42, w, 72), FONT_KEY_GOTHIC_14, align,
                       GColorWhite, GColorClear);
-  s_wait = make_layer(root, GRect(pad, TITLE_H + 112, w, 26), FONT_KEY_GOTHIC_18_BOLD, align,
+  s_wait = make_layer(root, GRect(pad, TITLE_H + 114, w, 26), FONT_KEY_GOTHIC_18_BOLD, align,
                       GColorWhite, GColorClear);
   text_layer_set_text(s_help, text_get(T_LINK_HELP));
   tick_timer_service_subscribe(SECOND_UNIT, on_tick);

@@ -14,6 +14,7 @@ function createApp(deps) {
   var openUrl = deps.openUrl;
   var linkLost = false;
   var cancelLink = null;
+  var pendingUrl = null;
 
   function status(seq, extra) {
     var m = { MsgType: P.MSG_STATUS, Seq: seq, Link: P.LINK_ACTIVE, Age: 0, Indicators: 0,
@@ -74,12 +75,14 @@ function createApp(deps) {
     }
     cancelLink = link.begin({
       onCode: function(info) {
+        pendingUrl = info.url;
         messenger.replace([{ MsgType: P.MSG_LINK_CODE, Seq: seq, LinkCode: info.userCode,
                              LinkSeconds: info.expiresIn, LinkState: P.CODE_WAITING }]);
         openUrl(info.url);
       },
       onDone: function(err) {
         cancelLink = null;
+        pendingUrl = null;
         if (!err) {
           linkLost = false;
           return messenger.replace([status(seq), { MsgType: P.MSG_LINK_CODE, Seq: seq,
@@ -116,7 +119,12 @@ function createApp(deps) {
     // MSG_HELLO : rien à retenir pour l'écran Pièces (langue et forme servent aux écrans suivants).
   }
 
-  return { onMessage: onMessage };
+  // Page de validation de la liaison en cours, ou null (ouverte aussi depuis les réglages du pkjs).
+  function pendingLinkUrl() {
+    return pendingUrl;
+  }
+
+  return { onMessage: onMessage, pendingLinkUrl: pendingLinkUrl };
 }
 
 module.exports = createApp;

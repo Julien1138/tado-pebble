@@ -5,12 +5,12 @@ static bool s_french;
 
 static const char *const FR[T_COUNT] = {
   "Maison", "Présent", "Absent", "repos", "éteint", "hors ligne", "forcé", "indisponible",
-  "Chargement…", "Aucune pièce", "Liaison Tado", "Saisir ce code sur\nlogin.tado.com/device",
+  "Chargement…", "Aucune pièce", "Liaison Tado", "Sinon, ouvrir sur le\ntéléphone :\nlogin.tado.com\n/oauth2/device",
   "Attente", "Code expiré", "Liaison refusée", "Liaison perdue", "Hors connexion", "Il y a"
 };
 static const char *const EN[T_COUNT] = {
   "House", "Present", "Away", "idle", "off", "offline", "boost", "unavailable",
-  "Loading…", "No room", "Tado link", "Enter this code at\nlogin.tado.com/device",
+  "Loading…", "No room", "Tado link", "Otherwise, open on\nyour phone:\nlogin.tado.com\n/oauth2/device",
   "Waiting", "Code expired", "Link refused", "Link lost", "Offline", "Ago"
 };
 

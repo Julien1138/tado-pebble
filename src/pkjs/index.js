@@ -32,3 +32,12 @@ Pebble.addEventListener('ready', function() {
     function() {},
     function(e) { console.log('prêt refusé ' + JSON.stringify(e)); });
 });
+
+// Repli si le téléphone ignore l'ouverture automatique : l'ouverture des réglages de
+// l'application affiche la page de validation de la liaison en cours.
+Pebble.addEventListener('showConfiguration', function() {
+  var url = app.pendingLinkUrl();
+  if (url) {
+    Pebble.openURL(url);
+  }
+});
