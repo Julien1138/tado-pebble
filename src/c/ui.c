@@ -82,16 +82,3 @@ void ui_mode_line(const Room *room, uint8_t index, bool with_setpoint, char *out
       }
   }
 }
-
-// Place nécessaire à une fenêtre et à ses composants graphiques, mesurée sur l'émulateur d'aplite.
-#define WINDOW_HEAP_BYTES 900
-
-bool ui_can_open_window(void) {
-#ifdef PBL_PLATFORM_APLITE
-  if (heap_bytes_free() < WINDOW_HEAP_BYTES) {
-    vibes_short_pulse();
-    return false;
-  }
-#endif
-  return true;
-}

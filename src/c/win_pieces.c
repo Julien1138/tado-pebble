@@ -294,6 +294,8 @@ static void window_appear(Window *window) {
   if (!s_built) {
     build(window);
   }
+  // Les pièces sont rechargées à chaque affichage de la liste (sans effet avant que le téléphone soit prêt).
+  comms_request_rooms(true);
   touch_start(&(TouchHandlers){
     .on_tap = touch_tap, .on_step = touch_step,
 #ifdef PBL_ROUND
@@ -307,14 +309,9 @@ static void window_appear(Window *window) {
 
 static void window_disappear(Window *window) {
   touch_stop();
-#ifdef PBL_PLATFORM_APLITE
-  unbuild();
-#endif
 }
 
-// Composants graphiques de la fenêtre. Sur aplite, dont la mémoire est la plus étroite, ils sont
-// libérés quand une autre fenêtre recouvre la liste et reconstruits à son retour : la fenêtre ne
-// garde que ce que le magasin sait redonner (conception, § Fenêtres et navigation).
+// Composants graphiques de la fenêtre, créés au chargement et libérés au déchargement.
 static void build(Window *window) {
   Layer *root = window_get_root_layer(window);
   GRect b = layer_get_bounds(root);
@@ -405,11 +402,20 @@ void win_pieces_select(uint8_t row) {
   }
 }
 
+// L'utilisateur a quitté l'écran de liaison sans la terminer : on ne la rouvre pas à chaque
+// rechargement de la liste, seulement après un nouveau lancement ou une liaison réussie.
+void win_pieces_link_dismissed(void) {
+  s_link_dismissed = true;
+}
+
 void win_pieces_status_changed(void) {
   if (!s_window) {
     return;
   }
   win_link_set_lost(g_view.link == LINK_LOST);
+  if (g_view.link == LINK_ACTIVE) {
+    s_link_dismissed = false;
+  }
   if (g_view.link != LINK_ACTIVE) {
     if (!win_link_is_open() && !s_link_dismissed) {
       win_link_push();

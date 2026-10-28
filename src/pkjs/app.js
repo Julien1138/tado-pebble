@@ -30,68 +30,90 @@ function createApp(deps) {
     return status(seq, { Link: linkLost ? P.LINK_LOST : P.LINK_NONE });
   }
 
-  // prefix : messages à envoyer avant la liste (accusé d'une commande).
+  // Messages à envoyer quand la lecture échoue : état de liaison, ou hors connexion (DEC-07 : la
+  // montre garde sa copie).
+  function failureMessages(seq, err, prefix) {
+    if (err.kind === 'lost' || err.kind === 'unlinked') {
+      linkLost = err.kind === 'lost';
+      return (prefix || []).concat([linkStatus(seq)]);
+    }
+    return (prefix || []).concat([status(seq, { Indicators: P.IND_OFFLINE })]);
+  }
+
+  // La liste des pièces : STATUS, tête, une ligne par pièce. prefix : messages à envoyer avant
+  // (accusé d'une commande).
+  function roomsMessages(seq, data, prefix) {
+    var view = views.buildRooms(data);
+    var messages = (prefix || []).concat([
+      status(seq, {
+        Age: view.status.ageSeconds,
+        Indicators: view.status.offline ? P.IND_OFFLINE : 0,
+        PresenceMode: view.status.presenceMode,
+        PresenceState: view.status.presenceState,
+        Alerts: view.status.alerts
+      }),
+      { MsgType: P.MSG_ROOMS_HEAD, Seq: seq, Count: view.head.count, Unit: view.head.unit }
+    ]);
+    view.rooms.forEach(function(r, i) {
+      messages.push({
+        MsgType: P.MSG_ROOM, Seq: seq, Index: i, Name: r.name,
+        Temp: r.temp, Setpoint: r.setpoint, Power: r.power, Band: r.band,
+        Flags: r.flags, Mode: r.mode, Remaining: r.remaining
+      });
+    });
+    return messages;
+  }
+
   function sendRooms(seq, refresh, prefix) {
     home.rooms({ force: refresh }, function(err, data) {
       if (err) {
-        if (err.kind === 'lost' || err.kind === 'unlinked') {
-          linkLost = err.kind === 'lost';
-          return messenger.replace((prefix || []).concat([linkStatus(seq)]));
-        }
-        // Rien à montrer et Tado injoignable : la montre garde sa copie (DEC-07).
-        return messenger.replace((prefix || []).concat([status(seq, { Indicators: P.IND_OFFLINE })]));
+        return messenger.replace(failureMessages(seq, err, prefix));
       }
-      var view = views.buildRooms(data);
-      var messages = (prefix || []).concat([
-        status(seq, {
-          Age: view.status.ageSeconds,
-          Indicators: view.status.offline ? P.IND_OFFLINE : 0,
-          PresenceMode: view.status.presenceMode,
-          PresenceState: view.status.presenceState,
-          Alerts: view.status.alerts
-        }),
-        { MsgType: P.MSG_ROOMS_HEAD, Seq: seq, Count: view.head.count, Unit: view.head.unit }
-      ]);
-      view.rooms.forEach(function(r, i) {
-        messages.push({
-          MsgType: P.MSG_ROOM, Seq: seq, Index: i, Name: r.name,
-          Temp: r.temp, Setpoint: r.setpoint, Power: r.power, Band: r.band,
-          Flags: r.flags, Mode: r.mode, Remaining: r.remaining
-        });
+      messenger.replace(roomsMessages(seq, data, prefix));
+    });
+  }
+
+  // Détail d'une pièce (MSG-14). Avec refresh, les pièces sont relues chez Tado et renvoyées d'abord,
+  // sous la même séquence : la montre n'accepte que la dernière demande (TPB-ACT-001).
+  function sendDetail(seq, index, refresh) {
+    home.rooms({ force: refresh }, function(err, data) {
+      if (err) {
+        return refresh ? messenger.replace(failureMessages(seq, err)) : undefined;
+      }
+      if (!data.rooms[index]) {
+        return;
+      }
+      var d = views.buildDetail(data.rooms[index], data.unit, now());
+      var last = control.last(data.rooms[index].id, data.unit);
+      var messages = refresh ? roomsMessages(seq, data) : [];
+      messages.push({
+        MsgType: P.MSG_DETAIL, Seq: seq, Index: index, Mode: d.mode, Remaining: d.remaining,
+        EndTime: d.endTime, NextTime: d.nextTime, NextTemp: d.nextTemp,
+        Humidity: d.humidity, WindowMin: d.windowMinutes,
+        LastTemp: last ? last.temp : 0, LastDur: last ? last.duration : 0
       });
       messenger.replace(messages);
     });
   }
 
-  // Détail d'une pièce, d'après les données déjà lues (aucune requête si elles sont fraîches).
-  function sendDetail(seq, index) {
-    home.rooms({ force: false }, function(err, data) {
-      if (err || !data.rooms[index]) {
-        return;
+  // Plage de consigne de la pièce (MSG-20), avec les pièces relues si refresh.
+  function sendCaps(seq, index, refresh) {
+    home.rooms({ force: refresh }, function(err, data) {
+      if (err) {
+        return refresh ? messenger.replace(failureMessages(seq, err)) : undefined;
       }
-      var d = views.buildDetail(data.rooms[index], data.unit, now());
-      var last = control.last(data.rooms[index].id, data.unit);
-      messenger.replace([{
-        MsgType: P.MSG_DETAIL, Seq: seq, Index: index, Mode: d.mode, Remaining: d.remaining,
-        EndTime: d.endTime, NextTime: d.nextTime, NextTemp: d.nextTemp,
-        Humidity: d.humidity, WindowMin: d.windowMinutes,
-        LastTemp: last ? last.temp : 0, LastDur: last ? last.duration : 0
-      }]);
-    });
-  }
-
-  // Plage de consigne de la pièce (MSG-20).
-  function sendCaps(seq, index) {
-    home.rooms({ force: false }, function(err, data) {
-      if (err || !data.rooms[index]) {
+      if (!data.rooms[index]) {
         return;
       }
       control.range({ homeId: data.homeId, zoneId: data.rooms[index].id, unit: data.unit }, function(err, r) {
-        if (err) {
-          return;
+        var messages = refresh ? roomsMessages(seq, data) : [];
+        if (!err) {
+          messages.push({ MsgType: P.MSG_CAPS, Seq: seq, Index: index,
+                          CapMin: r.min, CapMax: r.max, CapStep: r.step });
         }
-        messenger.replace([{ MsgType: P.MSG_CAPS, Seq: seq, Index: index,
-                             CapMin: r.min, CapMax: r.max, CapStep: r.step }]);
+        if (messages.length > 0) {
+          messenger.replace(messages);
+        }
       });
     });
   }
@@ -128,9 +150,9 @@ function createApp(deps) {
     if (payload.Object === P.OBJ_ROOMS) {
       sendRooms(seq, !!payload.Refresh);
     } else if (payload.Object === P.OBJ_DETAIL) {
-      sendDetail(seq, payload.Index);
+      sendDetail(seq, payload.Index, !!payload.Refresh);
     } else if (payload.Object === P.OBJ_CAPS) {
-      sendCaps(seq, payload.Index);
+      sendCaps(seq, payload.Index, !!payload.Refresh);
     }
   }
 

@@ -1,4 +1,5 @@
 #include "win_pilot.h"
+#include "comms.h"
 #include "protocol.h"
 #include "store.h"
 #include "text.h"
@@ -76,16 +77,21 @@ static void on_pilot_select(int id) {
   }
 }
 
+// Les données du pilotage (mode en cours, dernier forçage) sont rechargées à chaque affichage.
+static void on_pilot_appear(void) {
+  comms_request_detail(s_index, true);
+}
+
 static void on_duration_select(int id) {
   win_result_send(CMD_FORCE, s_index, s_temp, id);
 }
 
 void win_pilot_push(uint8_t room_index) {
   if (!s_pilot) {
-    s_pilot = actions_create(on_pilot_select);
-    s_duration = actions_create(on_duration_select);
+    s_pilot = actions_create(on_pilot_select, on_pilot_appear);
+    s_duration = actions_create(on_duration_select, NULL);
   }
-  if (!s_pilot || actions_is_open(s_pilot) || room_index >= g_view.count || !ui_can_open_window()) {
+  if (!s_pilot || actions_is_open(s_pilot) || room_index >= g_view.count) {
     return;
   }
   s_index = room_index;
@@ -111,9 +117,6 @@ void win_pilot_close_all(void) {
 void win_pilot_choose_duration(uint8_t room_index, int16_t temp) {
   ActionItem items[5];
   char temp_text[12], title[32];
-  if (!ui_can_open_window()) {
-    return;
-  }
   s_index = room_index;
   s_temp = temp;
   for (int i = 0; i < 5; i++) {

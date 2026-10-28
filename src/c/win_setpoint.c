@@ -22,7 +22,7 @@ static Layer *s_title;
 static Layer *s_content;
 static Layer *s_bar;
 static uint8_t s_index;
-static bool s_built;   // composants graphiques créés (libérés sur aplite quand la fenêtre est recouverte)
+static bool s_built;   // composants graphiques créés
 static int16_t s_value;     // dixièmes, dans l'unité du compte
 static int16_t s_min, s_max, s_step;
 
@@ -55,28 +55,17 @@ static void change(int steps) {
 
 // --- Dessin ----------------------------------------------------------------------------------
 
-static void draw_chevron(GContext *ctx, GPoint c, bool up) {
-  graphics_context_set_stroke_color(ctx, PBL_IF_COLOR_ELSE(GColorChromeYellow, GColorWhite));
-  graphics_context_set_stroke_width(ctx, 2);
-  int d = up ? 1 : -1;
-  graphics_draw_line(ctx, GPoint(c.x - 8, c.y + 4 * d), GPoint(c.x, c.y - 3 * d));
-  graphics_draw_line(ctx, GPoint(c.x, c.y - 3 * d), GPoint(c.x + 8, c.y + 4 * d));
-}
-
 static void content_draw(Layer *layer, GContext *ctx) {
   GRect b = layer_get_bounds(layer);
   const Room *room = &g_view.rooms[s_index];
   char text[24];
   int w = b.size.w;
-  int cx = w / 2;
   graphics_context_set_text_color(ctx, GColorWhite);
 
   ui_draw_text(ctx, text_get(T_SETPOINT), F_SUB, GRect(0, 0, w, 20), GTextAlignmentCenter);
-  draw_chevron(ctx, GPoint(cx, b.size.h * 20 / 100 + 4), true);
   text_temp(text, sizeof(text), s_value, g_view.unit);
   ui_draw_text(ctx, text, PBL_DISPLAY_WIDTH >= 200 ? FONT_KEY_BITHAM_42_BOLD : FONT_KEY_GOTHIC_28_BOLD,
-               GRect(0, b.size.h * 24 / 100, w, 50), GTextAlignmentCenter);
-  draw_chevron(ctx, GPoint(cx, b.size.h * 52 / 100 + 6), false);
+               GRect(0, b.size.h * 20 / 100, w, 50), GTextAlignmentCenter);
 
   if (!(room->flags & FLAG_NO_MEASURE)) {
     char current[16];
@@ -189,15 +178,14 @@ static void window_appear(Window *window) {
   if (!s_built) {
     build(window);
   }
+  // Plage de consigne, et pièces relues pour afficher la température actuelle.
+  comms_request_caps(s_index, true);
   touch_start(&(TouchHandlers){ .on_tap = touch_tap, .on_step = touch_step,
                                 .step_px = 22, .one_step = false });
 }
 
 static void window_disappear(Window *window) {
   touch_stop();
-#ifdef PBL_PLATFORM_APLITE
-  unbuild();
-#endif
 }
 
 static void build(Window *window) {
@@ -234,7 +222,6 @@ static void window_load(Window *window) {
   window_set_background_color(window, GColorBlack);
   build(window);
   window_set_click_config_provider(window, click_config);
-  comms_request_caps(s_index);
 }
 
 static void window_unload(Window *window) {
@@ -244,7 +231,7 @@ static void window_unload(Window *window) {
 }
 
 void win_setpoint_push(uint8_t room_index) {
-  if (s_window || room_index >= g_view.count || !ui_can_open_window()) {
+  if (s_window || room_index >= g_view.count) {
     return;
   }
   s_index = room_index;

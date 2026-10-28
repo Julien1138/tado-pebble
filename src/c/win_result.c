@@ -111,10 +111,6 @@ void win_result_done(uint8_t result) {
 }
 
 void win_result_send(uint8_t command, uint8_t room_index, int16_t temp, uint8_t duration) {
-  // Sans place pour annoncer le résultat, la commande n'est pas envoyée : jamais de succès présumé.
-  if (!s_window && !ui_can_open_window()) {
-    return;
-  }
   s_success = false;
   show(text_get(T_SENDING), true);
   if ((g_view.indicators & IND_OFFLINE) || !comms_send_command(command, room_index, temp, duration)) {

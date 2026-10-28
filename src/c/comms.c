@@ -3,7 +3,7 @@
 #include "store.h"
 #include "text.h"
 
-// Tailles réglées sur le plus gros message (une pièce, environ 135 octets) : la mémoire d'aplite est comptée.
+// Tailles réglées sur le plus gros message (une pièce, environ 135 octets).
 #define INBOX_SIZE 144
 #define OUTBOX_SIZE 72
 
@@ -202,17 +202,24 @@ void comms_request_rooms(bool refresh) {
   }
 }
 
-void comms_request_detail(uint8_t index) {
-  g_detail.valid = false;
+void comms_request_detail(uint8_t index, bool refresh) {
+  // Un rechargement de la même pièce garde l'ancien détail à l'écran jusqu'à la réponse.
+  if (!refresh || g_detail.index != index) {
+    g_detail.valid = false;
+  }
   if (s_ready) {
-    enqueue(&(Request){ .type = MSG_GET, .seq = ++s_seq, .object = OBJ_DETAIL, .index = index });
+    enqueue(&(Request){ .type = MSG_GET, .seq = ++s_seq, .object = OBJ_DETAIL, .index = index,
+                        .refresh = refresh });
   }
 }
 
-void comms_request_caps(uint8_t index) {
-  g_caps.valid = false;
+void comms_request_caps(uint8_t index, bool refresh) {
+  if (!refresh || g_caps.index != index) {
+    g_caps.valid = false;
+  }
   if (s_ready) {
-    enqueue(&(Request){ .type = MSG_GET, .seq = ++s_seq, .object = OBJ_CAPS, .index = index });
+    enqueue(&(Request){ .type = MSG_GET, .seq = ++s_seq, .object = OBJ_CAPS, .index = index,
+                        .refresh = refresh });
   }
 }
 

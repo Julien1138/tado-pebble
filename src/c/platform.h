@@ -18,7 +18,7 @@
   #define SELECTED_H 76
   #define OTHER_H 38
   #define BANNER_H 0
-#else /* basalt, aplite, diorite, flint */
+#else /* basalt, diorite, flint */
   #define TITLE_H 22
   #define ROW_H 38
   #define BANNER_H 18

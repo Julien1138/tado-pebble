@@ -23,7 +23,7 @@ static Layer *s_title;
 static Layer *s_content;
 static Layer *s_bar;
 static uint8_t s_index;
-static bool s_built;   // composants graphiques créés (libérés sur aplite quand la fenêtre est recouverte)
+static bool s_built;   // composants graphiques créés
 
 // --- Contenu ------------------------------------------------------------------------------
 
@@ -176,7 +176,7 @@ static void bar_draw(Layer *layer, GContext *ctx) {
 
 static void show_room(uint8_t index) {
   s_index = index;
-  comms_request_detail(s_index);
+  comms_request_detail(s_index, false);
   if (s_built) {
     layer_mark_dirty(s_title);
     layer_mark_dirty(s_content);
@@ -219,14 +219,13 @@ static void window_appear(Window *window) {
   if (!s_built) {
     build(window);
   }
+  // Les données sont rechargées à chaque affichage de l'écran.
+  comms_request_detail(s_index, true);
   touch_start(&(TouchHandlers){ .on_tap = touch_tap, .on_step = touch_step, .step_px = 40, .one_step = true });
 }
 
 static void window_disappear(Window *window) {
   touch_stop();
-#ifdef PBL_PLATFORM_APLITE
-  unbuild();
-#endif
 }
 
 static void on_select(ClickRecognizerRef recognizer, void *context) {
@@ -273,7 +272,6 @@ static void window_load(Window *window) {
   window_set_background_color(window, GColorBlack);
   build(window);
   window_set_click_config_provider(window, click_config);
-  comms_request_detail(s_index);
 }
 
 static void window_unload(Window *window) {
@@ -285,7 +283,7 @@ static void window_unload(Window *window) {
 }
 
 void win_detail_push(uint8_t room_index) {
-  if (s_window || room_index >= g_view.count || !ui_can_open_window()) {
+  if (s_window || room_index >= g_view.count) {
     return;
   }
   s_index = room_index;
@@ -303,7 +301,11 @@ void win_detail_reload(void) {
     window_stack_remove(s_window, true);
     return;
   }
-  comms_request_detail(s_index);
+  // Le détail est redemandé seulement si cette fenêtre est au premier plan : une fenêtre au-dessus
+  // (pilotage, consigne) attend la suite d'un rechargement en cours, qu'une nouvelle demande annulerait.
+  if (window_stack_get_top_window() == s_window) {
+    comms_request_detail(s_index, false);
+  }
   if (s_built) {
     layer_mark_dirty(s_title);
     layer_mark_dirty(s_content);

@@ -37,9 +37,8 @@
     basalt & Pebble Time, Time Steel & 144\,×\,168, couleur & 4~Ko & Barre d'actions de 24~px, sous-titres abrégés, noms de pièces abrégés dans l'historique. \\
     chalk & Pebble Time Round & 180\,×\,180, rond, couleur & 4~Ko & Trois lignes, sélection au centre, pas de barre d'actions, historique sur huit colonnes. \\
     gabbro & Pebble Round~2 & 260\,×\,260, rond, couleur & 1~Mo & Comme chalk, avec les textes et douze colonnes d'emery. \\
-    aplite & Pebble, Pebble Steel & 144\,×\,168, N\&B & 4~Ko & Vidéo inversée, contours, motifs. \\
-    diorite & Pebble~2 & 144\,×\,168, N\&B & 4~Ko & Comme aplite. \\
-    flint & Pebble~2 Duo & 144\,×\,168, N\&B & 1~Mo & Comme aplite (rendu identique). \\
+    diorite & Pebble~2 & 144\,×\,168, N\&B & 4~Ko & Vidéo inversée, contours, motifs. \\
+    flint & Pebble~2 Duo & 144\,×\,168, N\&B & 1~Mo & Comme diorite (rendu identique). \\
     \bottomrule
   \end{tabularx}
   \caption{Plateformes et choix de présentation}
@@ -112,22 +111,12 @@ température. La watchapp ne compare donc jamais de seuils (DEC-02).
 \end{table}
 
 Une fenêtre n'existe que pendant qu'elle est empilée~: elle est créée à l'ouverture, détruite
-à la fermeture, et ne garde rien que la vue du magasin ne sache redonner. Cette sobriété est
-indispensable sur aplite, la plateforme dont la mémoire de travail est la plus étroite
-(point ouvert ci-dessous).
+à la fermeture, et ne garde rien que la vue du magasin ne sache redonner. Les données de chaque écran sont
+rechargées à son affichage (ouverture, retour d'une fenêtre qui le recouvrait)~: le téléphone relit alors les
+pièces chez Tado et les renvoie avec la réponse, sous une même séquence.
 
-\paragraph{Mémoire d'aplite (mesurée le 29 octobre 2026).} Sur aplite, le code de l'application est chargé en mémoire
-de travail~: 21~Ko des 24~Ko dès la compilation, soit environ 3~Ko de tas libre au lancement et
-quelques centaines d'octets une fois la liste des pièces affichée. Trois mesures y répondent~:
-une fenêtre recouverte libère ses composants graphiques et les reconstruit à son retour~; les tampons
-d'AppMessage sont réglés sur le plus gros message (144 et 72 octets)~; et l'application vérifie la place
-avant d'ouvrir une fenêtre, sans quoi elle vibre et reste sur l'écran courant plutôt que de planter.
-L'optimisation à l'édition de liens (\texttt{-flto}) rendrait 1,9~Ko mais empêche l'installation de l'application.
-
-\pointouvert{La chaîne la plus profonde (liste, détail, pilotage, consigne, durée, résultat) tient-elle sur une Pebble
-aplite réelle~? Sur l'émulateur, la durée et le résultat n'ont pu être mesurés qu'avec le code de démonstration, qui
-occupe 600~octets de plus que l'application. À vérifier sur une montre, sinon réduire le code ou fusionner la durée
-et la consigne dans une même fenêtre.}
+\paragraph{Plateforme abandonnée.} aplite n'est pas prise en charge (DEC-14)~: son code occupait 21~Ko de ses
+24~Ko de mémoire de travail.
 
 \subsection{Données conservées sur la montre}
 

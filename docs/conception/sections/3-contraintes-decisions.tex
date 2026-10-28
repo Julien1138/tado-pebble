@@ -17,7 +17,7 @@ Ces contraintes ne se négocient pas~: la conception s'y plie.
     C4 & La géolocalisation de Tado et la restitution du mode \emph{Auto} (\texttt{DELETE presenceLock}) exigent un abonnement Auto-Assist~[E3]~; \emph{observé}~: le retour à \emph{Auto} est accepté sur le compte de l'utilisateur, qui n'a pas l'abonnement. & Le mode \emph{Auto} n'est offert que s'il est disponible~; un refus \texttt{403} reste géré pour un autre compte (H2). \\
     C5 & Le pkjs ne s'exécute que pendant que la watchapp est ouverte, ou qu'une page de configuration l'est. Il n'existe pas de tâche de fond. & Pas d'alerte poussée sans ouvrir l'application (DEC-08). \\
     C6 & Les tampons AppMessage sont de taille fixe~; un message plus gros que le tampon est perdu. & Messages petits, paginés (§\ref{sec:protocole}). \\
-    C7 & Stockage de la watchapp~: 4~Ko sur aplite, basalt, chalk et diorite~; 1~Mo sur emery, gabbro et flint [E5]. Mémoire de travail réduite sur aplite. & La watchapp ne conserve que la dernière situation (quelques centaines d'octets) (\texttt{TPB-INF-001}). \\
+    C7 & Stockage de la watchapp~: 4~Ko sur basalt, chalk et diorite~; 1~Mo sur emery, gabbro et flint [E5]. & La watchapp ne conserve que la dernière situation (quelques centaines d'octets) (\texttt{TPB-INF-001}). \\
     C8 & Pas de clavier, quatre boutons, écrans de 144\,×\,168 à 260\,×\,260. & Pas de saisie de texte (\texttt{TPB-UTI-003})~; un moteur de listes unique pour toutes les formes d'écran. \\
 \end{longtable}}
 
@@ -81,7 +81,7 @@ serveur n'est ajouté entre le téléphone et Tado.
   \attr{Décision} La watchapp est écrite en C et le pkjs en JavaScript, comme les applications
   précédentes de l'utilisateur (cohérence des outils et du savoir-faire).
   \attr{Alternatives écartées} JavaScript sur la montre (Alloy)~: moins éprouvé, et le support
-  des sept plateformes est à établir. Rocky.js~: réservé aux cadrans.
+  des six plateformes est à établir. Rocky.js~: réservé aux cadrans.
   \attr{Conséquences} Deux langages, un protocole à tenir à jour (§\ref{sec:protocole}).
   \attr{Exigences} \refexig{TPB-PLT-001}, \refexig{TPB-PLT-002}.
 \end{decision}
@@ -91,7 +91,7 @@ serveur n'est ajouté entre le téléphone et Tado.
   \attr{Décision} Le pkjs fait toutes les requêtes, tous les calculs (intensité, niveaux,
   abréviations, choix des raccourcis à proposer) et ne transmet à la montre que des vues
   prêtes à afficher. La watchapp n'interprète aucune donnée de Tado.
-  \attr{Alternatives écartées} Faire calculer la montre~: code dupliqué en C, mémoire sur aplite.
+  \attr{Alternatives écartées} Faire calculer la montre~: code dupliqué en C, mémoire de la montre.
   \attr{Conséquences} Les règles se testent en JavaScript sans montre. La montre est
   inutile sans téléphone, ce qui est déjà vrai (H3).
   \attr{Exigences} \refexig{TPB-PIE-002}, \refexig{TPB-HIS-002}, \refexig{TPB-RAC-003} à
@@ -167,7 +167,7 @@ serveur n'est ajouté entre le téléphone et Tado.
   \attr{Exigences} \refexig{TPB-ALE-006}, \refexig{TPB-INF-003}.
 \end{decision}
 
-\begin{decision}{DEC-09}{Un seul code C pour sept plateformes}
+\begin{decision}{DEC-09}{Un seul code C pour six plateformes}
   \attr{Contexte} Les plateformes diffèrent par la forme, la couleur et la taille.
   \attr{Décision} Un seul code, adapté à la compilation par les macros du SDK (\texttt{PBL\_COLOR},
   \texttt{PBL\_ROUND}, \texttt{PBL\_DISPLAY\_WIDTH}) et par une table de constantes par plateforme
@@ -226,4 +226,19 @@ serveur n'est ajouté entre le téléphone et Tado.
   comme \emph{Sélection}. Détail~: glisser change de pièce, toucher une flèche de la barre d'actions
   aussi. Les écrans suivants s'y ajoutent un à un.
   \attr{Exigences} \refexig{TPB-NAV-006} à \refexig{TPB-NAV-008}.
+\end{decision}
+
+\begin{decision}{DEC-14}{Abandon de la plateforme aplite}
+  \attr{Contexte} Sur aplite (Pebble et Pebble Steel), le code est chargé en mémoire de travail~: 21~Ko des
+  24~Ko dès la compilation, environ 3~Ko de tas libre au lancement, quelques centaines d'octets une fois
+  la liste des pièces affichée. L'écran de consigne faisait planter l'application~; libérer les composants
+  graphiques des fenêtres recouvertes et réduire les tampons ne rendaient que quelques centaines d'octets.
+  \attr{Décision} Le 29 octobre 2026, l'utilisateur renonce à prendre en charge aplite. Les six autres
+  plateformes sont conservées (\refexig{TPB-PLT-001}).
+  \attr{Alternatives écartées} Alléger le code (optimisation à l'édition de liens, qui empêche l'installation)~;
+  fusionner la durée et la consigne dans une même fenêtre~; réduire les fonctions sur aplite, ce que
+  \refexig{TPB-PLT-002} interdit.
+  \attr{Conséquences} Les contournements propres à aplite sont retirés du code. La montre noir et blanc la
+  plus ancienne prise en charge est la Pebble~2 (diorite).
+  \attr{Exigences} \refexig{TPB-PLT-001}, \refexig{TPB-PLT-002}.
 \end{decision}

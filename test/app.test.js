@@ -304,3 +304,35 @@ test('plage de consigne : une requête, puis le détail annonce le dernier forç
   assert.equal(t.sent[0].LastTemp, 215);
   assert.equal(t.sent[0].LastDur, P.DUR_60);
 });
+
+test('détail demandé avec rechargement : pièces relues chez Tado, renvoyées puis détail', async function() {
+  var t = await opened([{ status: 200, body: ZONE_STATES }, { status: 200, body: { presence: 'HOME', presenceLocked: false } }]);
+  var calls = t.http.calls.length;
+  t.app.onMessage({ MsgType: P.MSG_GET, Seq: 6, Object: P.OBJ_DETAIL, Index: 1, Refresh: 1 });
+  await f.settle(); await f.settle();
+  assert.equal(t.http.calls.length, calls + 2, 'zoneStates et state relus');
+  assert.deepEqual(t.sent.map(function(m) { return m.MsgType; }),
+                   [P.MSG_STATUS, P.MSG_ROOMS_HEAD, P.MSG_ROOM, P.MSG_ROOM, P.MSG_DETAIL]);
+  assert.ok(t.sent.every(function(m) { return m.Seq === 6; }), 'une seule séquence pour tout');
+});
+
+test('plage de consigne demandée avec rechargement : pièces relues puis plage', async function() {
+  var caps = { type: 'HEATING', temperatures: { celsius: { min: 5, max: 25 }, fahrenheit: { min: 41, max: 77 } } };
+  var t = await opened([{ status: 200, body: ZONE_STATES }, { status: 200, body: { presence: 'HOME', presenceLocked: false } },
+                        { status: 200, body: caps }]);
+  t.app.onMessage({ MsgType: P.MSG_GET, Seq: 7, Object: P.OBJ_CAPS, Index: 0, Refresh: 1 });
+  await f.settle(); await f.settle(); await f.settle();
+  assert.deepEqual(t.sent.map(function(m) { return m.MsgType; }),
+                   [P.MSG_STATUS, P.MSG_ROOMS_HEAD, P.MSG_ROOM, P.MSG_ROOM, P.MSG_CAPS]);
+});
+
+test('détail avec rechargement, Tado injoignable : copie conservée, indicateur hors connexion', async function() {
+  var t = await opened([{ error: { kind: 'network' } }, { error: { kind: 'network' } },
+                        { error: { kind: 'network' } }, { error: { kind: 'network' } }]);
+  t.clock.tick(10 * 60000);
+  t.app.onMessage({ MsgType: P.MSG_GET, Seq: 8, Object: P.OBJ_DETAIL, Index: 0, Refresh: 1 });
+  await f.settle(); await f.settle(); await f.settle();
+  assert.equal(t.sent[0].MsgType, P.MSG_STATUS);
+  assert.equal(t.sent[0].Indicators, P.IND_OFFLINE);
+  assert.equal(t.sent[t.sent.length - 1].MsgType, P.MSG_DETAIL, 'le détail vient du cache périmé');
+});

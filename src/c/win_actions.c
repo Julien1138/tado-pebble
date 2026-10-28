@@ -19,11 +19,12 @@ struct ActionList {
   Layer *header_layer;
   MenuLayer *menu;
   ActionSelectHandler on_select;
+  ActionAppearHandler on_appear;
   char title[32];
   char header[48];
   ActionItem items[ACTION_MAX];
   uint8_t count;
-  bool built;          // composants graphiques créés (libérés sur aplite quand la fenêtre est recouverte)
+  bool built;          // composants graphiques créés
   uint16_t saved_row;
 };
 
@@ -108,15 +109,15 @@ static void window_appear(Window *window) {
   if (!s_touch_list->built) {
     build(s_touch_list);
   }
+  if (s_touch_list->on_appear) {
+    s_touch_list->on_appear();
+  }
   touch_start(&(TouchHandlers){ .on_tap = touch_tap, .on_step = touch_step,
                                 .step_px = ACTION_ROW_H, .one_step = false });
 }
 
 static void window_disappear(Window *window) {
   touch_stop();
-#ifdef PBL_PLATFORM_APLITE
-  unbuild(window_get_user_data(window));
-#endif
   s_touch_list = NULL;
 }
 
@@ -189,13 +190,14 @@ static void window_unload(Window *window) {
   list->window = NULL;
 }
 
-ActionList *actions_create(ActionSelectHandler on_select) {
+ActionList *actions_create(ActionSelectHandler on_select, ActionAppearHandler on_appear) {
   if (s_pool_used >= POOL_SIZE) {
     return NULL;
   }
   ActionList *list = &s_pool[s_pool_used++];
   memset(list, 0, sizeof(*list));
   list->on_select = on_select;
+  list->on_appear = on_appear;
   return list;
 }
 

@@ -13,9 +13,11 @@ typedef struct {
 
 typedef struct ActionList ActionList;
 typedef void (*ActionSelectHandler)(int id);
+// Appelé chaque fois que la fenêtre apparaît (ouverture, retour d'une fenêtre qui la recouvrait).
+typedef void (*ActionAppearHandler)(void);
 
 // Deux listes existent au plus en même temps (Pilotage, puis Durée par-dessus).
-ActionList *actions_create(ActionSelectHandler on_select);
+ActionList *actions_create(ActionSelectHandler on_select, ActionAppearHandler on_appear);
 void actions_set_title(ActionList *list, const char *title);
 // Bandeau sous le titre (écrans rectangulaires) ; NULL ou vide pour l'omettre.
 void actions_set_header(ActionList *list, const char *header);

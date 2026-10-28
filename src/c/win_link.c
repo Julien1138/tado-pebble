@@ -3,6 +3,7 @@
 #include "platform.h"
 #include "protocol.h"
 #include "text.h"
+#include "win_pieces.h"
 
 static Window *s_window;
 static TextLayer *s_title;
@@ -77,6 +78,9 @@ static void window_load(Window *window) {
 }
 
 static void window_unload(Window *window) {
+  if (s_state != CODE_VALID) {
+    win_pieces_link_dismissed();
+  }
   tick_timer_service_unsubscribe();
   text_layer_destroy(s_title);
   text_layer_destroy(s_code);

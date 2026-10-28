@@ -226,23 +226,24 @@ les fonctions, non.
     Pebble Time, Time Steel & basalt & 144\,×\,168, couleur & Barre d'actions de 24~px. \\
     Pebble Time Round & chalk & 180\,×\,180, rond, couleur & Trois lignes, sélection au centre, pas de barre d'actions. Historique sur huit heures. \\
     Pebble Round~2 & gabbro & 260\,×\,260, rond, couleur & Comme chalk, avec les textes plus lisibles de emery. \\
-    Pebble, Pebble Steel & aplite & 144\,×\,168, noir et blanc & Sans couleur~: inversions, contours et motifs. \\
-    Pebble~2 & diorite & 144\,×\,168, noir et blanc & Rendu identique à aplite. \\
-    Pebble~2 Duo & flint & 144\,×\,168, noir et blanc & Rendu identique à aplite et diorite. \\
+    Pebble~2 & diorite & 144\,×\,168, noir et blanc & Sans couleur~: inversions, contours et motifs. \\
+    Pebble~2 Duo & flint & 144\,×\,168, noir et blanc & Rendu identique à diorite. \\
     \bottomrule
   \end{tabularx}
   \caption{Modèles pris en charge}
   \label{tab:modeles}
 \end{table}
 
-\begin{exigence}{TPB-PLT-001}{Sept plateformes}[
-    justification = {Les montres Pebble existent en sept plateformes d'affichage.},
+\begin{exigence}{TPB-PLT-001}{Six plateformes}[
+    justification = {Les montres Pebble existent en plusieurs plateformes d'affichage~; six sont retenues.},
     priorite      = {Essentielle},
     verification  = {D},
     phase         = {Modèles},
-    note          = {Toutes les montres Pebble sont prises en charge.},
+    note          = {Les Pebble et Pebble Steel (plateforme aplite) ne sont pas prises en charge~: leur
+                     mémoire de travail de 24~Ko ne laisse que 3~Ko de libre une fois le code chargé
+                     (décision du 29 octobre 2026).},
   ]
-  L'application doit fonctionner sur les montres des sept plateformes du
+  L'application doit fonctionner sur les montres des six plateformes du
   tableau~\ref{tab:modeles}.
 \end{exigence}
 
