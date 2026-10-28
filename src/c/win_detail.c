@@ -2,8 +2,10 @@
 #include "comms.h"
 #include "platform.h"
 #include "protocol.h"
+#include "gesture.h"
 #include "store.h"
 #include "text.h"
+#include "touch.h"
 #include "ui.h"
 #include "win_pieces.h"
 
@@ -217,6 +219,33 @@ static void on_down(ClickRecognizerRef recognizer, void *context) {
   show_room((s_index + 1) % g_view.count);
 }
 
+// Tactile (TPB-NAV-007) : glisser le doigt change de pièce, comme Haut et Bas ; sur la barre
+// d'actions, toucher une flèche fait de même.
+static void touch_step(int direction) {
+  show_room(direction > 0 ? (s_index + 1) % g_view.count
+                          : (s_index + g_view.count - 1) % g_view.count);
+}
+
+static void touch_tap(int16_t x, int16_t y) {
+  if (BAR_W == 0 || x < PBL_DISPLAY_WIDTH - BAR_W || y < TITLE_H) {
+    return;
+  }
+  int third = (y - TITLE_H) * 3 / (PBL_DISPLAY_HEIGHT - TITLE_H);
+  if (third == 0) {
+    touch_step(-1);
+  } else if (third == 2) {
+    touch_step(1);
+  }
+}
+
+static void window_appear(Window *window) {
+  touch_start(&(TouchHandlers){ .on_tap = touch_tap, .on_step = touch_step, .step_px = 40, .one_step = true });
+}
+
+static void window_disappear(Window *window) {
+  touch_stop();
+}
+
 static void click_config(void *context) {
   window_single_click_subscribe(BUTTON_ID_UP, on_up);
   window_single_click_subscribe(BUTTON_ID_DOWN, on_down);
@@ -260,7 +289,8 @@ void win_detail_push(uint8_t room_index) {
   }
   s_index = room_index;
   s_window = window_create();
-  window_set_window_handlers(s_window, (WindowHandlers){ .load = window_load, .unload = window_unload });
+  window_set_window_handlers(s_window, (WindowHandlers){ .load = window_load, .unload = window_unload,
+                                                         .appear = window_appear, .disappear = window_disappear });
   window_stack_push(s_window, true);
 }
 

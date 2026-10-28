@@ -3,7 +3,9 @@
 #include "platform.h"
 #include "protocol.h"
 #include "store.h"
+#include "gesture.h"
 #include "text.h"
+#include "touch.h"
 #include "ui.h"
 #include "win_detail.h"
 #include "win_link.h"
@@ -22,8 +24,16 @@ static char s_banner_text[32];
 
 #ifndef PBL_ROUND
 static GPath *s_flame;
+// Flamme : silhouette à mèche, avec un cœur de la couleur du fond.
 static const GPathInfo FLAME_INFO = {
-  .num_points = 3, .points = (GPoint[]){ {0, -7}, {4, -1}, {-4, -1} }
+  .num_points = 14, .points = (GPoint[]){
+    {1, -12}, {3, -9}, {5, -6}, {6, -2}, {6, 2}, {4, 5}, {1, 6}, {-2, 6}, {-5, 4}, {-6, 0},
+    {-5, -3}, {-3, -3}, {-2, -7}, {0, -9}
+  }
+};
+static GPath *s_flame_core;
+static const GPathInfo FLAME_CORE_INFO = {
+  .num_points = 6, .points = (GPoint[]){ {0, -1}, {2, 2}, {2, 4}, {0, 5}, {-2, 4}, {-2, 2} }
 };
 #endif
 
@@ -53,15 +63,17 @@ static void temp_text(const Room *room, char *out, size_t size) {
 }
 
 #ifndef PBL_ROUND
-static void draw_flame(GContext *ctx, GPoint at, GColor color) {
+static void draw_flame(GContext *ctx, GPoint at, GColor color, GColor core) {
   graphics_context_set_fill_color(ctx, color);
   gpath_move_to(s_flame, at);
   gpath_draw_filled(ctx, s_flame);
-  graphics_fill_circle(ctx, GPoint(at.x, at.y + 2), 4);
+  graphics_context_set_fill_color(ctx, core);
+  gpath_move_to(s_flame_core, at);
+  gpath_draw_filled(ctx, s_flame_core);
 }
 
 // Ligne rectangulaire : nom et consigne à gauche, température et puissance à droite.
-static void draw_row_rect(GContext *ctx, GRect b, const Room *room, GColor fg) {
+static void draw_row_rect(GContext *ctx, GRect b, const Room *room, GColor fg, GColor bg) {
   char temp[16], sub[32], power[12];
   int temp_w = PBL_DISPLAY_WIDTH >= 200 ? 76 : 62;
   int name_h = PBL_DISPLAY_WIDTH >= 200 ? 28 : 22;
@@ -79,7 +91,7 @@ static void draw_row_rect(GContext *ctx, GRect b, const Room *room, GColor fg) {
   if (room->flags & FLAG_HEATING) {
     snprintf(power, sizeof(power), "%d %%", room->power);
     ui_draw_text(ctx, power, F_SUB, GRect(b.size.w - temp_w - 2, name_h - 4, temp_w, name_h), GTextAlignmentRight);
-    draw_flame(ctx, GPoint(b.size.w - temp_w + 4, b.size.h - 13), fg);
+    draw_flame(ctx, GPoint(b.size.w - temp_w + 5, b.size.h - (PBL_DISPLAY_WIDTH >= 200 ? 17 : 10)), fg, bg);
   } else if (!(room->flags & (FLAG_OFF | FLAG_OFFLINE))) {
     ui_draw_text(ctx, text_get(T_IDLE), F_SUB, GRect(b.size.w - temp_w - 2, name_h - 4, temp_w, name_h), GTextAlignmentRight);
   }
@@ -147,7 +159,7 @@ static void menu_draw(GContext *ctx, const Layer *cell, MenuIndex *index, void *
 #ifdef PBL_ROUND
   draw_row_round(ctx, b, room, fg, selected);
 #else
-  draw_row_rect(ctx, b, room, fg);
+  draw_row_rect(ctx, b, room, fg, bg);
 #endif
   if (selected) {
     // Sélection : cadre épais, blanc sur couleur, de la couleur du texte en noir et blanc.
@@ -236,6 +248,47 @@ static void on_refresh_timer(void *data) {
   comms_request_rooms(true);
 }
 
+// --- Tactile (TPB-NAV-008) : faire défiler la liste, toucher une pièce = Sélection ------------
+
+static void touch_step(int direction) {
+  menu_layer_set_selected_next(s_menu, direction < 0, MenuRowAlignCenter, true);
+}
+
+static void touch_tap(int16_t x, int16_t y) {
+  int menu_y = y - layer_get_frame(menu_layer_get_layer(s_menu)).origin.y;
+  if (menu_y < 0 || g_view.count == 0) {
+    return;
+  }
+#ifdef PBL_ROUND
+  int row = gesture_row_round(menu_y, layer_get_frame(menu_layer_get_layer(s_menu)).size.h,
+                              menu_layer_get_selected_index(s_menu).row, g_view.count,
+                              SELECTED_H, OTHER_H);
+#else
+  int row = gesture_row_rect(menu_y, scroll_layer_get_content_offset(menu_layer_get_scroll_layer(s_menu)).y,
+                             ROW_H, g_view.count);
+#endif
+  if (row >= 0) {
+    menu_layer_set_selected_index(s_menu, MenuIndex(0, row), MenuRowAlignCenter, false);
+    win_detail_push(row);
+  }
+}
+
+static void window_appear(Window *window) {
+  touch_start(&(TouchHandlers){
+    .on_tap = touch_tap, .on_step = touch_step,
+#ifdef PBL_ROUND
+    .step_px = OTHER_H,
+#else
+    .step_px = ROW_H,
+#endif
+    .one_step = false
+  });
+}
+
+static void window_disappear(Window *window) {
+  touch_stop();
+}
+
 static void window_load(Window *window) {
   Layer *root = window_get_root_layer(window);
   GRect b = layer_get_bounds(root);
@@ -268,6 +321,7 @@ static void window_load(Window *window) {
   layer_add_child(root, text_layer_get_layer(s_empty));
 #ifndef PBL_ROUND
   s_flame = gpath_create(&FLAME_INFO);
+  s_flame_core = gpath_create(&FLAME_CORE_INFO);
 #endif
   tick_timer_service_subscribe(MINUTE_UNIT, on_minute);
   s_timer = app_timer_register(REFRESH_MS, on_refresh_timer, NULL);
@@ -282,6 +336,7 @@ static void window_unload(Window *window) {
   }
 #ifndef PBL_ROUND
   gpath_destroy(s_flame);
+  gpath_destroy(s_flame_core);
 #endif
   text_layer_destroy(s_empty);
   menu_layer_destroy(s_menu);
@@ -293,7 +348,8 @@ static void window_unload(Window *window) {
 
 void win_pieces_push(void) {
   s_window = window_create();
-  window_set_window_handlers(s_window, (WindowHandlers){ .load = window_load, .unload = window_unload });
+  window_set_window_handlers(s_window, (WindowHandlers){ .load = window_load, .unload = window_unload,
+                                                         .appear = window_appear, .disappear = window_disappear });
   window_stack_push(s_window, true);
 }
 

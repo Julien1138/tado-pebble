@@ -209,3 +209,21 @@ serveur n'est ajouté entre le téléphone et Tado.
   \attr{Conséquences} Ajouter une langue ne touche que les ressources de la montre.
   \attr{Exigences} \refexig{TPB-AFF-005}, \refexig{TPB-AFF-006}.
 \end{decision}
+
+\begin{decision}{DEC-13}{Tactile en complément des boutons, par le service tactile du SDK}
+  \attr{Contexte} Certaines montres ont un écran tactile (emery, gabbro~; flint expose le service
+  sans écran). Le toucher doit compléter les boutons sans jamais les remplacer
+  (\refexig{TPB-NAV-006}, \refexig{TPB-NAV-007}).
+  \attr{Décision} Chaque fenêtre qui prend en charge le toucher s'abonne au service tactile quand
+  elle apparaît et s'en désabonne quand elle disparaît, seulement si le service est actif. La
+  reconnaissance des gestes (toucher, glissement par pas) est isolée dans un module sans dépendance au SDK,
+  testé sur l'ordinateur. Les boutons restent câblés comme avant.
+  \attr{Alternatives écartées} Le pont de navigation tactile du système
+  (\texttt{app\_touch\_navigation\_enable})~: son comportement exact n'est pas décrit et ne se règle pas
+  écran par écran.
+  \attr{Conséquences} Sur les plateformes sans écran tactile, le code tactile n'est pas compilé.
+  Liste des pièces~: glisser fait défiler d'une ligne par hauteur de ligne, toucher une pièce l'ouvre
+  comme \emph{Sélection}. Détail~: glisser change de pièce, toucher une flèche de la barre d'actions
+  aussi. Les écrans suivants s'y ajoutent un à un.
+  \attr{Exigences} \refexig{TPB-NAV-006} à \refexig{TPB-NAV-008}.
+\end{decision}
