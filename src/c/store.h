@@ -68,11 +68,25 @@ typedef struct {
   uint8_t forced;
 } Shortcuts;
 
+// Historique (MSG-15) : une rangée par pièce, remplie au fil des réponses du téléphone.
+typedef struct {
+  char abbrev[5];
+  uint32_t levels;     // 2 bits par colonne, colonne 0 = la plus ancienne
+  uint16_t unknown;    // bit i : la colonne i est inconnue (et non nulle)
+  bool received;
+} HistoryRow;
+
+typedef struct {
+  uint8_t columns;
+  HistoryRow rows[MAX_ROOMS];
+} History;
+
 extern View g_view;
 extern Detail g_detail;
 extern Caps g_caps;
 extern Presence g_presence;
 extern Shortcuts g_shortcuts;
+extern History g_history;
 // Pièces que le dernier raccourci n'a pas modifiées (bit i : i-ième pièce de la liste).
 extern uint16_t g_failed_mask;
 

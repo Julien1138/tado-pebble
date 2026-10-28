@@ -23,3 +23,10 @@
   #define ROW_H 38
   #define BANNER_H 18
 #endif
+
+// Colonnes de l'historique (TPB-PLT-007) : huit heures sur la Pebble Time Round, douze ailleurs.
+#if defined(PBL_PLATFORM_CHALK)
+  #define HISTORY_COLUMNS 8
+#else
+  #define HISTORY_COLUMNS 12
+#endif

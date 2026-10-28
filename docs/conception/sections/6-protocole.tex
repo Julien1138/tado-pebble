@@ -38,7 +38,7 @@
     MSG-12 & ROOMS\_HEAD & Séquence~; nombre de pièces~; unité (C ou F). \\
     MSG-13 & ROOM & Séquence~; indice~; nom (20 octets)~; abréviation (4)~; température mesurée~; consigne~; puissance (\%)~; tranche de couleur~; indicateurs (chauffe, forcée, éteinte, hors ligne, fenêtre ouverte)~; code de mode et durée restante. \\
     MSG-14 & DETAIL & Séquence~; indice~; code de mode~; durée restante d'un forçage minuté~; heure de fin (absente pour \enquote{jusqu'à nouvel ordre})~; heure et température du prochain changement~; humidité (\%)~; minutes de fenêtre ouverte. \\
-    MSG-15 & HISTORY\_ROW & Séquence~; indice~; niveaux des $n$ colonnes (2 bits chacune)~; masque des colonnes inconnues~; indice de la colonne en cours. \\
+    MSG-15 & HISTORY\_ROW & Séquence~; indice de la pièce~; nom abrégé (4 caractères, distinct d'une pièce à l'autre)~; nombre de colonnes $n$ (12, ou 8 sur Time Round)~; niveaux des $n$ colonnes (2 bits chacune, colonne 0 la plus ancienne)~; masque des colonnes inconnues. La dernière colonne est toujours l'heure en cours. Une rangée par pièce, envoyée dès que son rapport est lu. \\
     MSG-16 & COMFORT & Séquence~; indice~; température et humidité en dixièmes~; code du verdict~; indicateur \enquote{humidité non mesurée}. \\
     MSG-17 & ALERT & Séquence~; indice~; indice de pièce~; nature~; détail (minutes ou code). \\
     MSG-18 & PRESENCE & Séquence~; mode (Présent, Absent, Auto)~; état~; nombre d'appareils suivis par la géolocalisation et nombre de ceux qui sont à la maison~; indicateur \enquote{Auto indisponible} (mémorisé par le téléphone après un refus). \\

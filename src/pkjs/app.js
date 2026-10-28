@@ -12,9 +12,11 @@ function createApp(deps) {
   var home = deps.home;
   var views = deps.views;
   var control = deps.control;
+  var history = deps.history;
   var cache = deps.cache;
   var openUrl = deps.openUrl;
   var now = deps.now || function() { return Date.now(); };
+  var latestSeq = 0;
   var linkLost = false;
   var cancelLink = null;
   var pendingUrl = null;
@@ -165,6 +167,29 @@ function createApp(deps) {
     });
   }
 
+  // Historique (MSG-15) : une rangée par pièce, envoyée dès que son rapport est lu, pour que la
+  // grille se remplisse à l'écran. columns : nombre de colonnes voulu par la montre (12, ou 8).
+  function sendHistory(seq, refresh, columns) {
+    home.rooms({ force: false }, function(err, data) {
+      if (err) {
+        return messenger.replace(failureMessages(seq, err));
+      }
+      var n = columns > 0 && columns <= 12 ? columns : 12;
+      var abbrevs = views.abbreviations(data.rooms.map(function(r) { return r.name; }));
+      messenger.replace([]);
+      data.rooms.forEach(function(room, index) {
+        history.columnsFor(data.homeId, room.id, now(), n, refresh, function(err, cols) {
+          if (seq !== latestSeq) {
+            return;   // une demande plus récente est arrivée : celle-ci n'intéresse plus la montre
+          }
+          var packed = history.pack(cols);
+          messenger.send([{ MsgType: P.MSG_HISTORY_ROW, Seq: seq, Index: index, Abbrev: abbrevs[index],
+                            Columns: n, Levels: packed.levels, Unknown: packed.unknown }]);
+        });
+      });
+    });
+  }
+
   // Raccourcis offerts (MSG-19) : masque et nombre de pièces forcées, avec les pièces relues si refresh.
   function sendShortcuts(seq, refresh) {
     home.rooms({ force: refresh }, function(err, data) {
@@ -259,6 +284,8 @@ function createApp(deps) {
       sendRooms(seq, !!payload.Refresh);
     } else if (payload.Object === P.OBJ_DETAIL) {
       sendDetail(seq, payload.Index, !!payload.Refresh);
+    } else if (payload.Object === P.OBJ_HISTORY) {
+      sendHistory(seq, !!payload.Refresh, payload.Columns);
     } else if (payload.Object === P.OBJ_SHORTCUTS) {
       sendShortcuts(seq, !!payload.Refresh);
     } else if (payload.Object === P.OBJ_PRESENCE) {
@@ -326,6 +353,9 @@ function createApp(deps) {
 
   // payload : dictionnaire reçu de la montre (clés par nom).
   function onMessage(payload) {
+    if (payload.Seq !== undefined) {
+      latestSeq = payload.Seq;
+    }
     if (payload.MsgType === P.MSG_GET) {
       onGet(payload);
     } else if (payload.MsgType === P.MSG_DO) {

@@ -6,6 +6,7 @@
 typedef struct {
   void (*rooms_changed)(void);          // une nouvelle liste est en place
   void (*detail_changed)(void);         // le détail de la pièce demandée est arrivé
+  void (*history_changed)(void);        // une rangée de l'historique est arrivée
   void (*shortcuts_changed)(void);      // les raccourcis offerts sont arrivés
   void (*presence_changed)(void);       // la présence demandée est arrivée
   void (*caps_changed)(void);           // la plage de consigne de la pièce demandée est arrivée
@@ -23,6 +24,8 @@ void comms_request_detail(uint8_t index, bool refresh);
 void comms_request_caps(uint8_t index, bool refresh);
 void comms_request_presence(bool refresh);
 void comms_request_shortcuts(bool refresh);
+// Historique : columns colonnes par pièce ; les rangées arrivent une à une (grille qui se remplit).
+void comms_request_history(uint8_t columns, bool refresh);
 // Commande : sur une pièce, CMD_FORCE (température en dixièmes, durée DUR_*), CMD_SCHEDULE, CMD_OFF ;
 // CMD_PRESENCE (le mode PRESENCE_* est passé dans duration) ; CMD_SHORTCUT (le raccourci SC_* est
 // passé dans duration).

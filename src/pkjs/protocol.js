@@ -8,6 +8,7 @@ module.exports = {
   MSG_ROOMS_HEAD: 12,
   MSG_ROOM: 13,
   MSG_DETAIL: 14,
+  MSG_HISTORY_ROW: 15,
   MSG_PRESENCE: 18,
   MSG_SHORTCUTS: 19,
   MSG_CAPS: 20,
@@ -21,6 +22,7 @@ module.exports = {
   OBJ_CAPS: 3,
   OBJ_PRESENCE: 4,
   OBJ_SHORTCUTS: 5,
+  OBJ_HISTORY: 6,
 
   // Commandes (clé Command)
   CMD_LINK: 1,

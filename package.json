@@ -71,7 +71,9 @@
       "Shortcut",
       "Mask",
       "ForcedCount",
-      "FailedMask"
+      "FailedMask",
+      "Levels",
+      "Unknown"
     ],
     "resources": {
       "media": []

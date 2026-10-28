@@ -8,8 +8,12 @@ var createHome = require('../src/pkjs/home');
 var createLink = require('../src/pkjs/link');
 var createClient = require('../src/pkjs/tado');
 var createControl = require('../src/pkjs/control');
+var createHistory = require('../src/pkjs/history');
 var views = require('../src/pkjs/views');
 var f = require('./fakes');
+
+// L'après-midi : la fenêtre de douze heures ne passe pas minuit, un seul rapport par pièce.
+var NOW = new Date(2026, 9, 28, 15, 30).getTime();
 
 var ZONES = [
   { id: 5, name: 'Bureau', type: 'HEATING' },
@@ -45,7 +49,8 @@ function setup(steps, linked) {
   var messenger = createMessenger({ pebble: { sendAppMessage: function(m, ok) { sent.push(m); setImmediate(ok); } } });
   var app = createApp({ messenger: messenger, link: link, home: createHome({ client: client, cache: cache }),
                         views: views, cache: cache, openUrl: function(u) { opened.push(u); },
-                        control: createControl({ client: client, cache: cache, storage: store }) });
+                        control: createControl({ client: client, cache: cache, storage: store }),
+                        history: createHistory({ client: client, cache: cache }), now: function() { return NOW; } });
   return { app: app, sent: sent, opened: opened, http: http, clock: clock, store: store };
 }
 
@@ -515,4 +520,56 @@ test('raccourci sans connexion : refusé, jamais retenté', async function() {
   await f.settle(); await f.settle();
   assert.equal(t.http.calls.length, calls + 1);
   assert.equal(t.sent[0].Result, P.RES_OFFLINE);
+});
+
+function dayReport(level) {
+  return { callForHeat: { dataIntervals: [{ from: new Date(2026, 9, 28, 0, 0).toISOString(), to: new Date(NOW).toISOString(), value: level }] } };
+}
+
+test('historique : une rangée par pièce, avec abréviation, niveaux empaquetés et masque des inconnues', async function() {
+  var t = await opened([{ status: 200, body: dayReport('HIGH') }, { status: 200, body: dayReport('NONE') }]);
+  var calls = t.http.calls.length;
+  t.app.onMessage({ MsgType: P.MSG_GET, Seq: 30, Object: P.OBJ_HISTORY, Columns: 12 });
+  await f.settle(); await f.settle(); await f.settle();
+  assert.equal(t.http.calls.length, calls + 2, 'un rapport du jour par pièce chauffée');
+  assert.match(t.http.calls[calls].url, /\/zones\/5\/dayReport\?date=2026-10-28$/);
+  var rows = t.sent.filter(function(m) { return m.MsgType === P.MSG_HISTORY_ROW; });
+  assert.equal(rows.length, 2);
+  rows.sort(function(a, b) { return a.Index - b.Index; });
+  assert.deepEqual([rows[0].Seq, rows[0].Index, rows[0].Abbrev, rows[0].Columns], [30, 0, 'Bure', 12]);
+  // le rapport ne remonte qu'à minuit : les colonnes d'avant minuit sont inconnues (HIS-008), les 15 heures connues
+  assert.equal(rows[0].Unknown, 0, 'douze colonnes toutes couvertes depuis 4 h');
+  assert.equal(rows[0].Levels, 0xFFFFFF, 'chauffe forte partout');
+  assert.equal(rows[1].Levels, 0, 'aucune chauffe');
+});
+
+test('historique : sur huit colonnes (Time Round), huit niveaux seulement', async function() {
+  var t = await opened([{ status: 200, body: dayReport('HIGH') }, { status: 200, body: dayReport('HIGH') }]);
+  t.app.onMessage({ MsgType: P.MSG_GET, Seq: 31, Object: P.OBJ_HISTORY, Columns: 8 });
+  await f.settle(); await f.settle(); await f.settle();
+  var row = t.sent.filter(function(m) { return m.MsgType === P.MSG_HISTORY_ROW; })[0];
+  assert.equal(row.Columns, 8);
+  assert.equal(row.Levels, 0xFFFF);
+});
+
+test('historique : une pièce dont le rapport échoue est inconnue, les autres sont envoyées', async function() {
+  // Le rapport de la pièce 5 échoue (J-03 le retente une fois) ; celui de la pièce 1 répond.
+  var byRoom = function(req) {
+    return /zones\/5\//.test(req.url) ? { status: 500, body: null } : { status: 200, body: dayReport('NONE') };
+  };
+  var t = await opened([byRoom, byRoom, byRoom]);
+  t.app.onMessage({ MsgType: P.MSG_GET, Seq: 32, Object: P.OBJ_HISTORY, Columns: 12, Refresh: 1 });
+  await f.settle(); await f.settle(); await f.settle(); await f.settle();
+  var rows = t.sent.filter(function(m) { return m.MsgType === P.MSG_HISTORY_ROW; });
+  assert.equal(rows.length, 2);
+  assert.ok(rows.some(function(r) { return r.Unknown === 0xFFF; }), 'toutes les colonnes de la pièce en échec sont inconnues');
+  assert.ok(rows.some(function(r) { return r.Unknown === 0; }));
+});
+
+test('historique : une demande plus récente abandonne les rangées de la précédente', async function() {
+  var t = await opened([{ status: 200, body: dayReport('NONE') }, { status: 200, body: dayReport('NONE') }]);
+  t.app.onMessage({ MsgType: P.MSG_GET, Seq: 33, Object: P.OBJ_HISTORY, Columns: 12 });
+  t.app.onMessage({ MsgType: P.MSG_GET, Seq: 34, Object: P.OBJ_ROOMS });
+  await f.settle(); await f.settle(); await f.settle();
+  assert.ok(t.sent.every(function(m) { return m.MsgType !== P.MSG_HISTORY_ROW; }));
 });

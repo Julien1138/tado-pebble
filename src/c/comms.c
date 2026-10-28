@@ -38,6 +38,7 @@ typedef struct {
   uint8_t command;    // MSG_DO : CMD_*
   uint8_t index;
   uint8_t duration;
+  uint8_t columns;
   int16_t temp;
   bool refresh;
 } Request;
@@ -65,6 +66,9 @@ static void send_next(void) {
     if (req.type == MSG_GET) {
       dict_write_int32(iter, MESSAGE_KEY_Object, req.object);
       dict_write_int32(iter, MESSAGE_KEY_Refresh, req.refresh ? 1 : 0);
+      if (req.object == OBJ_HISTORY) {
+        dict_write_int32(iter, MESSAGE_KEY_Columns, req.columns);
+      }
       if (req.object == OBJ_DETAIL || req.object == OBJ_CAPS) {
         dict_write_int32(iter, MESSAGE_KEY_Index, req.index);
       }
@@ -182,6 +186,19 @@ static void on_inbox(DictionaryIterator *iter, void *context) {
       g_presence.auto_unavailable = int_of(iter, MESSAGE_KEY_AutoUnavailable, 0) != 0;
       s_handlers.presence_changed();
       break;
+    case MSG_HISTORY_ROW: {
+      uint8_t index = int_of(iter, MESSAGE_KEY_Index, 0);
+      if (index < MAX_ROOMS) {
+        HistoryRow *row = &g_history.rows[index];
+        copy_string(row->abbrev, sizeof(row->abbrev), iter, MESSAGE_KEY_Abbrev);
+        row->levels = int_of(iter, MESSAGE_KEY_Levels, 0);
+        row->unknown = int_of(iter, MESSAGE_KEY_Unknown, 0);
+        row->received = true;
+        g_history.columns = int_of(iter, MESSAGE_KEY_Columns, g_history.columns);
+        s_handlers.history_changed();
+      }
+      break;
+    }
     case MSG_SHORTCUTS:
       g_shortcuts.valid = true;
       g_shortcuts.mask = int_of(iter, MESSAGE_KEY_Mask, 0);
@@ -252,6 +269,18 @@ void comms_request_presence(bool refresh) {
   }
   if (s_ready) {
     enqueue(&(Request){ .type = MSG_GET, .seq = ++s_seq, .object = OBJ_PRESENCE, .refresh = refresh });
+  }
+}
+
+void comms_request_history(uint8_t columns, bool refresh) {
+  // Les rangées déjà reçues restent à l'écran jusqu'à ce que leur nouvelle version arrive.
+  if (g_history.columns != columns) {
+    memset(&g_history, 0, sizeof(g_history));
+  }
+  g_history.columns = columns;
+  if (s_ready) {
+    enqueue(&(Request){ .type = MSG_GET, .seq = ++s_seq, .object = OBJ_HISTORY, .columns = columns,
+                        .refresh = refresh });
   }
 }
 

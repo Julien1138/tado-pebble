@@ -14,12 +14,14 @@ var link = require('./link')({
 var client = require('./tado')({ http: http, link: link });
 var cache = require('./cache')({ storage: storage, now: now });
 var control = require('./control')({ client: client, cache: cache, storage: storage });
+var history = require('./history')({ client: client, cache: cache });
 var app = require('./app')({
   messenger: require('./messaging')({ pebble: Pebble }),
   link: link,
   home: require('./home')({ client: client, cache: cache }),
   views: require('./views'),
   control: control,
+  history: history,
   cache: cache,
   openUrl: function(url) { Pebble.openURL(url); }
 });

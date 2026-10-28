@@ -3,6 +3,7 @@
 #include "store.h"
 #include "text.h"
 #include "win_detail.h"
+#include "win_history.h"
 #include "win_link.h"
 #include "win_presence.h"
 #include "win_pieces.h"
@@ -22,6 +23,10 @@ static void on_rooms(void) {
 static void on_detail(void) {
   win_detail_changed();
   win_pilot_refresh();
+}
+
+static void on_history(void) {
+  win_history_changed();
 }
 
 static void on_shortcuts(void) {
@@ -54,7 +59,7 @@ static void on_link_code(const char *code, int seconds, uint8_t state) {
 int main(void) {
   text_init();
   store_init();
-  comms_init(&(CommsHandlers){ .rooms_changed = on_rooms, .detail_changed = on_detail, .caps_changed = on_caps, .presence_changed = on_presence, .shortcuts_changed = on_shortcuts,
+  comms_init(&(CommsHandlers){ .rooms_changed = on_rooms, .detail_changed = on_detail, .caps_changed = on_caps, .presence_changed = on_presence, .shortcuts_changed = on_shortcuts, .history_changed = on_history,
                                .command_result = on_command_result, .status_changed = on_status,
                                .link_code = on_link_code });
   win_pieces_push();
