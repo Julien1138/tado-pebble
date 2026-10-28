@@ -167,3 +167,39 @@ test('détail : Fahrenheit', function() {
     nextScheduleChange: { start: at(22, 0), setting: { power: 'ON', temperature: { celsius: 16.5, fahrenheit: 61.7 } } } }) }, 'FAHRENHEIT', Date.now());
   assert.equal(d.nextTemp, 617);
 });
+
+function rooms2(forced) {
+  return [{ id: 1, name: 'A', state: zone({ overlay: forced ? { termination: { type: 'MANUAL' } } : null }) },
+          { id: 2, name: 'B', state: zone() }];
+}
+
+test('raccourcis offerts : Tout off toujours ; programmation seulement si une pièce est forcée', function() {
+  var base = { rooms: rooms2(false), presence: { presence: 'HOME', locked: false } };
+  assert.equal(views.buildShortcuts(base, false).mask & 1, 1);
+  assert.equal(views.buildShortcuts(base, false).mask & 2, 0);
+  var forced = views.buildShortcuts({ rooms: rooms2(true), presence: { presence: 'HOME', locked: false } }, false);
+  assert.equal(forced.mask & 2, 2);
+  assert.equal(forced.forced, 1);
+});
+
+test('raccourcis offerts : Absent si présent en Auto ; Géolocalisation si imposé, sauf Auto indisponible', function() {
+  function mask(presence, locked, unavailable) {
+    return views.buildShortcuts({ rooms: rooms2(false), presence: { presence: presence, locked: locked } }, unavailable).mask;
+  }
+  assert.equal(mask('HOME', false, false), 1 | 4, 'Tout off et Absent');
+  assert.equal(mask('AWAY', false, false), 1, 'Auto et absent : seulement Tout off');
+  assert.equal(mask('HOME', true, false), 1 | 8, 'imposé : Géolocalisation');
+  assert.equal(mask('AWAY', true, false), 1 | 8);
+  assert.equal(mask('HOME', true, true), 1, 'Auto indisponible : plus de Géolocalisation');
+});
+
+test('pièces non modifiées : Tout off compare l\'extinction, programmation compare le forçage', function() {
+  var off = zone({ setting: { type: 'HEATING', power: 'OFF', temperature: null } });
+  var on = zone();
+  var r = [{ state: off }, { state: on }, { state: off }];
+  var u = views.unmodifiedRooms(P.SC_ALL_OFF, r, [0, 1, 2]);
+  assert.deepEqual([u.mask, u.count], [2, 1]);
+  var forced = zone({ overlay: { termination: { type: 'MANUAL' } } });
+  var p = views.unmodifiedRooms(P.SC_PROGRAM, [{ state: forced }, { state: zone() }, { state: forced }], [0, 2]);
+  assert.deepEqual([p.mask, p.count], [5, 2]);
+});

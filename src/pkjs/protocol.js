@@ -9,6 +9,7 @@ module.exports = {
   MSG_ROOM: 13,
   MSG_DETAIL: 14,
   MSG_PRESENCE: 18,
+  MSG_SHORTCUTS: 19,
   MSG_CAPS: 20,
   MSG_ACK: 21,
   MSG_LINK_CODE: 22,
@@ -19,6 +20,7 @@ module.exports = {
   OBJ_DETAIL: 2,
   OBJ_CAPS: 3,
   OBJ_PRESENCE: 4,
+  OBJ_SHORTCUTS: 5,
 
   // Commandes (clé Command)
   CMD_LINK: 1,
@@ -27,6 +29,13 @@ module.exports = {
   CMD_SCHEDULE: 5,
   CMD_OFF: 6,
   CMD_PRESENCE: 7,
+  CMD_SHORTCUT: 8,
+
+  // Raccourcis (clé Shortcut ; le bit n-1 du masque Mask correspond au raccourci n)
+  SC_ALL_OFF: 1,
+  SC_PROGRAM: 2,
+  SC_ABSENT: 3,
+  SC_GEO: 4,
 
   // Durées d'un forçage (clé Duration)
   DUR_30: 1,
@@ -41,6 +50,7 @@ module.exports = {
   RES_FAILED: 2,
   RES_OFFLINE: 3,
   RES_AUTO_UNAVAILABLE: 4,
+  RES_PARTIAL: 5,
 
   // État de la liaison (STATUS, clé Link)
   LINK_NONE: 0,

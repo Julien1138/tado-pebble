@@ -165,6 +165,67 @@ function createApp(deps) {
     });
   }
 
+  // Raccourcis offerts (MSG-19) : masque et nombre de pièces forcées, avec les pièces relues si refresh.
+  function sendShortcuts(seq, refresh) {
+    home.rooms({ force: refresh }, function(err, data) {
+      if (err) {
+        return refresh ? messenger.replace(failureMessages(seq, err)) : undefined;
+      }
+      var v = views.buildShortcuts(data, control.autoUnavailable());
+      var messages = refresh ? roomsMessages(seq, data) : [];
+      messages.push({ MsgType: P.MSG_SHORTCUTS, Seq: seq, Mask: v.mask, ForcedCount: v.forced });
+      messenger.replace(messages);
+    });
+  }
+
+  // Raccourci de toute la maison : écriture, relecture sans cache, puis comparaison pour dire quelles
+  // pièces n'ont pas été modifiées (TPB-RAC-007). Jamais retenté.
+  function runShortcut(payload) {
+    var seq = payload.Seq;
+    var kind = payload.Shortcut;
+    home.rooms({ force: false }, function(err, data) {
+      if (err) {
+        return messenger.replace([{ MsgType: P.MSG_ACK, Seq: seq, Result: control.resultFor(err) }]);
+      }
+      var done = function(err) {
+        if (err) {
+          var autoRefused = kind === P.SC_GEO && err.kind === 'forbidden';
+          var ack = { MsgType: P.MSG_ACK, Seq: seq, Result: autoRefused ? P.RES_AUTO_UNAVAILABLE : control.resultFor(err) };
+          if (err.kind === 'lost' || err.kind === 'unlinked') {
+            linkLost = err.kind === 'lost';
+            return messenger.replace([ack, linkStatus(seq)]);
+          }
+          return messenger.replace([ack]);
+        }
+        home.rooms({ force: true }, function(err, fresh) {
+          var ack = { MsgType: P.MSG_ACK, Seq: seq, Result: P.RES_OK };
+          if (err) {
+            return messenger.replace(failureMessages(seq, err, [ack]));
+          }
+          if (kind === P.SC_ALL_OFF || kind === P.SC_PROGRAM) {
+            var targeted = [];
+            data.rooms.forEach(function(r, i) {
+              if (kind === P.SC_ALL_OFF || r.state.overlay) {
+                targeted.push(i);
+              }
+            });
+            var u = views.unmodifiedRooms(kind, fresh.rooms, targeted);
+            if (u.count > 0) {
+              ack.Result = u.count === targeted.length ? P.RES_FAILED : P.RES_PARTIAL;
+              ack.FailedMask = u.mask;
+            }
+          }
+          messenger.replace(roomsMessages(seq, fresh, [ack]));
+        });
+      };
+      if (kind === P.SC_ABSENT || kind === P.SC_GEO) {
+        control.setPresence({ homeId: data.homeId }, kind === P.SC_ABSENT ? P.PRESENCE_AWAY : P.PRESENCE_AUTO, done);
+      } else {
+        control.shortcut({ homeId: data.homeId, unit: data.unit }, kind, data.rooms, done);
+      }
+    });
+  }
+
   // Commande sur une pièce : écriture, puis relecture sans cache (DEC-10). Jamais retentée.
   function runCommand(payload) {
     var seq = payload.Seq;
@@ -198,6 +259,8 @@ function createApp(deps) {
       sendRooms(seq, !!payload.Refresh);
     } else if (payload.Object === P.OBJ_DETAIL) {
       sendDetail(seq, payload.Index, !!payload.Refresh);
+    } else if (payload.Object === P.OBJ_SHORTCUTS) {
+      sendShortcuts(seq, !!payload.Refresh);
     } else if (payload.Object === P.OBJ_PRESENCE) {
       sendPresence(seq, !!payload.Refresh);
     } else if (payload.Object === P.OBJ_CAPS) {
@@ -239,6 +302,11 @@ function createApp(deps) {
         return messenger.replace([linkStatus(payload.Seq)]);
       }
       runCommand(payload);
+    } else if (payload.Command === P.CMD_SHORTCUT) {
+      if (!link.isLinked()) {
+        return messenger.replace([linkStatus(payload.Seq)]);
+      }
+      runShortcut(payload);
     } else if (payload.Command === P.CMD_PRESENCE) {
       if (!link.isLinked()) {
         return messenger.replace([linkStatus(payload.Seq)]);

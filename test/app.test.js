@@ -417,3 +417,102 @@ test('présence : mode inconnu refusé sans requête d\'écriture', async functi
   assert.equal(t.http.calls.length, calls + 1, 'seulement la lecture des appareils');
   assert.equal(t.sent[0].Result, P.RES_REFUSED);
 });
+
+function shortcut(kind) {
+  return { MsgType: P.MSG_DO, Seq: 21, Command: P.CMD_SHORTCUT, Shortcut: kind };
+}
+function zoneStatesWith(power, overlay) {
+  var z = function(t, s) {
+    var o = zoneState(t, s);
+    o.setting.power = power;
+    o.overlay = overlay;
+    return o;
+  };
+  return { zoneStates: { 1: z(19.4, 21), 5: z(17.85, 16), 9: z(50, 50) } };
+}
+var FORCED = { type: 'MANUAL', termination: { type: 'MANUAL', typeSkillBasedApp: 'MANUAL' } };
+
+test('raccourcis offerts : masque et pièces forcées, après rechargement', async function() {
+  var t = await opened([{ status: 200, body: ZONE_STATES }, { status: 200, body: { presence: 'HOME', presenceLocked: false } }]);
+  t.app.onMessage({ MsgType: P.MSG_GET, Seq: 20, Object: P.OBJ_SHORTCUTS, Refresh: 1 });
+  await f.settle(); await f.settle();
+  var m = t.sent[t.sent.length - 1];
+  assert.deepEqual([m.MsgType, m.Mask, m.ForcedCount], [P.MSG_SHORTCUTS, 1 | 4, 0]);
+  assert.equal(t.sent[0].MsgType, P.MSG_STATUS, 'les pièces relues passent d\'abord');
+});
+
+test('Tout off : une seule requête groupée, puis relecture ; toutes les pièces éteintes', async function() {
+  var t = await opened([{ status: 200, body: {} }, { status: 200, body: zoneStatesWith('OFF', FORCED) },
+                        { status: 200, body: { presence: 'HOME', presenceLocked: false } }]);
+  var calls = t.http.calls.length;
+  t.app.onMessage(shortcut(P.SC_ALL_OFF));
+  await f.settle(); await f.settle(); await f.settle();
+  var tail = t.http.calls.slice(calls).map(function(c) { return c.method + ' ' + c.url.replace('https://my.tado.com/api/v2', ''); });
+  assert.deepEqual(tail, ['POST /homes/7/overlay', 'GET /homes/7/zoneStates', 'GET /homes/7/state']);
+  assert.deepEqual(JSON.parse(t.http.calls[calls].body).overlays.map(function(o) { return o.room; }), [5, 1], 'une entrée par pièce chauffée, dans l\'ordre de Tado');
+  assert.equal(t.sent[0].Result, P.RES_OK);
+  assert.equal(t.sent[0].FailedMask, undefined);
+});
+
+test('Tout off : une pièce qui reste allumée est signalée (résultat partiel)', async function() {
+  var partial = zoneStatesWith('OFF', FORCED);
+  partial.zoneStates[1].setting.power = 'ON';
+  partial.zoneStates[1].overlay = null;
+  var t = await opened([{ status: 200, body: {} }, { status: 200, body: partial },
+                        { status: 200, body: { presence: 'HOME', presenceLocked: false } }]);
+  t.app.onMessage(shortcut(P.SC_ALL_OFF));
+  await f.settle(); await f.settle(); await f.settle();
+  assert.equal(t.sent[0].Result, P.RES_PARTIAL);
+  assert.equal(t.sent[0].FailedMask, 2, 'la pièce d\'indice 1 (Salon) n\'a pas été modifiée');
+});
+
+test('Tout off : aucune pièce modifiée = échec', async function() {
+  var t = await opened([{ status: 200, body: {} }, { status: 200, body: ZONE_STATES },
+                        { status: 200, body: { presence: 'HOME', presenceLocked: false } }]);
+  t.app.onMessage(shortcut(P.SC_ALL_OFF));
+  await f.settle(); await f.settle(); await f.settle();
+  assert.equal(t.sent[0].Result, P.RES_FAILED);
+});
+
+test('programmation partout : DELETE des seules pièces forcées', async function() {
+  var forced = zoneStatesWith('OFF', FORCED);
+  forced.zoneStates[5].overlay = null;
+  forced.zoneStates[5].setting.power = 'ON';
+  // lecture initiale avec une pièce forcée (Salon, id 1), puis la relecture après le retour à la programmation
+  var t = setup([
+    OPEN[0], OPEN[1], OPEN[2], { status: 200, body: forced }, OPEN[4],
+    { status: 204 }, { status: 200, body: ZONE_STATES }, { status: 200, body: { presence: 'HOME', presenceLocked: false } }
+  ]);
+  t.app.onMessage(get(1));
+  await f.settle(); await f.settle();
+  var calls = t.http.calls.length;
+  t.sent.length = 0;
+  t.app.onMessage(shortcut(P.SC_PROGRAM));
+  await f.settle(); await f.settle(); await f.settle();
+  assert.equal(t.http.calls[calls].method, 'DELETE');
+  assert.equal(t.http.calls[calls].url, 'https://my.tado.com/api/v2/homes/7/overlay?rooms=1');
+  assert.equal(t.sent[0].Result, P.RES_OK);
+});
+
+test('Mode Absent et Géolocalisation : écrits comme un changement de présence', async function() {
+  var t = await opened([{ status: 204 }, { status: 200, body: ZONE_STATES }, { status: 200, body: { presence: 'AWAY', presenceLocked: true } }]);
+  var calls = t.http.calls.length;
+  t.app.onMessage(shortcut(P.SC_ABSENT));
+  await f.settle(); await f.settle(); await f.settle();
+  assert.equal(t.http.calls[calls].method, 'PUT');
+  assert.deepEqual(JSON.parse(t.http.calls[calls].body), { homePresence: 'AWAY' });
+  assert.equal(t.sent[0].Result, P.RES_OK);
+  var g = await opened([{ status: 403, body: {} }]);
+  g.app.onMessage(shortcut(P.SC_GEO));
+  await f.settle(); await f.settle();
+  assert.equal(g.sent[0].Result, P.RES_AUTO_UNAVAILABLE);
+});
+
+test('raccourci sans connexion : refusé, jamais retenté', async function() {
+  var t = await opened([{ error: { kind: 'network' } }]);
+  var calls = t.http.calls.length;
+  t.app.onMessage(shortcut(P.SC_ALL_OFF));
+  await f.settle(); await f.settle();
+  assert.equal(t.http.calls.length, calls + 1);
+  assert.equal(t.sent[0].Result, P.RES_OFFLINE);
+});

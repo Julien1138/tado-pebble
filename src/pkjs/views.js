@@ -194,8 +194,44 @@ function buildPresence(data, autoUnavailable) {
   };
 }
 
+// Raccourcis offerts selon la situation (TPB-RAC-002 à 005) : masque de bits (bit n-1 pour le
+// raccourci n) et nombre de pièces forcées.
+function buildShortcuts(data, autoUnavailable) {
+  var forced = data.rooms.filter(function(r) { return r.state.overlay; }).length;
+  var p = data.presence;
+  var mask = 1 << (P.SC_ALL_OFF - 1);
+  if (forced > 0) {
+    mask |= 1 << (P.SC_PROGRAM - 1);
+  }
+  if (p.presence === 'HOME' && !p.locked) {
+    mask |= 1 << (P.SC_ABSENT - 1);
+  }
+  if (p.locked && !autoUnavailable) {
+    mask |= 1 << (P.SC_GEO - 1);
+  }
+  return { mask: mask, forced: forced };
+}
+
+// Pièces que le raccourci n'a pas modifiées (TPB-RAC-007), d'après la relecture : masque de bits
+// des indices dans la liste, et leur nombre. targeted : indices visés.
+function unmodifiedRooms(kind, rooms, targeted) {
+  var mask = 0;
+  var count = 0;
+  targeted.forEach(function(i) {
+    var s = rooms[i].state;
+    var done = kind === P.SC_ALL_OFF ? (s.setting && s.setting.power === 'OFF') : !s.overlay;
+    if (!done) {
+      mask |= 1 << i;
+      count += 1;
+    }
+  });
+  return { mask: mask, count: count };
+}
+
 module.exports = {
   buildRooms: buildRooms,
+  buildShortcuts: buildShortcuts,
+  unmodifiedRooms: unmodifiedRooms,
   buildPresence: buildPresence,
   buildDetail: buildDetail,
   abbreviations: abbreviations,

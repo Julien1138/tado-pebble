@@ -11,6 +11,13 @@
 #else
   #define ACTION_ROW_H 34
 #endif
+#if defined(PBL_ROUND)
+  #define TWO_LINE_H (OTHER_H + 18)
+#elif PBL_DISPLAY_WIDTH >= 200
+  #define TWO_LINE_H 60
+#else
+  #define TWO_LINE_H 46
+#endif
 #define HEADER_H PBL_IF_ROUND_ELSE(0, 20)
 
 struct ActionList {
@@ -25,11 +32,12 @@ struct ActionList {
   ActionItem items[ACTION_MAX];
   uint8_t count;
   bool radio;
+  bool two_line;
   bool built;          // composants graphiques créés
   uint16_t saved_row;
 };
 
-#define POOL_SIZE 4
+#define POOL_SIZE 6
 static ActionList s_pool[POOL_SIZE];
 static uint8_t s_pool_used;
 
@@ -53,8 +61,12 @@ static uint16_t menu_rows(MenuLayer *layer, uint16_t section, void *context) {
   return ((ActionList *)context)->count;
 }
 
+static int16_t row_height(const ActionList *list) {
+  return list->two_line ? TWO_LINE_H : ACTION_ROW_H;
+}
+
 static int16_t menu_height(MenuLayer *layer, MenuIndex *index, void *context) {
-  return ACTION_ROW_H;
+  return row_height(context);
 }
 
 static void menu_draw(GContext *ctx, const Layer *cell, MenuIndex *index, void *context) {
@@ -81,9 +93,19 @@ static void menu_draw(GContext *ctx, const Layer *cell, MenuIndex *index, void *
     }
     left = c.x + r + 8;
   }
-  ui_draw_text(ctx, list->items[index->row].label, F_NAME,
-               GRect(left, (b.size.h - text_h) / 2 - 3, b.size.w - left - PBL_IF_ROUND_ELSE(10, 6), text_h),
-               PBL_IF_ROUND_ELSE(list->radio ? GTextAlignmentLeft : GTextAlignmentCenter, GTextAlignmentLeft));
+  GTextAlignment align = PBL_IF_ROUND_ELSE(list->radio ? GTextAlignmentLeft : GTextAlignmentCenter, GTextAlignmentLeft);
+  int width = b.size.w - left - PBL_IF_ROUND_ELSE(10, 6);
+  if (list->two_line) {
+    // Libellé puis légende, centrés verticalement ensemble.
+    int sub_h = PBL_DISPLAY_WIDTH >= 200 ? 22 : 18;
+    int top = (b.size.h - text_h - sub_h) / 2 - 2;
+    ui_draw_text(ctx, list->items[index->row].label, F_NAME, GRect(left, top, width, text_h), align);
+    graphics_context_set_text_color(ctx, selected ? GColorBlack : PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite));
+    ui_draw_text(ctx, list->items[index->row].sub, F_SUB, GRect(left, top + text_h - 2, width, sub_h), align);
+  } else {
+    ui_draw_text(ctx, list->items[index->row].label, F_NAME,
+                 GRect(left, (b.size.h - text_h) / 2 - 3, width, text_h), align);
+  }
 }
 
 static void menu_select(MenuLayer *layer, MenuIndex *index, void *context) {
@@ -109,7 +131,7 @@ static void touch_tap(int16_t x, int16_t y) {
   Layer *menu_layer = menu_layer_get_layer(list->menu);
   int menu_y = y - layer_get_frame(menu_layer).origin.y;
   int row = gesture_row_rect(menu_y, scroll_layer_get_content_offset(menu_layer_get_scroll_layer(list->menu)).y,
-                             ACTION_ROW_H, list->count);
+                             row_height(list), list->count);
   if (row >= 0) {
     menu_layer_set_selected_index(list->menu, MenuIndex(0, row), MenuRowAlignCenter, false);
     list->on_select(list->items[row].id);
@@ -128,7 +150,7 @@ static void window_appear(Window *window) {
     s_touch_list->on_appear();
   }
   touch_start(&(TouchHandlers){ .on_tap = touch_tap, .on_step = touch_step,
-                                .step_px = ACTION_ROW_H, .one_step = false });
+                                .step_px = row_height(s_touch_list), .one_step = false });
 }
 
 static void window_disappear(Window *window) {
@@ -228,6 +250,10 @@ void actions_set_header(ActionList *list, const char *header) {
   if (list->built) {
     relayout(list);
   }
+}
+
+void actions_set_two_line(ActionList *list, bool two_line) {
+  list->two_line = two_line;
 }
 
 void actions_set_radio(ActionList *list, bool radio) {

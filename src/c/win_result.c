@@ -16,6 +16,7 @@ static AppTimer *s_timer;
 static const char *s_text;
 static bool s_waiting;
 static bool s_success;
+static char s_partial[96];
 
 static void close_window(void) {
   if (s_window) {
@@ -47,7 +48,11 @@ static void layer_draw(Layer *layer, GContext *ctx) {
   graphics_context_set_text_color(ctx, s_waiting ? GColorWhite
                                   : (s_success ? PBL_IF_COLOR_ELSE(GColorGreen, GColorWhite)
                                                : PBL_IF_COLOR_ELSE(GColorChromeYellow, GColorWhite)));
-  ui_draw_text(ctx, s_text, F_TEMP, GRect(8, b.size.h / 2 - 28, b.size.w - 16, 60), GTextAlignmentCenter);
+  // Le texte d'un résultat partiel peut tenir sur plusieurs lignes : police plus petite et zone plus haute.
+  bool long_text = strlen(s_text) > 18;
+  ui_draw_text(ctx, s_text, long_text ? F_NAME : F_TEMP,
+               long_text ? GRect(8, b.size.h / 2 - 50, b.size.w - 16, 100) : GRect(8, b.size.h / 2 - 28, b.size.w - 16, 60),
+               GTextAlignmentCenter);
 }
 
 static void on_button(ClickRecognizerRef recognizer, void *context) {
@@ -104,13 +109,25 @@ void win_result_done(uint8_t result) {
     case RES_REFUSED: show(text_get(T_RES_REFUSED), false); break;
     case RES_OFFLINE: show(text_get(T_DISCONNECTED), false); break;
     case RES_AUTO_UNAVAILABLE: show(text_get(T_AUTO_UNAVAILABLE), false); break;
+    case RES_PARTIAL: {
+      // Les pièces que le raccourci n'a pas modifiées, nommées (TPB-RAC-007).
+      size_t used = snprintf(s_partial, sizeof(s_partial), "%s", text_get(T_RES_PARTIAL));
+      for (uint8_t i = 0; i < g_view.count && used < sizeof(s_partial) - 2; i++) {
+        if (g_failed_mask & (1 << i)) {
+          used += snprintf(s_partial + used, sizeof(s_partial) - used, "%s%s", used > strlen(text_get(T_RES_PARTIAL)) ? ", " : " ",
+                           g_view.rooms[i].name);
+        }
+      }
+      show(s_partial, false);
+      break;
+    }
     default: show(text_get(T_RES_FAILED), false); break;
   }
   if (s_success) {
     win_pilot_close_all();
     win_menu_close_all();
   }
-  arm(SHOW_MS);
+  arm(result == RES_PARTIAL ? 5000 : SHOW_MS);
 }
 
 void win_result_send(uint8_t command, uint8_t room_index, int16_t temp, uint8_t duration) {

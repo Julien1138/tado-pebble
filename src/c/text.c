@@ -11,6 +11,10 @@ static const char *const FR[T_COUNT] = {
   "Humidité", "Fenêtre ouverte", "Ensuite", "à", "Éteint",
   "Pilotage", "Forcer temp.", "Retour programme", "Éteindre chauffage", "Actuelle", "pendant",
   "30 min", "1 h", "2 h", "Prochain créneau", "Nouvel ordre",
+  "Raccourcis", "Tout off", "Programmation", "Mode Absent", "Géolocalisation", "Partout", "1 pièce forcée",
+  "%d pièces forcées", "Vous êtes présent", "Mode imposé", "Chauffage éteint partout",
+  "Programmation partout", "Passer en mode Absent", "Retour à la géolocalisation",
+  "Confirmer", "Annuler", "Non modifiées :",
   "Menu", "Présence", "Présent", "Absent", "Auto", "Actuel", "imposé", "Auto indisponible",
   "Forcer", "Envoi…", "Pris en compte", "Refusé", "Échec", "Pas de réponse"
 };
@@ -22,6 +26,10 @@ static const char *const EN[T_COUNT] = {
   "Humidity", "Window open", "Then", "at", "Off",
   "Control", "Set temp.", "Back to schedule", "Turn heating off", "Current", "for",
   "30 min", "1 h", "2 h", "Next period", "Until changed",
+  "Shortcuts", "All off", "Schedule", "Away mode", "Geolocation", "Everywhere", "1 room boosted",
+  "%d rooms boosted", "You are home", "Mode set", "Heating off everywhere",
+  "Schedule everywhere", "Switch to Away mode", "Back to geolocation",
+  "Confirm", "Cancel", "Not changed:",
   "Menu", "Presence", "Home", "Away", "Auto", "Now", "set", "Auto unavailable",
   "Boost", "Sending…", "Done", "Refused", "Failed", "No answer"
 };

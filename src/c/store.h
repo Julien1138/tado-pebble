@@ -61,10 +61,20 @@ typedef struct {
   bool auto_unavailable;      // Tado a refusé le retour à Auto : il n'est plus offert
 } Presence;
 
+// Raccourcis offerts (MSG-19) : bit n-1 du masque pour le raccourci n, et pièces forcées.
+typedef struct {
+  bool valid;
+  uint16_t mask;
+  uint8_t forced;
+} Shortcuts;
+
 extern View g_view;
 extern Detail g_detail;
 extern Caps g_caps;
 extern Presence g_presence;
+extern Shortcuts g_shortcuts;
+// Pièces que le dernier raccourci n'a pas modifiées (bit i : i-ième pièce de la liste).
+extern uint16_t g_failed_mask;
 
 void store_init(void);
 // Réception d'une liste : begin, puis chaque pièce ; commit quand toutes sont arrivées.

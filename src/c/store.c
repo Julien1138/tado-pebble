@@ -18,6 +18,8 @@ View g_view;
 Detail g_detail;
 Caps g_caps;
 Presence g_presence;
+Shortcuts g_shortcuts;
+uint16_t g_failed_mask;
 static uint8_t s_staging_count;
 static uint8_t s_staging_unit;
 static uint8_t s_staging_received;

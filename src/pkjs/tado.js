@@ -101,6 +101,19 @@ function createClient(deps) {
       request('DELETE', zone(h, z) + '/overlay', undefined, cb);
     },
 
+    // Routes groupées des raccourcis. overlays : [{room, setting, termination}] ; le corps a été
+    // vérifié sur le compte (POST répond 200, tout est appliqué).
+    postOverlays: function(h, overlays, cb) {
+      request('POST', home(h) + '/overlay', {
+        overlays: overlays.map(function(o) {
+          return { overlay: { setting: o.setting, termination: o.termination }, room: o.room };
+        })
+      }, cb);
+    },
+    deleteOverlays: function(h, roomIds, cb) {
+      request('DELETE', home(h) + '/overlay?rooms=' + roomIds.join(','), undefined, cb);
+    },
+
     // presence : 'HOME' ou 'AWAY'.
     putPresenceLock: function(h, presence, cb) {
       request('PUT', home(h) + '/presenceLock', { homePresence: presence }, cb);

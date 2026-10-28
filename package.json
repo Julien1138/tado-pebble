@@ -67,7 +67,11 @@
       "LastDur",
       "DevicesHome",
       "DevicesTracked",
-      "AutoUnavailable"
+      "AutoUnavailable",
+      "Shortcut",
+      "Mask",
+      "ForcedCount",
+      "FailedMask"
     ],
     "resources": {
       "media": []

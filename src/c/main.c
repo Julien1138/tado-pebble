@@ -9,6 +9,7 @@
 #include "win_pilot.h"
 #include "win_result.h"
 #include "win_setpoint.h"
+#include "win_shortcuts.h"
 
 // M-01 Application : affiche tout de suite la dernière situation connue (TPB-ACT-001), puis la
 // remplace quand le téléphone répond.
@@ -21,6 +22,10 @@ static void on_rooms(void) {
 static void on_detail(void) {
   win_detail_changed();
   win_pilot_refresh();
+}
+
+static void on_shortcuts(void) {
+  win_shortcuts_changed();
 }
 
 static void on_presence(void) {
@@ -49,7 +54,7 @@ static void on_link_code(const char *code, int seconds, uint8_t state) {
 int main(void) {
   text_init();
   store_init();
-  comms_init(&(CommsHandlers){ .rooms_changed = on_rooms, .detail_changed = on_detail, .caps_changed = on_caps, .presence_changed = on_presence,
+  comms_init(&(CommsHandlers){ .rooms_changed = on_rooms, .detail_changed = on_detail, .caps_changed = on_caps, .presence_changed = on_presence, .shortcuts_changed = on_shortcuts,
                                .command_result = on_command_result, .status_changed = on_status,
                                .link_code = on_link_code });
   win_pieces_push();

@@ -150,3 +150,21 @@ test('commande : jamais retentée', async function() {
   assert.equal(r2.err.kind, 'server');
   assert.equal(t2.http.calls.length, 1);
 });
+
+test('raccourcis groupés : adresses et corps vérifiés sur le compte', async function() {
+  var t = setup([{ status: 200, body: {} }, { status: 200, body: {} }]);
+  var off = { type: 'HEATING', power: 'OFF' };
+  var manual = { typeSkillBasedApp: 'MANUAL' };
+  await once(function(cb) { t.client.postOverlays(7, [{ room: 1, setting: off, termination: manual }, { room: 5, setting: off, termination: manual }], cb); });
+  await once(function(cb) { t.client.deleteOverlays(7, [1, 5, 14], cb); });
+  var post = t.http.calls[0];
+  assert.equal(post.method, 'POST');
+  assert.equal(post.url, 'https://my.tado.com/api/v2/homes/7/overlay');
+  assert.deepEqual(JSON.parse(post.body), { overlays: [
+    { overlay: { setting: off, termination: manual }, room: 1 },
+    { overlay: { setting: off, termination: manual }, room: 5 } ] });
+  var del = t.http.calls[1];
+  assert.equal(del.method, 'DELETE');
+  assert.equal(del.url, 'https://my.tado.com/api/v2/homes/7/overlay?rooms=1,5,14');
+  assert.equal(del.body, undefined);
+});

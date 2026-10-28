@@ -111,12 +111,30 @@ function createControl(deps) {
     client.putPresenceLock(target.homeId, mode === P.PRESENCE_HOME ? 'HOME' : 'AWAY', function(err) { cb(err); });
   }
 
+  // Exécute un raccourci de toute la maison (SC_ALL_OFF ou SC_PROGRAM). target : {homeId, unit} ;
+  // rooms : les pièces de J-06 ({id, state}). cb(err). La présence passe par setPresence.
+  function shortcut(target, kind, rooms, cb) {
+    if (kind === P.SC_ALL_OFF) {
+      return client.postOverlays(target.homeId, rooms.map(function(r) {
+        return { room: r.id, setting: { type: 'HEATING', power: 'OFF' }, termination: DURATIONS[P.DUR_MANUAL] };
+      }), function(err) { cb(err); });
+    }
+    if (kind === P.SC_PROGRAM) {
+      var forced = rooms.filter(function(r) { return r.state.overlay; }).map(function(r) { return r.id; });
+      if (forced.length === 0) {
+        return cb(null);
+      }
+      return client.deleteOverlays(target.homeId, forced, function(err) { cb(err); });
+    }
+    cb({ kind: 'refused' });
+  }
+
   function autoUnavailable() {
     return storage.get(AUTO_KEY) === '1';
   }
 
   return { execute: execute, last: last, range: range, resultFor: resultFor,
-           setPresence: setPresence, autoUnavailable: autoUnavailable };
+           setPresence: setPresence, autoUnavailable: autoUnavailable, shortcut: shortcut };
 }
 
 createControl.resultFor = resultFor;

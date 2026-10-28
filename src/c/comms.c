@@ -80,6 +80,9 @@ static void send_next(void) {
       if (req.command == CMD_PRESENCE) {
         dict_write_int32(iter, MESSAGE_KEY_PresenceMode, req.duration);
       }
+      if (req.command == CMD_SHORTCUT) {
+        dict_write_int32(iter, MESSAGE_KEY_Shortcut, req.duration);
+      }
     }
   }
   s_in_flight = true;
@@ -179,7 +182,14 @@ static void on_inbox(DictionaryIterator *iter, void *context) {
       g_presence.auto_unavailable = int_of(iter, MESSAGE_KEY_AutoUnavailable, 0) != 0;
       s_handlers.presence_changed();
       break;
+    case MSG_SHORTCUTS:
+      g_shortcuts.valid = true;
+      g_shortcuts.mask = int_of(iter, MESSAGE_KEY_Mask, 0);
+      g_shortcuts.forced = int_of(iter, MESSAGE_KEY_ForcedCount, 0);
+      s_handlers.shortcuts_changed();
+      break;
     case MSG_ACK:
+      g_failed_mask = int_of(iter, MESSAGE_KEY_FailedMask, 0);
       s_handlers.command_result(int_of(iter, MESSAGE_KEY_Result, RES_FAILED));
       break;
     case MSG_LINK_CODE: {
@@ -242,6 +252,15 @@ void comms_request_presence(bool refresh) {
   }
   if (s_ready) {
     enqueue(&(Request){ .type = MSG_GET, .seq = ++s_seq, .object = OBJ_PRESENCE, .refresh = refresh });
+  }
+}
+
+void comms_request_shortcuts(bool refresh) {
+  if (!refresh) {
+    g_shortcuts.valid = false;
+  }
+  if (s_ready) {
+    enqueue(&(Request){ .type = MSG_GET, .seq = ++s_seq, .object = OBJ_SHORTCUTS, .refresh = refresh });
   }
 }
 
